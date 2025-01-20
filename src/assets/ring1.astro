@@ -1,0 +1,27 @@
+<script>
+  import * as THREE from "three";
+  import * as Tone from "tone";
+
+  export function createAsset(scene, listener) {
+    // Ring geometry
+    const geometry = new THREE.RingGeometry(1, 1.5, 32);
+    const material = new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide });
+    const ring = new THREE.Mesh(geometry, material);
+    scene.add(ring);
+
+    // Karplus-Strong Synth
+    const pluckSynth = new Tone.PluckSynth().toDestination();
+    const positionalAudio = new THREE.PositionalAudio(listener);
+    pluckSynth.connect(Tone.context.createMediaStreamDestination());
+    positionalAudio.setMediaStreamSource(Tone.context.createMediaStreamDestination().stream);
+    ring.add(positionalAudio);
+
+    return {
+      object: ring,
+      update: (delta) => {
+        ring.rotation.z += delta * 0.5;
+        pluckSynth.triggerAttack("C3");
+      },
+    };
+  }
+</script>

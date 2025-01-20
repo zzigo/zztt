@@ -1,0 +1,36 @@
+<script>
+  import * as THREE from "three";
+  import * as Tone from "tone";
+
+  export function createAsset(scene, listener) {
+    const group = new THREE.Group();
+
+    // Add 3 spheres
+    for (let i = 0; i < 3; i++) {
+      const geometry = new THREE.SphereGeometry(0.5, 32, 32);
+      const material = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
+      const sphere = new THREE.Mesh(geometry, material);
+      sphere.position.set(Math.random() * 4 - 2, Math.random() * 4 - 2, Math.random() * 4 - 2);
+      group.add(sphere);
+    }
+    scene.add(group);
+
+    // FM Synth
+    const fmSynth = new Tone.FMSynth().toDestination();
+    const positionalAudio = new THREE.PositionalAudio(listener);
+    fmSynth.connect(Tone.context.createMediaStreamDestination());
+    positionalAudio.setMediaStreamSource(Tone.context.createMediaStreamDestination().stream);
+    group.add(positionalAudio);
+
+    return {
+      object: group,
+      update: (delta) => {
+        group.children.forEach((sphere) => {
+          sphere.position.x += (Math.random() - 0.5) * delta;
+          sphere.position.y += (Math.random() - 0.5) * delta;
+        });
+        fmSynth.triggerAttackRelease(["C4", "E4", "G4"][Math.floor(Math.random() * 3)], "16n");
+      },
+    };
+  }
+</script>

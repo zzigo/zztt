@@ -1,0 +1,288 @@
+<script>
+    import * as THREE from "three";
+    import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+    import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+    import TWEEN from "@tweenjs/tween.js";
+    import * as Tone from "tone";
+    import CubeModule from "./cubeModule";
+    import PulseModule from "./pulseModule";
+  
+    let scene: THREE.Scene;
+    let camera: THREE.PerspectiveCamera;
+    let renderer: THREE.WebGLRenderer;
+    let composer: EffectComposer;
+    let controls: OrbitControls;
+    let pulse: any;
+    let cube: any;
+    let reverb: AudioNode;
+    let listener: THREE.AudioListener;
+  
+    const setupPostProcessing = () => {
+      const renderPass = new RenderPass(scene, camera);
+      composer = new EffectComposer(renderer);
+      composer.addPass(renderPass);
+
+      const bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        1.5,  // strength
+        0.4,  // radius
+        0.85  // threshold
+      );
+      composer.addPass(bloomPass);
+    };
+
+    const setupControls = () => {
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.screenSpacePanning = false;
+      controls.minDistance = 5;
+      controls.maxDistance = 50;
+      controls.maxPolarAngle = Math.PI / 2;
+      controls.minPolarAngle = Math.PI / 2; // Lock vertical rotation
+      controls.enableZoom = false; // Disable zoom
+      controls.enablePan = false; // Disable panning
+      controls.rotateSpeed = 0.5; // Adjust rotation speed
+
+      // WASD Controls with audio listener update
+      const onKeyDown = (event: KeyboardEvent) => {
+        let moved = false;
+        switch (event.code) {
+          case 'KeyW':
+            camera.position.z -= 1;
+            moved = true;
+            break;
+          case 'KeyS':
+            camera.position.z += 1;
+            moved = true;
+            break;
+          case 'KeyA':
+            camera.position.x -= 1;
+            moved = true;
+            break;
+          case 'KeyD':
+            camera.position.x += 1;
+            moved = true;
+            break;
+        }
+        
+        if (moved) {
+          // Update camera and listener orientation
+          camera.updateMatrixWorld();
+          listener.updateMatrixWorld();
+        }
+      };
+      document.addEventListener('keydown', onKeyDown);
+
+      // Update audio listener on orbit controls change
+      controls.addEventListener('change', () => {
+        camera.updateMatrixWorld();
+        listener.updateMatrixWorld();
+      });
+    };
+
+    const setupAudio = async () => {
+      try {
+        // Create and attach audio listener to camera
+        listener = new THREE.AudioListener();
+        camera.add(listener);
+
+        // Get audio context and ensure it's running
+        const audioContext = listener.context;
+        
+        // Try to resume the context - needed for browsers that require user interaction
+        if (audioContext.state === 'suspended') {
+          await audioContext.resume();
+        }
+
+        // Wait for the context to be running
+        if (audioContext.state !== 'running') {
+          await new Promise((resolve) => {
+            const checkState = () => {
+              if (audioContext.state === 'running') {
+                resolve(true);
+              } else {
+                requestAnimationFrame(checkState);
+              }
+            };
+            checkState();
+          });
+        }
+
+        console.log('Audio context is running:', audioContext.state);
+
+      // Create a shared ConvolverNode for reverb
+    const convolver = audioContext.createConvolver();
+    const reverbTime = 140.5; // Reverb duration in seconds
+    const sampleRate = audioContext.sampleRate;
+    const length = sampleRate * reverbTime;
+    const impulse = audioContext.createBuffer(2, length, sampleRate);
+
+    // Generate an impulse response for the convolver
+    for (let channel = 0; channel < 2; channel++) {
+      const channelData = impulse.getChannelData(channel);
+      for (let i = 0; i < length; i++) {
+        channelData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (sampleRate * 0.1));
+      }
+    }
+
+    convolver.buffer = impulse;
+
+    // Create a GainNode to control the overall wet mix
+    const reverbGain = audioContext.createGain();
+    reverbGain.gain.value = 1; // Adjust this value for the reverb effect mix
+
+    // Connect the convolver to the gain node, then to the destination
+    convolver.connect(reverbGain);
+    reverbGain.connect(audioContext.destination);
+
+    // Store the reverb node for modules to use
+    reverb = convolver;
+    console.log('Audio setup complete with reverb node.');
+
+
+      } catch (error) {
+        console.error('Error setting up audio:', error);
+      }
+    };
+
+    const initialize = async () => {
+      console.log("Initializing Hero...");
+      // Initialize Tone.js
+      await Tone.start();
+      // const masterVolume = Tone.getDestination();
+      // masterVolume.volume.value = 0; // Set initial volume in dB
+
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 0, 10);
+  
+      renderer = new THREE.WebGLRenderer({ 
+        alpha: true,
+        antialias: true,
+        premultipliedAlpha: false
+      });
+      renderer.setClearColor(0x000000, 0);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      const container = document.getElementById("three-container");
+      if (!container) {
+        console.error("Could not find three-container element");
+        return;
+      }
+      container.appendChild(renderer.domElement);
+  
+      // Add lights
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(ambientLight);
+  
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight.position.set(10, 10, 10);
+      scene.add(directionalLight);
+  
+      // Initialize audio
+      await setupAudio();
+  
+      // Initialize modules
+      pulse = PulseModule();
+      cube = CubeModule();
+  
+      pulse.init(scene, listener, reverb);
+      cube.init(scene, listener, reverb);
+  
+      // Set up post-processing
+      setupPostProcessing();
+      
+      // Set up controls
+      setupControls();
+
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(width, height);
+        composer.setSize(width, height);
+      });
+
+      animate();
+    };
+  
+    const startAnimations = async () => {
+      console.log("Starting animations...");
+      try {
+        // Ensure audio context is still running
+        const audioContext = listener.context;
+        if (audioContext.state !== 'running') {
+          await audioContext.resume();
+        }
+
+        // Start visual animations with their own positional audio
+        await Promise.all([
+          cube.startCubeAnimation(),
+          pulse.startPulseAnimation()
+        ]);
+      } catch (error) {
+        console.error("Error starting animations:", error);
+      }
+    };
+  
+    const animate = () => {
+      requestAnimationFrame(animate);
+      TWEEN.update();
+      controls.update();
+      composer.render();
+    };
+  
+    if (typeof window !== "undefined") {
+      try {
+        window.addEventListener("load", initialize);
+        document.addEventListener("click", startAnimations);
+        window.addEventListener("audioContextReady", startAnimations);
+
+        // // Add scroll handler for volume control
+        // window.addEventListener("scroll", () => {
+        //   const scrollPosition = window.scrollY;
+        //   const windowHeight = window.innerHeight;
+        //   console.log('Scroll Y:', scrollPosition, 'Window Height:', windowHeight);
+        //   // Calculate volume based on scroll position (0 to 1)
+        //   const volume = Math.max(0, Math.min(1, 1 - (scrollPosition / (windowHeight))));          // Set Tone.js master volume with smooth transition
+        //   // const masterVolume = Tone.Destination();
+        //   // masterVolume.volume.value =0;// volume;
+        //   console.log('Volume:', volume);
+        //   // masterVolume.volume.rampTo(20 * Math.log10(volume), 0.1); // Convert to dB
+        // });
+
+            window.addEventListener("scroll", () => {
+      // Get scroll position and window height
+      const scrollPosition = window.scrollY;
+      const windowHeight = window.innerHeight;
+
+      console.log('Scroll Y:', scrollPosition, 'Window Height:', windowHeight);
+
+      // Calculate volume based on scroll position (normalized to [0, 1])
+      const volume = Math.max(0, Math.min(1, 1 - (scrollPosition / windowHeight)));
+      console.log('Calculated Volume:', volume);
+
+      // Control master volume through the GainNode (reverbGain)
+      if (reverb && reverb.gain) {
+        // Smoothly interpolate to the target volume
+        const audioContext = reverb.context;
+        const currentTime = audioContext.currentTime;
+        reverb.gain.linearRampToValueAtTime(volume, currentTime + 0.1);
+      }
+    });
+
+
+
+      } catch (error) {
+        console.error("Error setting up event listeners:", error);
+      }
+    }
+  </script>
+  
+  <div id="three-container" style="width: 100%; height: 100vh; position: block; top: 0; left: 0; z-index: -1; pointer-events: auto; background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%);"></div>

@@ -1,0 +1,91 @@
+---
+const today = new Date();
+---
+
+<footer>
+	<div class="copyright">
+		<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" class="cc-license">
+			<i class="fab fa-creative-commons"></i>
+			<i class="fab fa-creative-commons-by"></i>
+			<i class="fab fa-creative-commons-sa"></i>
+			<span> {today.getFullYear()} &nbsp; ZZTT</span>
+
+		</a>
+	</div>
+	<div class="social-links">
+		<a href="https://www.youtube.com/@LucianoAzzigotti" target="_blank" class="icon-link">
+			<i class="fab fa-youtube"></i>
+			<span class="sr-only">YouTube</span>
+		</a>
+		<a href="https://x.com/azzigotti" target="_blank" class="icon-link">
+			<i class="fab fa-x-twitter"></i>
+			<span class="sr-only">X (Twitter)</span>
+		</a>
+		<a href="https://soundcloud.com/lucianoazzigotti" target="_blank" class="icon-link">
+			<i class="fab fa-soundcloud"></i>
+			<span class="sr-only">SoundCloud</span>
+		</a>
+		<a href="https://hkb.academia.edu/LucianoAzzigotti" target="_blank" class="icon-link">
+			<i class="fas fa-graduation-cap"></i>
+			<span class="sr-only">Academia</span>
+		</a>
+		<a href="https://orcid.org/0000-0002-6812-2050" target="_blank" class="icon-link">
+			<i class="fa-brands fa-orcid"></i>
+			<span class="sr-only">ORCID</span>
+		</a>
+		<a href="https://www.linkedin.com/in/azzigotti" target="_blank" class="icon-link">
+			<i class="fab fa-linkedin"></i>
+			<span class="sr-only">LinkedIn</span>
+		</a>
+		<a href="https://github.com/zzigo" target="_blank" class="icon-link">
+			<i class="fab fa-github"></i>
+			<span class="sr-only">GitHub</span>
+		</a>
+	</div>
+</footer>
+<style>
+	footer {
+		padding: 2em 1em 6em 1em;
+		background: linear-gradient(var(--gray-gradient)) no-repeat;
+		color: rgb(var(--gray));
+		text-align: center;
+	}
+	.copyright {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5em;
+	}
+	.cc-license {
+		display: flex;
+		align-items: center;
+		gap: 0.2em;
+		color: rgb(var(--gray));
+		text-decoration: none;
+		transition: color 0.2s ease;
+	}
+	.cc-license:hover {
+		color: rgb(var(--gray-dark));
+	}
+	.social-links {
+		display: flex;
+		justify-content: center;
+		gap: 1em;
+		margin-top: 1em;
+	}
+	.social-links a {
+		color: rgb(var(--gray));
+		padding: 0.5em;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: color 0.2s ease;
+		text-decoration: none;
+	}
+	.social-links a:hover {
+		color: rgb(var(--gray-dark));
+	}
+	.social-links i {
+		font-size: 1.2em;
+	}
+</style>

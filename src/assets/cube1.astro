@@ -1,0 +1,51 @@
+---
+---
+
+<script is:inline>
+  export function createAsset(scene, listener, THREE, Tone) {
+    // Cube geometry
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
+
+    // Create reverb
+    const reverb = new Tone.Reverb({
+      decay: 2,
+      wet: 0.5
+    }).toDestination();
+
+    // Synth sound with reverb
+    const synth = new Tone.Synth().connect(reverb);
+    
+    // Create oscillator for continuous sound
+    const oscillator = new Tone.Oscillator({
+      frequency: "C4",
+      type: "sine",
+      volume: -20
+    }).connect(reverb);
+    
+    // Create positional audio
+    const positionalAudio = new THREE.PositionalAudio(listener);
+    const gainNode = Tone.context.createGain();
+    oscillator.connect(gainNode);
+    positionalAudio.setNodeSource(gainNode);
+    cube.add(positionalAudio);
+    
+    // Start the oscillator
+    oscillator.start();
+
+    return {
+      object: cube,
+      update: (delta) => {
+        cube.rotation.x += delta * 0.5;
+        cube.rotation.y += delta * 0.5;
+        
+        // Update positional audio parameters based on distance
+        const distance = listener.position.distanceTo(cube.position);
+        const volume = Math.max(-50, -distance * 2); // Adjust volume based on distance
+        gainNode.gain.value = Math.pow(10, volume / 20); // Convert dB to linear gain
+      },
+    };
+  }
+</script>

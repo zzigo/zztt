@@ -1,0 +1,145 @@
+---
+import HeaderLink from './HeaderLink.astro';
+import { SITE_TITLE } from '../consts';
+---
+
+<header>
+	<nav>
+		<div class="nav-brand">
+			<a href="/">{SITE_TITLE}</a>
+			<button class="menu-toggle" aria-label="Toggle menu">
+				<i class="fas fa-bars"></i>
+			</button>
+		</div>
+		<div class="nav-content">
+			<div class="internal-links">
+				<HeaderLink href="/works">WORKS</HeaderLink>
+				<HeaderLink href="/research">RESEARCH</HeaderLink>
+				<HeaderLink href="/about">ABOUT</HeaderLink>
+			</div>
+			<div class="social-links">
+				<a href="https://www.youtube.com/@LucianoAzzigotti" target="_blank" class="icon-link">
+					<i class="fab fa-youtube"></i>
+					<span class="sr-only">YouTube</span>
+				</a>
+				<a href="https://x.com/azzigotti" target="_blank" class="icon-link">
+					<i class="fab fa-x-twitter"></i>
+					<span class="sr-only">X (Twitter)</span>
+				</a>
+				<a href="https://soundcloud.com/lucianoazzigotti" target="_blank" class="icon-link">
+					<i class="fab fa-soundcloud"></i>
+					<span class="sr-only">SoundCloud</span>
+				</a>
+				<a href="https://hkb.academia.edu/LucianoAzzigotti" target="_blank" class="icon-link">
+					<i class="fas fa-graduation-cap"></i>
+					<span class="sr-only">Academia</span>
+				</a>
+				<a href="https://orcid.org/0000-0002-6812-2050" target="_blank" class="icon-link">
+					<i class="fas fa-book"></i>
+					<span class="sr-only">ORCID</span>
+				</a>
+				<a href="https://www.linkedin.com/in/azzigotti" target="_blank" class="icon-link">
+					<i class="fab fa-linkedin"></i>
+					<span class="sr-only">LinkedIn</span>
+				</a>
+				<a href="https://github.com/zzigo" target="_blank" class="icon-link">
+					<i class="fab fa-github"></i>
+					<span class="sr-only">GitHub</span>
+				</a>
+			</div>
+		</div>
+	</nav>
+</header>
+
+<style>
+header {
+ 	margin: 0;
+		padding: 0 1em;
+		box-shadow: 0 2px 8px rgba(var(--black), 5%);
+		position: fixed;
+		width: 100%;
+		z-index: 1000;
+}
+
+nav {
+display: flex;
+flex-direction: row;
+  padding: 1em 0;
+}
+
+.nav-brand {
+  display: flex;
+		justify-content: space-between;
+		align-items: left;
+		width: 100%;
+		font-size: 0.8em;
+}
+
+.nav-brand a {
+  color: white;
+  text-decoration: none;
+  font-size: 1.5em;
+}
+
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5em;
+  cursor: pointer;
+  padding: 0.5em;
+}
+
+.nav-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 2em;
+}
+
+.internal-links {
+  display: flex;
+  flex-direction: row;
+  gap: 2em;
+}
+
+.internal-links a {
+  color: white;
+  text-decoration: none;
+  padding: 0em;
+  border-bottom: 4px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.internal-links a:hover,
+.internal-links a.active {
+  border-bottom-color: var(--accent, #ff6f61);
+}
+
+.social-links {
+  display: flex;
+  flex-direction: row;
+  gap: 1em;
+}
+
+.social-links a {
+  color: white;
+  padding: 0.5em;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+}
+
+.social-links a:hover {
+  color: var(--accent, #ff6f61);
+}
+
+.social-links i {
+  font-size: 1.2em;
+}
+
+
+
+</style>
