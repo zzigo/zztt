@@ -21,7 +21,10 @@ The amount of interfering variables is opposed to the amount of control variable
 
 In a multicultural and multitemporal environment, composing with systems and their unquantifiable emergences can remind us how ridiculous any pretension of control or subjective selectivity can be. It is an anti-elitist definition of sophistication as the selective growth of any natural organism. Beyond our subjectivity. It is (to paraphrase Adorno) an unresolved antagonism of reality, which returns as an immanent problem of form.
 
-![2014_Vilanos@conDiT_MEIflautas-5.jpg](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/ab7e531c-f4ce-4de2-b395-4620002fd048/2014_VilanosconDiT_MEIflautas-5.jpg)
+<figure class="center">
+  <img src="https://i.imgur.com/5Cfe9Gy.jpeg" alt="Description" />
+  <figcaption>Vilanos at conDiT 2014 4 Escrituras Argentinas</figcaption>
+</figure>
 
 - Nota extendida
     
@@ -44,10 +47,3 @@ We posit that in Azzigotti’s work the particular way the instruments are ampli
 Thus the singularities of the piece direct our attention to a specific modus of interaction between the performer’s body and the musical instrument, demanding us to reconsider Marx’s ideas about the relationship between humans and technology.
 Hence what we intend is, not only to say something about Vilanos, but to contribute in providing tools to reflect on political and aesthetical implications of technology in New Music today.
 
-
-
-<figure class="center">
-  <img src="https://i.imgur.com/G8xDNeV.png" alt="Description" />
-  <figcaption>Figure 1: A centered image with a caption.</figcaption>
-</figure>
-Tempus quam pellentesque nec nam aliquam sem. Risus at ultrices mi tempus imperdiet. Id porta nibh venenatis cras sed felis eget velit. Ipsum a arcu cursus vitae. Facilisis magna etiam tempor orci eu lobortis elementum. Tincidunt dui ut ornare lectus sit. Quisque non tellus orci ac. Blandit libero volutpat sed cras. Nec tincidunt praesent semper feugiat nibh sed pulvinar proin gravida. Egestas integer eget aliquet nibh praesent tristique magna.
