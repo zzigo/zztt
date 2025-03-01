@@ -12,7 +12,6 @@ package-lock.json
 
 # Build output
 dist/
-public/
 
 # Astro specific
 .cache/

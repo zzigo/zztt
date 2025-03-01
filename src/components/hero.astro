@@ -1,164 +1,1457 @@
 <script>
-    import * as THREE from "three";
-    import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-    import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-    import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-    import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-    import TWEEN from "@tweenjs/tween.js";
-    import * as Tone from "tone";
-    import CubeModule from "./cubeModule";
-    import PulseModule from "./pulseModule";
-  
-    let scene: THREE.Scene;
-    let camera: THREE.PerspectiveCamera;
-    let renderer: THREE.WebGLRenderer;
-    let composer: EffectComposer;
-    let controls: OrbitControls;
-    let pulse: any;
-    let cube: any;
-    let reverb: AudioNode;
-    let listener: THREE.AudioListener;
-    let reverbGain: GainNode; // Declare reverbGain at the top level
-  
-    const setupPostProcessing = () => {
-      const renderPass = new RenderPass(scene, camera);
-      composer = new EffectComposer(renderer);
-      composer.addPass(renderPass);
+  import * as THREE from "three";
+  import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+  import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+  import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+  import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+  import TWEEN from "@tweenjs/tween.js";
+  import * as Tone from "tone";
+  import CubeModule from "./cubeModule";
+  import PulseModule from "./pulseModule";
 
-      const bloomPass = new UnrealBloomPass(
-        new THREE.Vector2(window.innerWidth, window.innerHeight),
-        1.5,  // strength
-        0.4,  // radius
-        0.85  // threshold
+  // Initialize Three.js variables
+  let scene = new THREE.Scene();
+  let camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000,
+  );
+  let renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  let composer: any;
+  let controls: any;
+  let pulse: any;
+  let cube: any;
+  let reverb: any;
+  let listener: any;
+  let reverbGain: any;
+
+  // Initialize modules
+  let cubeModule: any;
+  let pulseModule: any;
+
+  // Track initial volume and scroll state
+  let initialVolume = 0;
+  let lastScrollY = 0;
+  let toneStarted = false;
+
+  // Spatial audio objects and movement parameters
+  let audioObjects: any[] = [];
+  const SPACE_BOUNDS = 800; // Doubled again from 400 for even more spread
+  const BASE_FREQUENCY = 220; // A3 as base frequency
+  const FREQUENCY_STEP = 20; // 20 Hz steps for microtonal distribution
+  const MAX_OBJECTS = 15; // Maximum number of objects in the scene
+  const COLLISION_THRESHOLD = 1.5; // Distance threshold for collision detection
+
+  // Physics parameters
+  const MIN_SPEED = 0.005; // Reduced by 3x for slower movement
+  const MAX_SPEED = 0.02; // Reduced by 3x for slower movement
+  const DAMPING = 0.99; // Increased damping for smoother movement
+  const ATTRACTION_FORCE = 0.00002; // Reduced for wider initial spread, but still pulls back to center
+  const REPULSION_THRESHOLD = 100; // Distance threshold for repulsion effect
+  const REPULSION_FORCE = 0.00001; // Force to push objects away from center initially
+
+  // Lighting parameters
+  const LIGHT_EXPANSION_FACTOR = 3; // Light expansion factor
+  const LIGHT_ROTATION_SPEED = 0.005; // Light rotation speed
+
+  // Sphere parameters
+  const SPHERE_GROWTH_FACTOR = 2.5; // Increased from 1.5 for more dramatic growth
+  const SPHERE_GROWTH_SPEED = 0.0017; // Reduced by 3x from 0.005 for slower growth
+  const SPHERE_MIN_TRANSPARENCY = 0.08; // Reduced from 0.1 (20% more transparent)
+  const SPHERE_MAX_TRANSPARENCY = 0.4; // Reduced from 0.5 (20% more transparent)
+  const SPHERE_SIZE_MULTIPLIER = 10.0; // Make spheres 10 times bigger (increased from 5)
+
+  // Cube parameters
+  const CUBE_SIZE_MULTIPLIER = 10.0; // Make cubes 10 times bigger
+
+  // Enhanced lighting objects
+  let lightingBars: any[] = [];
+
+  // Godray shader parameters
+  const godrayParams = {
+    density: 1.0, // Doubled from 0.5
+    maxDensity: 1.6, // Doubled from 0.8
+    distanceAttenuation: 2.0,
+    raymarchSteps: 30, // Increased from 20 for better quality
+    lightPos: new THREE.Vector3(0, 10, 0),
+    noiseResolution: new THREE.Vector2(256, 256),
+    texelSizeY: 0.01,
+    lightCameraNear: 0.1,
+    lightCameraFar: 100,
+    near: 0.1,
+    far: 1000,
+  };
+
+  // Load shader files
+  let godrayVertexShader;
+  let godrayFragmentShader;
+
+  // Simplified godray shader for spheres
+  const simplifiedGodrayVertexShader = `
+    varying vec3 vNormal;
+    varying vec3 vWorldPosition;
+    varying vec3 vViewPosition;
+    varying vec2 vUv;
+    
+    void main() {
+      vUv = uv;
+      vNormal = normalize(normalMatrix * normal);
+      vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+      vWorldPosition = worldPosition.xyz;
+      
+      vec4 mvPosition = viewMatrix * worldPosition;
+      vViewPosition = -mvPosition.xyz;
+      
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `;
+
+  const simplifiedGodrayFragmentShader = `
+    uniform vec3 color;
+    uniform float time;
+    uniform vec3 lightPos;
+    uniform float transparency;
+    
+    varying vec3 vNormal;
+    varying vec3 vWorldPosition;
+    varying vec3 vViewPosition;
+    varying vec2 vUv;
+    
+    void main() {
+      // Fresnel effect for edge glow
+      vec3 viewDirection = normalize(vViewPosition);
+      float fresnel = pow(1.0 - abs(dot(vNormal, viewDirection)), 3.0);
+      
+      // Light ray effect
+      vec3 lightDir = normalize(lightPos - vWorldPosition);
+      float lightIntensity = pow(max(0.0, dot(vNormal, lightDir)), 2.0);
+      
+      // Pulsating glow
+      float pulse = 0.5 + 0.5 * sin(time * 2.0);
+      
+      // God ray effect - doubled energy
+      float rayEffect = 0.0;
+      float steps = 15.0; // Increased from 10 for better quality
+      vec3 rayStart = vWorldPosition;
+      vec3 rayEnd = lightPos;
+      vec3 rayDir = normalize(rayEnd - rayStart);
+      float rayLength = distance(rayEnd, rayStart);
+      
+      for(float i = 0.0; i < steps; i++) {
+        float t = i / steps;
+        vec3 samplePoint = mix(rayStart, rayEnd, t);
+        float distFromLight = distance(samplePoint, lightPos);
+        float distFactor = 1.0 - (distFromLight / rayLength);
+        
+        // Add more intensity when ray aligns with view direction
+        float alignment = pow(max(0.0, dot(rayDir, viewDirection)), 4.0);
+        
+        rayEffect += distFactor * alignment * 0.2; // Doubled from 0.1
+      }
+      
+      // Volumetric light effect - doubled energy
+      float volumetricEffect = pow(max(0.0, dot(viewDirection, lightDir)), 4.0) * 1.0; // Doubled from 0.5
+      
+      // Combine effects
+      vec3 glowColor = color * (fresnel * 3.0 + lightIntensity * 1.0); // Doubled intensity
+      glowColor *= 0.8 + 0.8 * pulse; // Increased pulse effect
+      
+      // Add ray effects - doubled energy
+      glowColor += color * rayEffect * pulse * 2.0;
+      glowColor += color * volumetricEffect * pulse * 2.0;
+      
+      // Final color with dynamic transparency
+      gl_FragColor = vec4(glowColor, fresnel * 0.3 + transparency);
+    }
+  `;
+
+  // Camera rotation parameters
+  const CAMERA_ROTATION_SPEED_X = 0.00005; // Slowed down for very slow movement
+  const CAMERA_ROTATION_SPEED_Y = 0.00007; // Slowed down for very slow movement
+  const CAMERA_ROTATION_SPEED_Z = 0.00003; // Slowed down for very slow movement
+  const CAMERA_ROTATION_RADIUS_MIN = 8; // Minimum radius
+  const CAMERA_ROTATION_RADIUS_MAX = 20; // Maximum radius (reduced from 40 to be closer)
+  const CAMERA_INERTIA = 0.98; // Camera inertia factor
+  const CAMERA_MAX_DISTANCE = 100; // Maximum distance from origin in any direction
+  let cameraRotationAngle = 0; // Current camera rotation angle
+  let cameraAutoRotationEnabled = true; // Flag to enable/disable auto rotation
+  let cameraVelocity = new THREE.Vector3(0, 0, 0); // Camera velocity for inertia
+  let cameraTargetPosition = new THREE.Vector3(0, 0, 0); // Target position for smooth movement
+
+  // HUD parameters
+  let hudElement: HTMLElement | null;
+  let hudVisible = true;
+
+  // Create a lighting bar with dynamic properties
+  const createLightingBar = (index: number) => {
+    // Create a cylinder geometry for the lighting bar
+    const height = Math.random() * 4 + 2;
+    const radius = Math.random() * 0.3 + 0.1;
+    const geometry = new THREE.CylinderGeometry(radius, radius, height, 16, 1);
+
+    // Create a material with random color
+    const hue = Math.random();
+    const saturation = 0.9;
+    const lightness = 0.6;
+    const color = new THREE.Color().setHSL(hue, saturation, lightness);
+
+    // Create emissive material for glow effect
+    const material = new THREE.MeshPhongMaterial({
+      color: color,
+      emissive: color.clone(),
+      emissiveIntensity: 0.8,
+      transparent: true,
+      opacity: 0.7,
+      shininess: 100,
+    });
+
+    // Create mesh
+    const mesh = new THREE.Mesh(geometry, material);
+
+    // Random position within bounds
+    mesh.position.set(
+      (Math.random() - 0.5) * SPACE_BOUNDS * 0.5,
+      (Math.random() - 0.5) * SPACE_BOUNDS * 0.5,
+      (Math.random() - 0.5) * SPACE_BOUNDS * 0.5,
+    );
+
+    // Random rotation
+    mesh.rotation.set(
+      Math.random() * Math.PI,
+      Math.random() * Math.PI,
+      Math.random() * Math.PI,
+    );
+
+    // Add point light at the center of the bar
+    const light = new THREE.PointLight(color, 1, 10);
+    light.position.set(0, 0, 0);
+    mesh.add(light);
+
+    // Random velocity for movement - ensure all bars move
+    const velocity = new THREE.Vector3(
+      (Math.random() - 0.5) * MIN_SPEED * 2 || MIN_SPEED * 0.5, // Ensure non-zero
+      (Math.random() - 0.5) * MIN_SPEED * 2 || MIN_SPEED * 0.5,
+      (Math.random() - 0.5) * MIN_SPEED * 2 || MIN_SPEED * 0.5,
+    );
+
+    // Random rotation velocity
+    const rotationVelocity = new THREE.Vector3(
+      (Math.random() - 0.5) * LIGHT_ROTATION_SPEED * 2,
+      (Math.random() - 0.5) * LIGHT_ROTATION_SPEED * 2,
+      (Math.random() - 0.5) * LIGHT_ROTATION_SPEED * 2,
+    );
+
+    // Initial scale
+    const initialScale = new THREE.Vector3(1, 1, 1);
+
+    // Add to scene
+    scene.add(mesh);
+
+    // Calculate frequency for color changes
+    const frequency = BASE_FREQUENCY + index * FREQUENCY_STEP * 1.5;
+
+    return {
+      mesh,
+      light,
+      velocity,
+      rotationVelocity,
+      initialScale,
+      frequency,
+      color,
+      expansionState: 0, // 0 to 1 for expansion animation
+      expansionDirection: 1, // 1 for expanding, -1 for contracting
+      lastUpdate: Date.now(),
+    };
+  };
+
+  // Update lighting bars
+  const updateLightingBars = (deltaTime: number) => {
+    const now = Date.now();
+
+    lightingBars.forEach((bar) => {
+      // Move the bar
+      bar.mesh.position.x += bar.velocity.x * deltaTime;
+      bar.mesh.position.y += bar.velocity.y * deltaTime;
+      bar.mesh.position.z += bar.velocity.z * deltaTime;
+
+      // Rotate the bar
+      bar.mesh.rotation.x += bar.rotationVelocity.x * deltaTime;
+      bar.mesh.rotation.y += bar.rotationVelocity.y * deltaTime;
+      bar.mesh.rotation.z += bar.rotationVelocity.z * deltaTime;
+
+      // Update expansion state
+      bar.expansionState += bar.expansionDirection * 0.005 * deltaTime;
+
+      // Reverse direction at limits
+      if (bar.expansionState >= 1) {
+        bar.expansionDirection = -1;
+        bar.expansionState = 1;
+      } else if (bar.expansionState <= 0) {
+        bar.expansionDirection = 1;
+        bar.expansionState = 0;
+      }
+
+      // Calculate expansion scale
+      const expansionScale =
+        1 + (LIGHT_EXPANSION_FACTOR - 1) * bar.expansionState;
+      bar.mesh.scale.set(expansionScale, expansionScale, expansionScale);
+
+      // Update light color based on expansion (pitch relationship)
+      const hueShift = bar.expansionState * 0.2; // Shift hue by up to 0.2
+      const newHue = (bar.color.getHSL({}).h + hueShift) % 1;
+      const newColor = new THREE.Color().setHSL(
+        newHue,
+        bar.color.getHSL({}).s,
+        bar.color.getHSL({}).l + bar.expansionState * 0.2, // Increase lightness with expansion
       );
-      composer.addPass(bloomPass);
+
+      // Apply new color to light and material
+      bar.light.color.copy(newColor);
+      bar.mesh.material.emissive.copy(newColor);
+
+      // Adjust light intensity based on expansion
+      bar.light.intensity = 0.5 + bar.expansionState * 2;
+
+      // Boundary checks with bounce
+      const halfBounds = SPACE_BOUNDS / 2;
+
+      if (Math.abs(bar.mesh.position.x) > halfBounds) {
+        bar.velocity.x *= -1;
+        bar.mesh.position.x = Math.sign(bar.mesh.position.x) * halfBounds;
+      }
+
+      if (Math.abs(bar.mesh.position.y) > halfBounds) {
+        bar.velocity.y *= -1;
+        bar.mesh.position.y = Math.sign(bar.mesh.position.y) * halfBounds;
+      }
+
+      if (Math.abs(bar.mesh.position.z) > halfBounds) {
+        bar.velocity.z *= -1;
+        bar.mesh.position.z = Math.sign(bar.mesh.position.z) * halfBounds;
+      }
+    });
+  };
+
+  // Initialize lighting bars
+  const initLightingBars = () => {
+    // Clear existing bars
+    lightingBars.forEach((bar) => {
+      if (bar.mesh) scene.remove(bar.mesh);
+    });
+
+    lightingBars = [];
+
+    // Create new bars
+    const barCount = 5;
+    for (let i = 0; i < barCount; i++) {
+      lightingBars.push(createLightingBar(i));
+    }
+
+    console.log(`Created ${lightingBars.length} lighting bars`);
+  };
+
+  // Create a spatial audio object with random properties
+  const createAudioObject = (index: number) => {
+    // Create a sphere geometry with higher detail for better shader effects
+    const radius = (Math.random() * 0.8 + 0.4) * SPHERE_SIZE_MULTIPLIER; // 10x larger radius
+    const geometry = new THREE.SphereGeometry(radius, 32, 32);
+
+    // Create matcap material for translucent spheres
+    const matcapTexture = new THREE.TextureLoader().load("/matcap/bluew.jpg");
+    const matcapMaterial = new THREE.MeshMatcapMaterial({
+      matcap: matcapTexture,
+      transparent: true,
+      opacity: 0.3, // 70% translucent
+      side: THREE.DoubleSide,
+    });
+
+    // Create godray shader material
+    const godrayMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        time: { value: 0 },
+        density: { value: godrayParams.density },
+        maxDensity: { value: godrayParams.maxDensity },
+        lightPos: { value: godrayParams.lightPos.clone() },
+        raymarchSteps: { value: godrayParams.raymarchSteps },
+        color: { value: new THREE.Color() },
+        transparency: { value: 0.5 }, // Default transparency
+      },
+      vertexShader: `
+        varying vec3 vPosition;
+        varying vec2 vUv;
+        
+        void main() {
+          vPosition = position;
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float time;
+        uniform float density;
+        uniform float maxDensity;
+        uniform vec3 lightPos;
+        uniform int raymarchSteps;
+        uniform vec3 color;
+        uniform float transparency;
+        
+        varying vec3 vPosition;
+        varying vec2 vUv;
+        
+        void main() {
+          // Calculate direction from fragment to light
+          vec3 lightDir = normalize(lightPos - vPosition);
+          
+          // Calculate view ray
+          vec3 viewVector = normalize(vPosition - cameraPosition);
+          
+          // Calculate density based on distance and angle
+          float dist = length(vPosition - lightPos);
+          float attenuation = 1.0 / (1.0 + 0.1 * dist + 0.01 * dist * dist);
+          float pulse = sin(time * 0.5 + dist * 0.2) * 0.5 + 0.5;
+          
+          // Volumetric lighting effect
+          float density = min(density * (1.0 + pulse), maxDensity);
+          float rayDensity = max(0.0, dot(viewVector, lightDir));
+          rayDensity = pow(rayDensity, 2.0) * density * attenuation;
+          
+          // Apply color with transparency
+          vec3 finalColor = color * rayDensity;
+          float alpha = min(rayDensity * 2.0, 1.0) * transparency;
+          
+          // Output final color with transparency
+          gl_FragColor = vec4(finalColor, alpha);
+        }
+      `,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+
+    // Decide which material to use (70% chance for matcap, 30% for godray)
+    const useMaterial = Math.random() > 0.7 ? godrayMaterial : matcapMaterial;
+
+    // Create mesh with the selected material
+    const mesh = new THREE.Mesh(geometry, useMaterial);
+
+    // Position the sphere using spherical coordinates for better distribution
+    const radius3D = SPACE_BOUNDS * 0.5 * (0.3 + Math.random() * 0.7);
+    const theta = Math.random() * Math.PI * 2; // Random angle around Y axis
+    const phi = Math.acos(2 * Math.random() - 1); // Random angle from Y axis
+
+    mesh.position.set(
+      radius3D * Math.sin(phi) * Math.cos(theta),
+      radius3D * Math.cos(phi),
+      radius3D * Math.sin(phi) * Math.sin(theta),
+    );
+
+    // Add to scene
+    scene.add(mesh);
+
+    // Generate random color with higher saturation and lightness
+    const hue = Math.random();
+    const saturation = 0.7 + Math.random() * 0.3; // Higher saturation (0.7-1.0)
+    const lightness = 0.6 + Math.random() * 0.3; // Higher lightness (0.6-0.9)
+    const color = new THREE.Color().setHSL(hue, saturation, lightness);
+
+    // Set color for godray material
+    if (useMaterial === godrayMaterial) {
+      useMaterial.uniforms.color.value = color;
+    }
+
+    // Create positional audio
+    const sound = new THREE.PositionalAudio(listener);
+
+    // Calculate microtonal frequency
+    const frequency = BASE_FREQUENCY + index * FREQUENCY_STEP;
+
+    // Create oscillator
+    const oscillator = listener.context.createOscillator();
+    const gainNode = listener.context.createGain();
+
+    // Randomize oscillator type
+    const oscillatorTypes = ["sine", "square", "sawtooth", "triangle"];
+    const oscillatorType =
+      oscillatorTypes[Math.floor(Math.random() * oscillatorTypes.length)];
+    oscillator.type = oscillatorType;
+
+    // Set frequency and connect nodes
+    oscillator.frequency.value = frequency;
+    oscillator.connect(gainNode);
+    gainNode.connect(sound.panner);
+
+    // Set initial gain to 0
+    gainNode.gain.value = 0;
+
+    // Start oscillator
+    oscillator.start(0);
+
+    // Add sound to mesh
+    mesh.add(sound);
+
+    // Create random velocity
+    const velocity = new THREE.Vector3(
+      (Math.random() - 0.5) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED,
+      (Math.random() - 0.5) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED,
+      (Math.random() - 0.5) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED,
+    );
+
+    // Create audio object with properties
+    return {
+      mesh,
+      sound,
+      oscillator,
+      gainNode,
+      velocity,
+      initialPosition: mesh.position.clone(),
+      initialDistance: mesh.position.length(),
+      targetDistance: mesh.position.length() * (0.5 + Math.random() * 0.5), // Target between 50-100% of initial distance
+      distancePhase: Math.random() * Math.PI * 2, // Random phase for distance oscillation
+      distanceSpeed: 0.0002 + Math.random() * 0.0003, // Random speed for distance oscillation
+      pulsePhase: Math.random() * Math.PI * 2, // Random phase for growth pulsation
+      growthSpeed: SPHERE_GROWTH_SPEED * (0.7 + Math.random() * 0.6), // Individualized growth speed
+      material: useMaterial,
+    };
+  };
+
+  // Update audio object positions and handle collisions
+  const updateAudioObjects = (deltaTime: number) => {
+    // Skip if no listener
+    if (!listener) return;
+
+    const currentTime = Date.now();
+
+    // Update moving light position for godray effect
+    godrayParams.lightPos.x =
+      Math.sin(currentTime * 0.0005) * SPACE_BOUNDS * 0.3;
+    godrayParams.lightPos.y =
+      Math.cos(currentTime * 0.0003) * SPACE_BOUNDS * 0.3 + SPACE_BOUNDS * 0.2;
+    godrayParams.lightPos.z =
+      Math.sin(currentTime * 0.0007) * SPACE_BOUNDS * 0.3;
+
+    // Update each object
+    for (let i = 0; i < audioObjects.length; i++) {
+      const obj = audioObjects[i];
+      const mesh = obj.mesh;
+      const velocity = obj.velocity;
+
+      // Update shader uniforms
+      if (obj.material && obj.material.uniforms) {
+        obj.material.uniforms.time.value = currentTime * 0.001;
+        obj.material.uniforms.lightPos.value = godrayParams.lightPos;
+
+        // Dynamic transparency based on growth state and a sine wave
+        const transparencyWave =
+          Math.sin(currentTime * 0.001 + obj.pulsePhase) * 0.5 + 0.5;
+        const dynamicTransparency =
+          SPHERE_MIN_TRANSPARENCY +
+          (SPHERE_MAX_TRANSPARENCY - SPHERE_MIN_TRANSPARENCY) *
+            transparencyWave;
+        obj.material.uniforms.transparency.value = dynamicTransparency;
+      }
+
+      // Update growth state with individual speed and non-linear dynamics
+      const growthDelta = obj.growthSpeed * deltaTime;
+      // Add some sine wave modulation to growth for more organic movement
+      const growthModulation =
+        Math.sin(currentTime * 0.002 + obj.pulsePhase) * 0.3;
+      obj.growthSpeed += growthDelta * (1 + growthModulation);
+
+      // Calculate growth scale with non-linear easing
+      const growthScale =
+        obj.growthSpeed < 0.5
+          ? 4 * obj.growthSpeed * obj.growthSpeed * obj.growthSpeed
+          : 1 - Math.pow(-2 * obj.growthSpeed + 2, 3) / 2;
+
+      mesh.scale.set(growthScale, growthScale, growthScale);
+
+      // Apply velocity with some random jitter for more organic movement
+      const jitter = new THREE.Vector3(
+        (Math.random() - 0.5) * 0.001 * deltaTime, // Reduced jitter for smoother movement
+        (Math.random() - 0.5) * 0.001 * deltaTime,
+        (Math.random() - 0.5) * 0.001 * deltaTime,
+      );
+
+      mesh.position.x += (velocity.x + jitter.x) * deltaTime;
+      mesh.position.y += (velocity.y + jitter.y) * deltaTime;
+      mesh.position.z += (velocity.z + jitter.z) * deltaTime;
+
+      // Calculate distance from center
+      const distanceToCenter = mesh.position.length();
+      const directionToCenter = mesh.position.clone().normalize();
+
+      // Distance oscillation effect - makes objects move away and come back
+      const distanceOscillation = Math.sin(
+        currentTime * obj.distanceSpeed + obj.distancePhase,
+      );
+      const targetDistance =
+        obj.initialDistance * (0.5 + 0.5 * distanceOscillation);
+
+      // Apply forces based on distance
+      if (distanceToCenter < targetDistance - 10) {
+        // Push away from center if too close to target
+        velocity.x +=
+          directionToCenter.x * REPULSION_FORCE * distanceToCenter * deltaTime;
+        velocity.y +=
+          directionToCenter.y * REPULSION_FORCE * distanceToCenter * deltaTime;
+        velocity.z +=
+          directionToCenter.z * REPULSION_FORCE * distanceToCenter * deltaTime;
+      } else if (distanceToCenter > targetDistance + 10) {
+        // Pull toward center if too far from target
+        velocity.x -=
+          directionToCenter.x * ATTRACTION_FORCE * distanceToCenter * deltaTime;
+        velocity.y -=
+          directionToCenter.y * ATTRACTION_FORCE * distanceToCenter * deltaTime;
+        velocity.z -=
+          directionToCenter.z * ATTRACTION_FORCE * distanceToCenter * deltaTime;
+      }
+
+      // Apply damping
+      velocity.multiplyScalar(DAMPING);
+
+      // Ensure minimum speed
+      const speed = velocity.length();
+      if (speed < MIN_SPEED) {
+        velocity.normalize().multiplyScalar(MIN_SPEED);
+      }
+
+      // Boundary collision detection and response
+      const halfBounds = SPACE_BOUNDS / 2;
+
+      // X boundaries
+      if (mesh.position.x > halfBounds) {
+        mesh.position.x = halfBounds;
+        velocity.x *= -1.1; // Bounce with slight energy gain
+        playCollisionSound(obj, 1.0);
+      } else if (mesh.position.x < -halfBounds) {
+        mesh.position.x = -halfBounds;
+        velocity.x *= -1.1;
+        playCollisionSound(obj, 1.0);
+      }
+
+      // Y boundaries
+      if (mesh.position.y > halfBounds) {
+        mesh.position.y = halfBounds;
+        velocity.y *= -1.1;
+        playCollisionSound(obj, 1.0);
+      } else if (mesh.position.y < -halfBounds) {
+        mesh.position.y = -halfBounds;
+        velocity.y *= -1.1;
+        playCollisionSound(obj, 1.0);
+      }
+
+      // Z boundaries
+      if (mesh.position.z > halfBounds) {
+        mesh.position.z = halfBounds;
+        velocity.z *= -1.1;
+        playCollisionSound(obj, 1.0);
+      } else if (mesh.position.z < -halfBounds) {
+        mesh.position.z = -halfBounds;
+        velocity.z *= -1.1;
+        playCollisionSound(obj, 1.0);
+      }
+
+      // Object-object collision detection
+      for (let j = i + 1; j < audioObjects.length; j++) {
+        const otherObj = audioObjects[j];
+        const otherMesh = otherObj.mesh;
+
+        // Calculate distance between objects
+        const distance = mesh.position.distanceTo(otherMesh.position);
+        const minDistance = obj.radius + otherObj.radius;
+
+        // Check for collision
+        if (
+          distance < minDistance &&
+          currentTime - obj.lastCollision > obj.collisionCooldown &&
+          currentTime - otherObj.lastCollision > otherObj.collisionCooldown
+        ) {
+          // Calculate collision response
+          const collisionNormal = new THREE.Vector3()
+            .subVectors(mesh.position, otherMesh.position)
+            .normalize();
+
+          // Apply impulse
+          const relativeVelocity = new THREE.Vector3().subVectors(
+            obj.velocity,
+            otherObj.velocity,
+          );
+
+          const impulseStrength = relativeVelocity.dot(collisionNormal) * 1.5;
+
+          // Apply impulse to both objects
+          obj.velocity.sub(
+            collisionNormal.clone().multiplyScalar(impulseStrength),
+          );
+          otherObj.velocity.add(
+            collisionNormal.clone().multiplyScalar(impulseStrength),
+          );
+
+          // Prevent objects from sticking together
+          const correction = (minDistance - distance) * 0.5;
+          mesh.position.add(collisionNormal.clone().multiplyScalar(correction));
+          otherMesh.position.sub(
+            collisionNormal.clone().multiplyScalar(correction),
+          );
+
+          // Play collision sounds
+          playCollisionSound(obj, 0.8);
+          playCollisionSound(otherObj, 0.8);
+
+          // Update collision timestamps
+          obj.lastCollision = currentTime;
+          otherObj.lastCollision = currentTime;
+        }
+      }
+    }
+  };
+
+  // Play a collision sound effect
+  const playCollisionSound = (obj: any, intensity: number) => {
+    if (!obj.sound || !obj.oscillator) return;
+
+    // Create a brief frequency modulation
+    const currentFreq = obj.frequency;
+    const detune = obj.oscillator.detune.value;
+
+    // Quick pitch bend up and down
+    const now = listener.context.currentTime;
+    obj.oscillator.detune.cancelScheduledValues(now);
+    obj.oscillator.detune.setValueAtTime(detune, now);
+    obj.oscillator.detune.linearRampToValueAtTime(
+      detune + 100 * intensity,
+      now + 0.05,
+    );
+    obj.oscillator.detune.linearRampToValueAtTime(
+      detune - 50 * intensity,
+      now + 0.1,
+    );
+    obj.oscillator.detune.linearRampToValueAtTime(detune, now + 0.2);
+
+    // Brief volume bump
+    const currentGain = obj.gainNode.gain.value;
+    obj.gainNode.gain.cancelScheduledValues(now);
+    obj.gainNode.gain.setValueAtTime(currentGain, now);
+    obj.gainNode.gain.linearRampToValueAtTime(
+      Math.min(0.3, currentGain + 0.2 * intensity),
+      now + 0.02,
+    );
+    obj.gainNode.gain.linearRampToValueAtTime(currentGain, now + 0.2);
+  };
+
+  // Initialize audio objects
+  const initAudioObjects = () => {
+    // Clear any existing objects
+    audioObjects.forEach((obj) => {
+      if (obj.mesh) scene.remove(obj.mesh);
+      if (obj.oscillator) obj.oscillator.stop();
+    });
+
+    audioObjects = [];
+
+    // Create new objects
+    const objectCount = Math.floor(Math.random() * 5) + 10; // 10-15 objects
+
+    for (let i = 0; i < objectCount; i++) {
+      audioObjects.push(createAudioObject(i));
+    }
+
+    console.log(`Created ${audioObjects.length} spatial audio objects`);
+  };
+
+  const setupPostProcessing = () => {
+    const renderPass = new RenderPass(scene, camera);
+    composer = new EffectComposer(renderer);
+    composer.addPass(renderPass);
+
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      1.5, // strength
+      0.4, // radius
+      0.85, // threshold
+    );
+    composer.addPass(bloomPass);
+  };
+
+  const setupControls = () => {
+    // Create orbit controls
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.screenSpacePanning = false;
+    controls.minDistance = 3; // Allow closer zoom
+    controls.maxDistance = 30; // Limit max zoom out
+    controls.maxPolarAngle = Math.PI; // Allow full vertical rotation
+    controls.enablePan = true;
+    controls.panSpeed = 0.5;
+    controls.rotateSpeed = 0.5;
+
+    // Disable mousewheel for Y-axis to reserve it for page scrolling
+    controls.mouseButtons = {
+      LEFT: THREE.MOUSE.ROTATE,
+      MIDDLE: THREE.MOUSE.DOLLY,
+      RIGHT: THREE.MOUSE.PAN,
     };
 
-    const setupControls = () => {
-      controls = new OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.05;
-      controls.screenSpacePanning = false;
-      controls.minDistance = 5;
-      controls.maxDistance = 50;
-      controls.maxPolarAngle = Math.PI / 2;
-      controls.minPolarAngle = Math.PI / 2; // Lock vertical rotation
-      controls.enableZoom = false; // Disable zoom
-      controls.enablePan = false; // Disable panning
-      controls.rotateSpeed = 0.5; // Adjust rotation speed
+    // Disable scroll to zoom to reserve mousewheel for page scrolling
+    controls.enableZoom = false;
 
-      // WASD Controls with audio listener update
-      const onKeyDown = (event: KeyboardEvent) => {
-        let moved = false;
-        switch (event.code) {
-          case 'KeyW':
-            camera.position.z -= 1;
-            moved = true;
-            break;
-          case 'KeyS':
-            camera.position.z += 1;
-            moved = true;
-            break;
-          case 'KeyA':
-            camera.position.x -= 1;
-            moved = true;
-            break;
-          case 'KeyD':
-            camera.position.x += 1;
-            moved = true;
-            break;
-        }
-        
-        if (moved) {
-          // Update camera and listener orientation
-          camera.updateMatrixWorld();
+    // Store last interaction time
+    camera.userData.lastUserInteraction = Date.now();
+    camera.userData.userInteractionTimeout = 5000; // 5 seconds
+
+    // WASD Controls with audio listener update and inertia
+    const onKeyDown = (event: KeyboardEvent) => {
+      let moved = false;
+      const moveSpeed = 0.5; // Reduced for slower movement
+
+      // Add inertia object if not present
+      if (!camera.userData.inertia) {
+        camera.userData.inertia = new THREE.Vector3(0, 0, 0);
+      }
+
+      switch (event.key) {
+        case "w":
+        case "W":
+          camera.userData.inertia.z -= moveSpeed;
+          moved = true;
+          break;
+        case "s":
+        case "S":
+          camera.userData.inertia.z += moveSpeed;
+          moved = true;
+          break;
+        case "a":
+        case "A":
+          camera.userData.inertia.x -= moveSpeed;
+          moved = true;
+          break;
+        case "d":
+        case "D":
+          camera.userData.inertia.x += moveSpeed;
+          moved = true;
+          break;
+        case "q":
+        case "Q":
+          camera.userData.inertia.y += moveSpeed;
+          moved = true;
+          break;
+        case "e":
+        case "E":
+          camera.userData.inertia.y -= moveSpeed;
+          moved = true;
+          break;
+      }
+
+      if (moved) {
+        // Update last interaction time
+        camera.userData.lastUserInteraction = Date.now();
+        cameraAutoRotationEnabled = false;
+
+        // Update camera and listener orientation
+        camera.updateMatrixWorld();
+        if (listener) {
           listener.updateMatrixWorld();
         }
-      };
-      document.addEventListener('keydown', onKeyDown);
-
-      // Update audio listener on orbit controls change
-      controls.addEventListener('change', () => {
-        camera.updateMatrixWorld();
-        listener.updateMatrixWorld();
-      });
-    };
-
-    const setupAudio = async () => {
-      try {
-        // Create and attach audio listener to camera
-        listener = new THREE.AudioListener();
-        camera.add(listener);
-
-        // Get audio context and ensure it's running
-        const audioContext = listener.context;
-        
-        // Try to resume the context - needed for browsers that require user interaction
-        if (audioContext.state === 'suspended') {
-          await audioContext.resume();
-        }
-
-        // Wait for the context to be running
-        if (audioContext.state !== 'running') {
-          await new Promise((resolve) => {
-            const checkState = () => {
-              if (audioContext.state === 'running') {
-                resolve(true);
-              } else {
-                requestAnimationFrame(checkState);
-              }
-            };
-            checkState();
-          });
-        }
-
-        console.log('Audio context is running:', audioContext.state);
-
-        // Create a shared ConvolverNode for reverb
-        const convolver = audioContext.createConvolver();
-        const reverbTime = 140.5; // Reverb duration in seconds
-        const sampleRate = audioContext.sampleRate;
-        const length = sampleRate * reverbTime;
-        const impulse = audioContext.createBuffer(2, length, sampleRate);
-
-        // Generate an impulse response for the convolver
-        for (let channel = 0; channel < 2; channel++) {
-          const channelData = impulse.getChannelData(channel);
-          for (let i = 0; i < length; i++) {
-            channelData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (sampleRate * 0.1));
-          }
-        }
-
-        convolver.buffer = impulse;
-
-        // Create a GainNode to control the overall wet mix
-        reverbGain = audioContext.createGain(); // Initialize reverbGain here
-        reverbGain.gain.value = 1; // Adjust this value for the reverb effect mix
-
-        // Connect the convolver to the gain node, then to the destination
-        convolver.connect(reverbGain);
-        reverbGain.connect(audioContext.destination);
-
-        // Store the reverb node for modules to use
-        reverb = convolver;
-        console.log('Audio setup complete with reverb node.');
-      } catch (error) {
-        console.error('Error setting up audio:', error);
       }
     };
 
-    const handleScroll = () => {
-      // Get scroll position and window height
-      const scrollPosition = window.scrollY;
-      const windowHeight = window.innerHeight;
+    // Add event listeners
+    window.addEventListener("keydown", onKeyDown);
+
+    controls.addEventListener("change", () => {
+      camera.updateMatrixWorld();
+      if (listener) {
+        listener.updateMatrixWorld();
+      }
+
+      // Update last interaction time
+      camera.userData.lastUserInteraction = Date.now();
+      cameraAutoRotationEnabled = false;
+    });
+  };
+
+  const setupAudio = async () => {
+    try {
+      // Create and attach audio listener to camera
+      listener = new THREE.AudioListener();
+      camera.add(listener);
+
+      // Get audio context and ensure it's running
+      const audioContext = listener.context;
+
+      // Force start the audio context without user interaction
+      if (audioContext.state === "suspended") {
+        try {
+          // Create a silent buffer to play
+          const silentBuffer = audioContext.createBuffer(1, 1, 22050);
+          const source = audioContext.createBufferSource();
+          source.buffer = silentBuffer;
+          source.connect(audioContext.destination);
+          source.start(0);
+
+          // Try to resume the context
+          await audioContext.resume();
+          console.log("Forced audio context to start:", audioContext.state);
+        } catch (e) {
+          console.warn("Could not force start audio context:", e);
+        }
+      }
+
+      // Wait for the context to be running
+      if (audioContext.state !== "running") {
+        await new Promise((resolve) => {
+          const checkState = () => {
+            if (audioContext.state === "running") {
+              resolve(true);
+            } else {
+              // Try to resume again
+              audioContext
+                .resume()
+                .catch((e: Error) => console.warn("Resume attempt failed:", e));
+              setTimeout(checkState, 100);
+            }
+          };
+          checkState();
+        });
+      }
+
+      console.log("Audio context is running:", audioContext.state);
+
+      // Create a shared ConvolverNode for reverb
+      const convolver = audioContext.createConvolver();
+      const reverbTime = 421.5; // Reverb duration in seconds - increased 3x (was 140.5)
+      const sampleRate = audioContext.sampleRate;
+      const length = sampleRate * reverbTime;
+      const impulse = audioContext.createBuffer(2, length, sampleRate);
+
+      // Generate an impulse response for the convolver
+      for (let channel = 0; channel < 2; channel++) {
+        const channelData = impulse.getChannelData(channel);
+        for (let i = 0; i < length; i++) {
+          channelData[i] =
+            (Math.random() * 2 - 1) * Math.exp(-i / (sampleRate * 0.1));
+        }
+      }
+
+      convolver.buffer = impulse;
+
+      // Create a GainNode to control the overall wet mix
+      reverbGain = audioContext.createGain();
+      reverbGain.gain.value = 0.7; // Adjusted for the larger reverb (was 1)
+
+      // Connect the convolver to the gain node, then to the destination
+      convolver.connect(reverbGain);
+      reverbGain.connect(audioContext.destination);
+
+      // Store the reverb node for modules to use
+      reverb = convolver;
+      console.log("Audio setup complete with reverb node.");
+
+      // Set up Tone.js master volume
+      initialVolume = Tone.getDestination().volume.value;
+      console.log("Initial Tone.js volume:", initialVolume);
+    } catch (error) {
+      console.error("Error setting up audio:", error);
+    }
+  };
+
+  const handleScroll = () => {
+    // Get scroll position and window height
+    const scrollPosition = window.scrollY;
+    const windowHeight = window.innerHeight;
+
+    // Calculate how far down the page we've scrolled as a percentage
+    // We'll use this to fade out the audio
+    // Using a smaller divisor (windowHeight/3) to make the fade happen faster
+    const scrollPercentage = Math.min(scrollPosition / (windowHeight / 3), 1);
+
+    // Only proceed if Tone.js is started
+    if (toneStarted) {
+      // Adjust Tone.js master volume based on scroll position
+      // Map from 0 to 1 (scroll percentage) to initial volume to -70 (silent)
+      // Using a more aggressive curve with Math.pow for faster initial drop
+      const fadeIntensity = Math.pow(scrollPercentage, 0.7); // Adjust power for curve shape
+      const targetVolume = initialVolume - fadeIntensity * 70;
+
+      // Apply volume change with smoothing
+      if (Math.abs(Tone.getDestination().volume.value - targetVolume) > 0.1) {
+        // Faster ramp time for more immediate effect
+        Tone.getDestination().volume.rampTo(targetVolume, 0.05);
+
+        // Also adjust Three.js audio listener gain if available
+        if (listener && listener.gain) {
+          const listenerGain = 1 - fadeIntensity;
+          listener.gain.gain.value = listenerGain;
+        }
+
+        // Log volume changes for debugging
+        if (Math.abs(lastScrollY - scrollPosition) > 20) {
+          console.log(
+            `Scroll: ${scrollPercentage.toFixed(2)}, Intensity: ${fadeIntensity.toFixed(2)}, Volume: ${targetVolume.toFixed(2)}dB`,
+          );
+          lastScrollY = scrollPosition;
+        }
+      }
+
+      // If we've scrolled more than 50% of our fade threshold, pause any playing sounds
+      if (scrollPercentage > 0.5) {
+        // Optional: pause or stop specific sounds when scrolled far down
+        // This could be implemented if needed
+      }
+    }
+  };
+
+  const setupScene = () => {
+    // Set up renderer
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(0x000000, 0);
+
+    // Position camera at origin
+    camera.position.set(0, 0, 0); // Changed from z=10 to start at origin (0,0,0)
+
+    // Add ambient light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+
+    // Add directional light
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 5, 5);
+    scene.add(directionalLight);
+
+    // Add point light for godray effect
+    const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+    pointLight.position.copy(godrayParams.lightPos);
+    scene.add(pointLight);
+
+    // Create HUD element
+    createHUD();
+
+    // Add event listener for window resize
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      if (composer) {
+        composer.setSize(window.innerWidth, window.innerHeight);
+      }
+    });
+  };
+
+  // Create HUD element to display camera position and rotation
+  const createHUD = () => {
+    hudElement = document.createElement("div");
+    hudElement.style.position = "absolute";
+    hudElement.style.bottom = "20px";
+    hudElement.style.right = "20px";
+    hudElement.style.padding = "10px";
+    hudElement.style.backgroundColor = "transparent";
+    hudElement.style.color = "#aaaaaa";
+    hudElement.style.fontFamily = "monospace";
+    hudElement.style.fontSize = "12px";
+    hudElement.style.borderRadius = "5px";
+    hudElement.style.zIndex = "1000";
+    hudElement.style.pointerEvents = "none"; // Don't interfere with mouse events
+    hudElement.style.textAlign = "right";
+
+    // Add to DOM
+    document.body.appendChild(hudElement);
+
+    // Add toggle key for HUD visibility
+    document.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "h" || e.key === "H") {
+        hudVisible = !hudVisible;
+        if (hudElement) {
+          hudElement.style.display = hudVisible ? "block" : "none";
+        }
+      }
+    });
+  };
+
+  // Update HUD with current camera position and rotation
+  const updateHUD = () => {
+    if (!hudElement || !hudVisible) return;
+
+    // Get camera position
+    const position = camera.position;
+
+    // Get camera rotation in degrees
+    const rotation = new THREE.Euler().setFromQuaternion(camera.quaternion);
+    const rotationDegrees = {
+      x: THREE.MathUtils.radToDeg(rotation.x).toFixed(1),
+      y: THREE.MathUtils.radToDeg(rotation.y).toFixed(1),
+      z: THREE.MathUtils.radToDeg(rotation.z).toFixed(1),
     };
 
-    window.addEventListener("scroll", handleScroll);
+    // Update HUD content
+    hudElement.innerHTML = `
+      ${position.x.toFixed(1)} ${position.y.toFixed(1)} ${position.z.toFixed(1)}<br>
+      ${rotationDegrees.x} ${rotationDegrees.y} ${rotationDegrees.z}
+    `;
+  };
 
-    const initialize = async () => {
-      console.log("Initializing Hero...");
-      // Initialize Tone.js
-      await Tone.start();
-  
-  <div id="three-container" style="width: 100%; height: 100vh; position: block; top: 0; left: 0; z-index: -1; pointer-events: auto; background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%);"></div>
-}
+  const setupModules = () => {
+    // Initialize modules
+    cubeModule = CubeModule();
+    pulseModule = PulseModule();
+
+    // Pass shared resources to modules
+    cubeModule.init(scene, listener, reverb);
+    pulseModule.init(scene, listener, reverb);
+
+    console.log("Modules initialized");
+  };
+
+  // Modify cubeModule to add movement
+  const enhanceCubeModule = () => {
+    if (!cubeModule || !cubeModule.getCubes) return;
+
+    // Get the cubes from the cubeModule
+    const cubes = cubeModule.getCubes();
+
+    // Add velocity to each cube
+    cubes.forEach((cube: any) => {
+      if (!cube.userData) cube.userData = {};
+
+      // Add random velocity if not already present
+      if (!cube.userData.velocity) {
+        cube.userData.velocity = new THREE.Vector3(
+          (Math.random() - 0.5) * 0.02,
+          (Math.random() - 0.5) * 0.02,
+          (Math.random() - 0.5) * 0.02,
+        );
+      }
+
+      // Scale cube size
+      cube.scale.set(
+        CUBE_SIZE_MULTIPLIER,
+        CUBE_SIZE_MULTIPLIER,
+        CUBE_SIZE_MULTIPLIER,
+      );
+
+      // Apply matcap material for translucency
+      if (cube.material) {
+        // Create matcap texture
+        const matcapTexture = new THREE.TextureLoader().load(
+          "/matcap/bluew.jpg",
+        );
+
+        // Create matcap material
+        const matcapMaterial = new THREE.MeshMatcapMaterial({
+          matcap: matcapTexture,
+          transparent: true,
+          opacity: 0.3, // 70% translucent
+          side: THREE.DoubleSide,
+        });
+
+        // Apply material
+        cube.material = matcapMaterial;
+      }
+    });
+  };
+
+  // Update cubes from cubeModule
+  const updateCubes = (deltaTime: number) => {
+    if (!cubeModule || !cubeModule.getCubes) return;
+
+    const cubes = cubeModule.getCubes();
+    if (!cubes || !cubes.length) return;
+
+    cubes.forEach((cube: any) => {
+      if (!cube.userData || !cube.userData.velocity) return;
+
+      // Move the cube
+      cube.position.x += cube.userData.velocity.x * deltaTime;
+      cube.position.y += cube.userData.velocity.y * deltaTime;
+      cube.position.z += cube.userData.velocity.z * deltaTime;
+
+      // Rotate the cube
+      if (cube.userData.rotationVelocity) {
+        cube.rotation.x += cube.userData.rotationVelocity.x * deltaTime;
+        cube.rotation.y += cube.userData.rotationVelocity.y * deltaTime;
+        cube.rotation.z += cube.userData.rotationVelocity.z * deltaTime;
+      }
+
+      // Boundary checks with bounce
+      const cubeBounds = SPACE_BOUNDS / 4; // Keep cubes in a smaller area
+      const halfBounds = cubeBounds / 2;
+
+      if (Math.abs(cube.position.x) > halfBounds) {
+        cube.userData.velocity.x *= -1;
+        cube.position.x = Math.sign(cube.position.x) * halfBounds;
+      }
+
+      if (Math.abs(cube.position.y) > halfBounds) {
+        cube.userData.velocity.y *= -1;
+        cube.position.y = Math.sign(cube.position.y) * halfBounds;
+      }
+
+      if (Math.abs(cube.position.z) > halfBounds) {
+        cube.userData.velocity.z *= -1;
+        cube.position.z = Math.sign(cube.position.z) * halfBounds;
+      }
+    });
+  };
+
+  const animate = function () {
+    requestAnimationFrame(animate);
+
+    // Calculate delta time for smooth animation
+    const now = Date.now();
+    const deltaTime = Math.min(
+      (now - ((animate as any).lastTime || now)) / 16.6,
+      2,
+    ); // Cap at 2x normal speed
+    (animate as any).lastTime = now;
+
+    // Update audio objects
+    updateAudioObjects(deltaTime);
+
+    // Update lighting bars
+    updateLightingBars(deltaTime);
+
+    // Update cubes
+    updateCubes(deltaTime);
+
+    // Check if user interaction timeout has passed
+    const userInteractionElapsed = now - camera.userData.lastUserInteraction;
+    const autoRotationResumed =
+      userInteractionElapsed > camera.userData.userInteractionTimeout;
+
+    // Apply inertia to camera movement from WASD controls
+    if (camera.userData.inertia) {
+      // Apply inertia with damping
+      camera.position.x += camera.userData.inertia.x * deltaTime;
+      camera.position.y += camera.userData.inertia.y * deltaTime;
+      camera.position.z += camera.userData.inertia.z * deltaTime;
+
+      // Dampen inertia
+      camera.userData.inertia.multiplyScalar(0.95);
+
+      // Limit camera position to stay within bounds
+      camera.position.x = THREE.MathUtils.clamp(
+        camera.position.x,
+        -CAMERA_MAX_DISTANCE,
+        CAMERA_MAX_DISTANCE,
+      );
+      camera.position.y = THREE.MathUtils.clamp(
+        camera.position.y,
+        -CAMERA_MAX_DISTANCE,
+        CAMERA_MAX_DISTANCE,
+      );
+      camera.position.z = THREE.MathUtils.clamp(
+        camera.position.z,
+        -CAMERA_MAX_DISTANCE,
+        CAMERA_MAX_DISTANCE,
+      );
+
+      // Update camera matrix
+      camera.updateMatrixWorld();
+
+      // Update listener position
+      if (listener) {
+        listener.updateMatrixWorld();
+      }
+    }
+
+    // Free camera movement when auto rotation is enabled
+    if (cameraAutoRotationEnabled && autoRotationResumed) {
+      // Update camera rotation angle
+      cameraRotationAngle += deltaTime;
+
+      // Calculate radius with slow oscillation
+      const radiusOscillation =
+        Math.sin(cameraRotationAngle * 0.0001) * 0.5 + 0.5;
+      const currentRadius =
+        CAMERA_ROTATION_RADIUS_MIN +
+        (CAMERA_ROTATION_RADIUS_MAX - CAMERA_ROTATION_RADIUS_MIN) *
+          radiusOscillation;
+
+      // Calculate new camera position based on rotation with 3D movement
+      const x =
+        currentRadius * Math.sin(cameraRotationAngle * CAMERA_ROTATION_SPEED_X);
+      const y = 3 + 5 * Math.sin(cameraRotationAngle * CAMERA_ROTATION_SPEED_Y); // Reduced vertical movement
+      const z =
+        currentRadius * Math.cos(cameraRotationAngle * CAMERA_ROTATION_SPEED_Z);
+
+      // Set target position
+      cameraTargetPosition.set(x, y, z);
+
+      // Apply smooth transition to new position with inertia
+      camera.position.x +=
+        (cameraTargetPosition.x - camera.position.x) * 0.005 * deltaTime;
+      camera.position.y +=
+        (cameraTargetPosition.y - camera.position.y) * 0.005 * deltaTime;
+      camera.position.z +=
+        (cameraTargetPosition.z - camera.position.z) * 0.005 * deltaTime;
+
+      // Add slight random drift for more organic movement
+      camera.position.x += (Math.random() - 0.5) * 0.01 * deltaTime;
+      camera.position.y += (Math.random() - 0.5) * 0.01 * deltaTime;
+      camera.position.z += (Math.random() - 0.5) * 0.01 * deltaTime;
+
+      // Limit camera position to stay within bounds
+      camera.position.x = THREE.MathUtils.clamp(
+        camera.position.x,
+        -CAMERA_MAX_DISTANCE,
+        CAMERA_MAX_DISTANCE,
+      );
+      camera.position.y = THREE.MathUtils.clamp(
+        camera.position.y,
+        -CAMERA_MAX_DISTANCE,
+        CAMERA_MAX_DISTANCE,
+      );
+      camera.position.z = THREE.MathUtils.clamp(
+        camera.position.z,
+        -CAMERA_MAX_DISTANCE,
+        CAMERA_MAX_DISTANCE,
+      );
+
+      // Look at center with slight offset for more interesting view
+      const lookAtOffset = new THREE.Vector3(
+        Math.sin(cameraRotationAngle * 0.0001) * 3, // Reduced from 5
+        Math.cos(cameraRotationAngle * 0.00015) * 3, // Reduced from 5
+        Math.sin(cameraRotationAngle * 0.00012) * 3, // Reduced from 5
+      );
+      camera.lookAt(lookAtOffset.x, lookAtOffset.y, lookAtOffset.z);
+
+      // Update camera matrix
+      camera.updateMatrixWorld();
+
+      // Update listener position
+      if (listener) {
+        listener.updateMatrixWorld();
+      }
+    } else {
+      // Update controls
+      if (controls) {
+        controls.update();
+      }
+    }
+
+    // Update HUD
+    updateHUD();
+
+    // Update TWEEN animations
+    TWEEN.update();
+
+    // Render scene
+    if (composer) {
+      composer.render();
+    } else {
+      renderer.render(scene, camera);
+    }
+  };
+
+  const startVisualExperience = async () => {
+    // Start cube animation
+    await cubeModule.startCubeAnimation();
+
+    // Enhance cubes with movement after a short delay
+    setTimeout(() => {
+      enhanceCubeModule();
+    }, 500);
+
+    // Start pulse animation after a delay
+    setTimeout(async () => {
+      await pulseModule.startPulseAnimation();
+    }, 2000);
+  };
+
+  const initialize = async () => {
+    console.log("Initializing Hero...");
+
+    // Set up Three.js scene
+    setupScene();
+
+    // Set up post-processing
+    setupPostProcessing();
+
+    // Set up controls
+    setupControls();
+
+    // Initialize Tone.js with autostart - but only after user interaction
+    const startAudioContext = async () => {
+      try {
+        await Tone.start();
+        toneStarted = true;
+        console.log("Tone.js started successfully");
+
+        // Set initial volume
+        Tone.getDestination().volume.value = -10; // Start at a reasonable volume
+        initialVolume = -10;
+
+        // Set up audio
+        await setupAudio();
+
+        // Initialize spatial audio objects
+        initAudioObjects();
+      } catch (e) {
+        console.warn("Could not start Tone.js:", e);
+      }
+    };
+
+    // Set up modules
+    setupModules();
+
+    // Add the renderer to the DOM
+    const container = document.getElementById("three-container");
+    if (container) {
+      container.appendChild(renderer.domElement);
+
+      // Start animation loop
+      animate();
+
+      // Add scroll event listener
+      window.addEventListener("scroll", handleScroll);
+
+      // Initialize lighting bars
+      setTimeout(() => {
+        initLightingBars();
+      }, 300);
+
+      // Start visual experience after a short delay
+      setTimeout(() => {
+        startVisualExperience();
+      }, 1000);
+
+      // Add event listeners for user interaction to start audio
+      const userInteractionHandler = async () => {
+        await startAudioContext();
+        document.removeEventListener("click", userInteractionHandler);
+        document.removeEventListener("touchstart", userInteractionHandler);
+        document.removeEventListener("keydown", userInteractionHandler);
+      };
+
+      document.addEventListener("click", userInteractionHandler);
+      document.addEventListener("touchstart", userInteractionHandler);
+      document.addEventListener("keydown", userInteractionHandler);
+
+      console.log("Hero initialization complete");
+    } else {
+      console.error("Could not find three-container element");
+    }
+  };
+
+  // Initialize when the DOM is loaded
+  if (typeof document !== "undefined") {
+    document.addEventListener("DOMContentLoaded", () => {
+      initialize();
+    });
+
+    // Also listen for the custom event from index.astro
+    window.addEventListener("audioContextReady", () => {
+      console.log("Received audioContextReady event");
+      initialize();
+    });
+  }
+</script>
+
+<div
+  id="three-container"
+  style="width: 100%; height: 100vh; position: block; top: 0; left: 0; z-index: -1; pointer-events: auto; background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%);"
+>
+</div>
