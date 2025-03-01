@@ -1,13 +1,29 @@
+<div
+  id="three-container"
+  style="position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 0; background: linear-gradient(to bottom, #000022, #000033);"
+>
+  <button
+    id="start-audio-btn"
+    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 15px 30px; background-color: rgba(0, 0, 0, 0.8); color: #fff; border: 2px solid #0ff; border-radius: 5px; font-family: sans-serif; font-size: 18px; cursor: pointer; box-shadow: 0 0 20px rgba(0, 255, 255, 0.5); z-index: 1000; display: none;"
+  >
+    Start Audio Experience
+  </button>
+</div>
+
 <script>
   import * as THREE from "three";
   import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
   import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
   import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
   import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
-  import TWEEN from "@tweenjs/tween.js";
+  import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+  import { SimplexNoise } from "three/examples/jsm/math/SimplexNoise.js";
   import * as Tone from "tone";
-  import CubeModule from "./cubeModule";
-  import PulseModule from "./pulseModule";
+  import TWEEN from "@tweenjs/tween.js";
+  import SphereModule from "./sphereModule.js";
+  import CubeModule from "./cubeModule.js";
+  import PulseModule from "./pulseModule.js";
+  import AudioMixer from "./audioMixer.js";
 
   // Initialize Three.js variables
   let scene = new THREE.Scene();
@@ -25,10 +41,16 @@
   let reverb: any;
   let listener: any;
   let reverbGain: any;
+  let floatingModel: any; // Reference for the floating model
+  let threeAudioListener: THREE.AudioListener; // Three.js audio listener
+  let positionalAudios: THREE.PositionalAudio[] = []; // Track positional audio sources
 
   // Initialize modules
   let cubeModule: any;
   let pulseModule: any;
+  let sphereModule: any;
+  let audioMixer: any;
+  let clock = new THREE.Clock(); // Add clock for timing
 
   // Track initial volume and scroll state
   let initialVolume = 0;
@@ -37,15 +59,15 @@
 
   // Spatial audio objects and movement parameters
   let audioObjects: any[] = [];
-  const SPACE_BOUNDS = 800; // Doubled again from 400 for even more spread
+  const SPACE_BOUNDS = 20; // Changed from 800 to 20 to keep objects in -10 to 10 range
   const BASE_FREQUENCY = 220; // A3 as base frequency
   const FREQUENCY_STEP = 20; // 20 Hz steps for microtonal distribution
   const MAX_OBJECTS = 15; // Maximum number of objects in the scene
   const COLLISION_THRESHOLD = 1.5; // Distance threshold for collision detection
 
   // Physics parameters
-  const MIN_SPEED = 0.005; // Reduced by 3x for slower movement
-  const MAX_SPEED = 0.02; // Reduced by 3x for slower movement
+  const MIN_SPEED = 0.0005; // Reduced by 10x for much slower movement (was 0.005)
+  const MAX_SPEED = 0.002; // Reduced by 10x for much slower movement (was 0.02)
   const DAMPING = 0.99; // Increased damping for smoother movement
   const ATTRACTION_FORCE = 0.00002; // Reduced for wider initial spread, but still pulls back to center
   const REPULSION_THRESHOLD = 100; // Distance threshold for repulsion effect
@@ -183,11 +205,39 @@
   let hudElement: HTMLElement | null;
   let hudVisible = true;
 
+  // Audio samples for grain player
+  const AUDIO_SAMPLES = [
+    "/audio/heroic.mp3", // We'll need to add this file to the public/audio directory
+  ];
+
+  // Grain player for spheres
+  let grainPlayers: any[] = [];
+
+  // White noise generators for bars
+  let noiseGenerators: any[] = [];
+
+  // Biquad filter parameters
+  const FILTER_RESONANCE = 10; // High resonance for DJ-style filter sweeps
+  const FILTER_MIN_FREQ = 80; // 80Hz minimum frequency
+  const FILTER_MAX_FREQ = 8000; // 8kHz maximum frequency
+  const FILTER_SWEEP_SPEED = 0.5; // Speed of filter sweeps
+  let filterSweeps: any[] = [];
+
+  // Lower octave parameters
+  const LOW_OCTAVE_FREQUENCIES = [
+    55, // A1 (2 octaves below A3)
+    65.4, // C2 (2 octaves below C4)
+    82.4, // E2 (2 octaves below E4)
+    98, // G2 (2 octaves below G4)
+    110, // A2 (2 octaves below A4)
+  ];
+  let lowOctaveSynths: any[] = [];
+
   // Create a lighting bar with dynamic properties
   const createLightingBar = (index: number) => {
     // Create a cylinder geometry for the lighting bar
-    const height = Math.random() * 4 + 2;
-    const radius = Math.random() * 0.3 + 0.1;
+    const height = (Math.random() * 4 + 2) * 5; // 5 times bigger
+    const radius = (Math.random() * 0.3 + 0.1) * 5; // 5 times bigger
     const geometry = new THREE.CylinderGeometry(radius, radius, height, 16, 1);
 
     // Create a material with random color
@@ -209,11 +259,11 @@
     // Create mesh
     const mesh = new THREE.Mesh(geometry, material);
 
-    // Random position within bounds
+    // Random position within bounds (-10 to 10)
     mesh.position.set(
-      (Math.random() - 0.5) * SPACE_BOUNDS * 0.5,
-      (Math.random() - 0.5) * SPACE_BOUNDS * 0.5,
-      (Math.random() - 0.5) * SPACE_BOUNDS * 0.5,
+      (Math.random() - 0.5) * 20, // Changed from SPACE_BOUNDS * 0.5 to 20
+      (Math.random() - 0.5) * 20, // Changed from SPACE_BOUNDS * 0.5 to 20
+      (Math.random() - 0.5) * 20, // Changed from SPACE_BOUNDS * 0.5 to 20
     );
 
     // Random rotation
@@ -224,32 +274,90 @@
     );
 
     // Add point light at the center of the bar
-    const light = new THREE.PointLight(color, 1, 10);
+    const light = new THREE.PointLight(color, 1, 50); // Increased light distance to match larger size
     light.position.set(0, 0, 0);
     mesh.add(light);
 
     // Random velocity for movement - ensure all bars move
     const velocity = new THREE.Vector3(
-      (Math.random() - 0.5) * MIN_SPEED * 2 || MIN_SPEED * 0.5, // Ensure non-zero
-      (Math.random() - 0.5) * MIN_SPEED * 2 || MIN_SPEED * 0.5,
-      (Math.random() - 0.5) * MIN_SPEED * 2 || MIN_SPEED * 0.5,
+      ((Math.random() - 0.5) * MIN_SPEED * 2 || MIN_SPEED * 0.5) / 10, // 10 times slower
+      ((Math.random() - 0.5) * MIN_SPEED * 2 || MIN_SPEED * 0.5) / 10,
+      ((Math.random() - 0.5) * MIN_SPEED * 2 || MIN_SPEED * 0.5) / 10,
     );
 
     // Random rotation velocity
     const rotationVelocity = new THREE.Vector3(
-      (Math.random() - 0.5) * LIGHT_ROTATION_SPEED * 2,
-      (Math.random() - 0.5) * LIGHT_ROTATION_SPEED * 2,
-      (Math.random() - 0.5) * LIGHT_ROTATION_SPEED * 2,
+      ((Math.random() - 0.5) * LIGHT_ROTATION_SPEED * 2) / 10, // 10 times slower
+      ((Math.random() - 0.5) * LIGHT_ROTATION_SPEED * 2) / 10,
+      ((Math.random() - 0.5) * LIGHT_ROTATION_SPEED * 2) / 10,
     );
 
     // Initial scale
     const initialScale = new THREE.Vector3(1, 1, 1);
+
+    // Vertical ping-pong movement parameters
+    const verticalMovement = {
+      enabled: true,
+      amplitude: Math.random() * 3 + 1, // Random amplitude between 1-4
+      speed: (Math.random() * 0.001 + 0.0005) / 10, // 10 times slower
+      phase: Math.random() * Math.PI * 2, // Random starting phase
+    };
+
+    // Breathing effect parameters
+    const breathingEffect = {
+      enabled: true,
+      minScale: 0.8, // Minimum scale during breathing
+      maxScale: 1.2, // Maximum scale during breathing
+      speed: (Math.random() * 0.001 + 0.0005) / 10, // 10 times slower
+      phase: Math.random() * Math.PI * 2, // Random starting phase
+    };
 
     // Add to scene
     scene.add(mesh);
 
     // Calculate frequency for color changes
     const frequency = BASE_FREQUENCY + index * FREQUENCY_STEP * 1.5;
+
+    // Create white noise with biquad filter for the bar
+    if (Tone.context.state === "running") {
+      // Create noise source
+      const noise = new Tone.Noise({
+        type: "white",
+        volume: -30,
+      });
+
+      // Create biquad filter
+      const filter = new Tone.Filter({
+        type: "bandpass",
+        frequency: frequency,
+        Q: 1.0,
+      });
+
+      // Connect noise to filter and to mixer or destination
+      noise.connect(filter);
+
+      // Connect to mixer
+      if (audioMixer) {
+        audioMixer.connectNode(filter, "lightingBarNoise");
+      } else {
+        // Fallback to old connection method
+        filter.toDestination();
+        if (reverb) {
+          filter.connect(reverb);
+        }
+      }
+
+      // Start noise
+      noise.start();
+
+      // Store noise and filter in noiseGenerators array
+      noiseGenerators.push({
+        noise,
+        filter,
+        bar: mesh,
+        baseFreq: frequency,
+      });
+    }
 
     return {
       mesh,
@@ -262,26 +370,36 @@
       expansionState: 0, // 0 to 1 for expansion animation
       expansionDirection: 1, // 1 for expanding, -1 for contracting
       lastUpdate: Date.now(),
+      verticalMovement,
+      breathingEffect,
+      initialY: mesh.position.y, // Store initial Y position for ping-pong movement
     };
   };
 
   // Update lighting bars
-  const updateLightingBars = (deltaTime: number) => {
-    const now = Date.now();
-
-    lightingBars.forEach((bar) => {
+  const updateLightingBars = (deltaTime: number, now: number) => {
+    lightingBars.forEach((bar, index) => {
       // Move the bar
       bar.mesh.position.x += bar.velocity.x * deltaTime;
       bar.mesh.position.y += bar.velocity.y * deltaTime;
       bar.mesh.position.z += bar.velocity.z * deltaTime;
+
+      // Apply vertical ping-pong movement
+      if (bar.verticalMovement && bar.verticalMovement.enabled) {
+        const verticalOffset =
+          Math.sin(
+            now * bar.verticalMovement.speed + bar.verticalMovement.phase,
+          ) * bar.verticalMovement.amplitude;
+        bar.mesh.position.y = bar.initialY + verticalOffset;
+      }
 
       // Rotate the bar
       bar.mesh.rotation.x += bar.rotationVelocity.x * deltaTime;
       bar.mesh.rotation.y += bar.rotationVelocity.y * deltaTime;
       bar.mesh.rotation.z += bar.rotationVelocity.z * deltaTime;
 
-      // Update expansion state
-      bar.expansionState += bar.expansionDirection * 0.005 * deltaTime;
+      // Update expansion state (10 times slower)
+      bar.expansionState += (bar.expansionDirection * 0.005 * deltaTime) / 10;
 
       // Reverse direction at limits
       if (bar.expansionState >= 1) {
@@ -295,7 +413,23 @@
       // Calculate expansion scale
       const expansionScale =
         1 + (LIGHT_EXPANSION_FACTOR - 1) * bar.expansionState;
-      bar.mesh.scale.set(expansionScale, expansionScale, expansionScale);
+
+      // Apply breathing effect
+      let finalScale = expansionScale;
+      if (bar.breathingEffect && bar.breathingEffect.enabled) {
+        const breathingFactor =
+          bar.breathingEffect.minScale +
+          (Math.sin(
+            now * bar.breathingEffect.speed + bar.breathingEffect.phase,
+          ) *
+            0.5 +
+            0.5) *
+            (bar.breathingEffect.maxScale - bar.breathingEffect.minScale);
+
+        finalScale *= breathingFactor;
+      }
+
+      bar.mesh.scale.set(finalScale, finalScale, finalScale);
 
       // Update light color based on expansion (pitch relationship)
       const hueShift = bar.expansionState * 0.2; // Shift hue by up to 0.2
@@ -313,6 +447,24 @@
       // Adjust light intensity based on expansion
       bar.light.intensity = 0.5 + bar.expansionState * 2;
 
+      // Update noise filter parameters based on expansion state
+      if (noiseGenerators[index]) {
+        const noiseGen = noiseGenerators[index];
+
+        // Adjust filter frequency based on expansion state
+        // Higher Q when expanded, lower Q when contracted
+        const newQ = 0.5 + bar.expansionState * 5;
+        noiseGen.filter.Q.value = newQ;
+
+        // Adjust filter frequency slightly based on expansion
+        const freqMultiplier = 0.8 + bar.expansionState * 0.4;
+        noiseGen.filter.frequency.value = noiseGen.baseFreq * freqMultiplier;
+
+        // Adjust volume based on expansion
+        const volume = -40 + bar.expansionState * 20;
+        noiseGen.noise.volume.value = volume;
+      }
+
       // Boundary checks with bounce
       const halfBounds = SPACE_BOUNDS / 2;
 
@@ -321,7 +473,10 @@
         bar.mesh.position.x = Math.sign(bar.mesh.position.x) * halfBounds;
       }
 
-      if (Math.abs(bar.mesh.position.y) > halfBounds) {
+      if (
+        Math.abs(bar.mesh.position.y) > halfBounds &&
+        !bar.verticalMovement.enabled
+      ) {
         bar.velocity.y *= -1;
         bar.mesh.position.y = Math.sign(bar.mesh.position.y) * halfBounds;
       }
@@ -349,6 +504,51 @@
     }
 
     console.log(`Created ${lightingBars.length} lighting bars`);
+  };
+
+  // Add audio context auto-resume functionality
+  const setupAudioContextResumption = () => {
+    if (!Tone.context) return;
+
+    // Function to resume audio context
+    const resumeAudioContext = async () => {
+      if (Tone.context.state !== "running") {
+        try {
+          await Tone.context.resume();
+          console.log("Audio context resumed:", Tone.context.state);
+
+          // Update audio modules with the resumed context
+          if (cubeModule) cubeModule.updateAudioContext(Tone.context);
+          if (sphereModule) sphereModule.updateAudioContext(Tone.context);
+          if (pulseModule) pulseModule.updateAudioContext(Tone.context);
+          if (audioMixer) audioMixer.updateAudioContext(Tone.context);
+        } catch (err) {
+          console.error("Failed to resume audio context:", err);
+        }
+      }
+    };
+
+    // Resume on various user interactions
+    const userInteractions = ["click", "touchstart", "keydown", "mousedown"];
+    userInteractions.forEach((event) => {
+      window.addEventListener(event, resumeAudioContext, { once: false });
+    });
+
+    // Resume when window gets focus
+    window.addEventListener("focus", resumeAudioContext);
+
+    // Set up periodic check to ensure audio context stays running
+    setInterval(() => {
+      if (Tone.context && Tone.context.state !== "running") {
+        console.log("Audio context suspended, attempting to resume...");
+        resumeAudioContext();
+      }
+    }, 3000);
+
+    // Try to resume immediately
+    setTimeout(resumeAudioContext, 1000);
+
+    console.log("Audio context resumption handlers set up");
   };
 
   // Create a spatial audio object with random properties
@@ -437,7 +637,8 @@
     const mesh = new THREE.Mesh(geometry, useMaterial);
 
     // Position the sphere using spherical coordinates for better distribution
-    const radius3D = SPACE_BOUNDS * 0.5 * (0.3 + Math.random() * 0.7);
+    // Keep within -10 to 10 range
+    const radius3D = 10 * (0.3 + Math.random() * 0.7); // Changed from SPACE_BOUNDS * 0.5 to 10
     const theta = Math.random() * Math.PI * 2; // Random angle around Y axis
     const phi = Math.acos(2 * Math.random() - 1); // Random angle from Y axis
 
@@ -461,63 +662,272 @@
       useMaterial.uniforms.color.value = color;
     }
 
-    // Create positional audio
-    const sound = new THREE.PositionalAudio(listener);
+    // Add Three.js positional audio to some spheres (1 in 3 chance)
+    if (threeAudioListener && Math.random() < 0.33) {
+      try {
+        // Create a positional audio source
+        const sound = new THREE.PositionalAudio(threeAudioListener);
 
-    // Calculate microtonal frequency
-    const frequency = BASE_FREQUENCY + index * FREQUENCY_STEP;
+        // Configure positional audio parameters
+        sound.setRefDistance(5);
+        sound.setDistanceModel("exponential");
+        sound.setRolloffFactor(2);
+        sound.setVolume(0.3);
 
-    // Create oscillator
-    const oscillator = listener.context.createOscillator();
-    const gainNode = listener.context.createGain();
+        // Create different types of sounds for variety
+        const soundType = Math.floor(Math.random() * 3);
 
-    // Randomize oscillator type
-    const oscillatorTypes = ["sine", "square", "sawtooth", "triangle"];
-    const oscillatorType =
-      oscillatorTypes[Math.floor(Math.random() * oscillatorTypes.length)];
-    oscillator.type = oscillatorType;
+        if (soundType === 0) {
+          // Load audio file
+          const audioLoader = new THREE.AudioLoader();
+          audioLoader.load(
+            "/audio/heroic.mp3",
+            (buffer) => {
+              sound.setBuffer(buffer);
+              sound.setLoop(true);
+              // Random playback rate for variety
+              sound.setPlaybackRate(0.5 + Math.random() * 0.5);
+              sound.play();
+            },
+            (progress) => {
+              // Optional progress tracking
+            },
+            (error) => {
+              console.error("Error loading audio:", error);
+            },
+          );
+        } else {
+          // Create audio buffer with procedural sound
+          const context = threeAudioListener.context;
+          const sampleRate = context.sampleRate;
+          const buffer = context.createBuffer(1, sampleRate * 2, sampleRate);
+          const data = buffer.getChannelData(0);
 
-    // Set frequency and connect nodes
-    oscillator.frequency.value = frequency;
-    oscillator.connect(gainNode);
-    gainNode.connect(sound.panner);
+          // Generate different waveforms based on soundType
+          if (soundType === 1) {
+            // Sine wave with frequency modulation
+            const frequency = 220 + index * 20; // Different frequency per object
+            for (let i = 0; i < data.length; i++) {
+              const t = i / sampleRate;
+              const modulation = Math.sin(t * 0.5) * 50;
+              data[i] =
+                Math.sin(2 * Math.PI * (frequency + modulation) * t) * 0.5;
+            }
+          } else {
+            // Noise with filtering
+            for (let i = 0; i < data.length; i++) {
+              data[i] = (Math.random() * 2 - 1) * 0.5;
+            }
 
-    // Set initial gain to 0
-    gainNode.gain.value = 0;
+            // Simple low-pass filter
+            for (let i = 1; i < data.length; i++) {
+              data[i] = (data[i] + data[i - 1]) * 0.5;
+            }
+          }
 
-    // Start oscillator
-    oscillator.start(0);
+          sound.setBuffer(buffer);
+          sound.setLoop(true);
+          sound.play();
+        }
 
-    // Add sound to mesh
-    mesh.add(sound);
+        // Add sound to the mesh
+        mesh.add(sound);
 
-    // Create random velocity
-    const velocity = new THREE.Vector3(
-      (Math.random() - 0.5) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED,
-      (Math.random() - 0.5) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED,
-      (Math.random() - 0.5) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED,
-    );
+        // Store reference to the positional audio
+        positionalAudios.push(sound);
 
-    // Create audio object with properties
+        console.log(`Added Three.js positional audio to sphere ${index}`);
+      } catch (e) {
+        console.error("Error creating Three.js positional audio:", e);
+      }
+    }
+
+    // Create audio components only if audio context is ready
+    if (listener && Tone.context && Tone.context.state === "running") {
+      try {
+        // Determine if this sphere should use a GrainPlayer (only 1 in 10 spheres)
+        const useGrainPlayer = index % 10 === 0;
+
+        // Create velocity for the sphere
+        const velocity = new THREE.Vector3(
+          (Math.random() * 2 - 1) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED,
+          (Math.random() * 2 - 1) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED,
+          (Math.random() * 2 - 1) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED,
+        );
+
+        // Select frequency - alternate between low and high octaves
+        let frequency;
+        if (index % 2 === 0) {
+          // Lower octaves (55-220 Hz)
+          frequency = 55 + Math.random() * 165;
+        } else {
+          // Higher octaves (220-880 Hz)
+          frequency = 220 + Math.random() * 660;
+        }
+
+        // Create audio components based on type
+        if (useGrainPlayer) {
+          // Create a GrainPlayer with proper buffer loading (only for 1 in 10 spheres)
+          const audioUrl = "/audio/heroic.mp3"; // Use local file
+
+          // Create the GrainPlayer with lower volume
+          const grainPlayer = new Tone.GrainPlayer({
+            url: audioUrl,
+            loop: true,
+            grainSize: 0.1,
+            overlap: 0.05,
+            volume: -40, // Much lower volume
+            playbackRate: 0.5 + Math.random(),
+            onload: () => {
+              console.log("GrainPlayer loaded for sphere", index);
+              // Start with a 10% chance
+              if (Math.random() < 0.1) {
+                grainPlayer.start();
+              }
+            },
+          });
+
+          // Create a panner for spatial audio
+          const panner = new Tone.Panner3D({
+            positionX: mesh.position.x,
+            positionY: mesh.position.y,
+            positionZ: mesh.position.z,
+            rolloffFactor: 2,
+            distanceModel: "exponential",
+            maxDistance: 10000,
+            refDistance: 5,
+          });
+
+          // Connect to audio mixer instead of directly to destination
+          grainPlayer.connect(panner);
+
+          // Connect to mixer
+          if (audioMixer) {
+            audioMixer.connectNode(panner, "sphereGrainPlayers");
+          } else {
+            // Fallback to old connection method
+            panner.toDestination();
+            if (reverb) {
+              panner.connect(reverb);
+            }
+          }
+
+          // Return audio object with grain player
+          return {
+            mesh,
+            velocity,
+            frequency,
+            grainPlayer,
+            panner,
+            lastUpdateTime: Date.now(),
+          };
+        } else {
+          // Create a simple oscillator with chop effect
+          const oscillator = new Tone.Oscillator({
+            frequency: frequency,
+            type: "sine",
+            volume: -30,
+          }).start();
+
+          // Create a filter
+          const filter = new Tone.Filter({
+            type: "bandpass",
+            frequency: frequency,
+            Q: 2,
+          });
+
+          // Create a gain node
+          const gain = new Tone.Gain(0.5);
+
+          // Create a chopper effect (amplitude modulation)
+          const chopRate = Math.random() * 9 + 1; // 1Hz to 10Hz
+          const chopOsc = new Tone.Oscillator({
+            frequency: chopRate,
+            type: "square",
+            volume: 0,
+          }).start();
+
+          // Create lowpass filter for smoother transitions in the chopping
+          const chopFilter = new Tone.Filter({
+            frequency: 30,
+            type: "lowpass",
+          });
+
+          // Connect chop oscillator to filter
+          chopOsc.connect(chopFilter);
+
+          // Create gain node for the chopping effect
+          const chopGain = new Tone.Gain();
+
+          // Connect filter to gain node's gain parameter
+          // Fix the linter error by explicitly specifying the gain parameter
+          chopFilter.connect(chopGain.gain as unknown as Tone.Param<"gain">);
+
+          // Connect oscillator to filter to chop gain to main gain
+          oscillator.connect(filter);
+          filter.connect(chopGain);
+          chopGain.connect(gain);
+
+          // Create a panner for spatial audio
+          const panner = new Tone.Panner3D({
+            positionX: mesh.position.x,
+            positionY: mesh.position.y,
+            positionZ: mesh.position.z,
+            rolloffFactor: 2,
+            distanceModel: "exponential",
+            maxDistance: 10000,
+            refDistance: 5,
+          });
+
+          // Connect to audio mixer instead of directly to destination
+          gain.connect(panner);
+
+          // Connect to mixer
+          if (audioMixer) {
+            audioMixer.connectNode(panner, "sphereOscillators");
+          } else {
+            // Fallback to old connection method
+            panner.toDestination();
+            if (reverb) {
+              panner.connect(reverb);
+            }
+          }
+
+          // Return audio object with oscillator
+          return {
+            mesh,
+            velocity,
+            frequency,
+            oscillator,
+            filter,
+            gain,
+            panner,
+            chopOsc,
+            chopFilter,
+            chopGain,
+            lastUpdateTime: Date.now(),
+          };
+        }
+      } catch (e) {
+        console.error("Error creating audio for sphere:", e);
+      }
+    }
+
+    // Return minimal object if audio creation fails
     return {
       mesh,
-      sound,
-      oscillator,
-      gainNode,
-      velocity,
-      initialPosition: mesh.position.clone(),
-      initialDistance: mesh.position.length(),
-      targetDistance: mesh.position.length() * (0.5 + Math.random() * 0.5), // Target between 50-100% of initial distance
-      distancePhase: Math.random() * Math.PI * 2, // Random phase for distance oscillation
-      distanceSpeed: 0.0002 + Math.random() * 0.0003, // Random speed for distance oscillation
-      pulsePhase: Math.random() * Math.PI * 2, // Random phase for growth pulsation
-      growthSpeed: SPHERE_GROWTH_SPEED * (0.7 + Math.random() * 0.6), // Individualized growth speed
-      material: useMaterial,
+      velocity: new THREE.Vector3(
+        (Math.random() * 2 - 1) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED,
+        (Math.random() * 2 - 1) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED,
+        (Math.random() * 2 - 1) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED,
+      ),
+      frequency: 220 + Math.random() * 440,
+      lastUpdateTime: Date.now(),
     };
   };
 
   // Update audio object positions and handle collisions
-  const updateAudioObjects = (deltaTime: number) => {
+  const updateAudioObjects = () => {
     // Skip if no listener
     if (!listener) return;
 
@@ -531,241 +941,88 @@
     godrayParams.lightPos.z =
       Math.sin(currentTime * 0.0007) * SPACE_BOUNDS * 0.3;
 
-    // Update each object
-    for (let i = 0; i < audioObjects.length; i++) {
-      const obj = audioObjects[i];
-      const mesh = obj.mesh;
-      const velocity = obj.velocity;
+    // Update spheres
+    audioObjects.forEach((obj) => {
+      // Skip if no mesh
+      if (!obj.mesh) return;
 
-      // Update shader uniforms
-      if (obj.material && obj.material.uniforms) {
+      // Update position based on velocity
+      obj.mesh.position.x += obj.velocity.x;
+      obj.mesh.position.y += obj.velocity.y;
+      obj.mesh.position.z += obj.velocity.z;
+
+      // Boundary checks with bounce to keep within -10 to 10 range
+      const halfBounds = 10; // Changed from SPACE_BOUNDS / 2 to exactly 10
+
+      if (Math.abs(obj.mesh.position.x) > halfBounds) {
+        obj.velocity.x *= -1;
+        obj.mesh.position.x = Math.sign(obj.mesh.position.x) * halfBounds;
+      }
+
+      if (Math.abs(obj.mesh.position.y) > halfBounds) {
+        obj.velocity.y *= -1;
+        obj.mesh.position.y = Math.sign(obj.mesh.position.y) * halfBounds;
+      }
+
+      if (Math.abs(obj.mesh.position.z) > halfBounds) {
+        obj.velocity.z *= -1;
+        obj.mesh.position.z = Math.sign(obj.mesh.position.z) * halfBounds;
+      }
+
+      // Update material time uniform for godray effect
+      if (obj.material && obj.material.uniforms && obj.material.uniforms.time) {
         obj.material.uniforms.time.value = currentTime * 0.001;
-        obj.material.uniforms.lightPos.value = godrayParams.lightPos;
-
-        // Dynamic transparency based on growth state and a sine wave
-        const transparencyWave =
-          Math.sin(currentTime * 0.001 + obj.pulsePhase) * 0.5 + 0.5;
-        const dynamicTransparency =
-          SPHERE_MIN_TRANSPARENCY +
-          (SPHERE_MAX_TRANSPARENCY - SPHERE_MIN_TRANSPARENCY) *
-            transparencyWave;
-        obj.material.uniforms.transparency.value = dynamicTransparency;
       }
 
-      // Update growth state with individual speed and non-linear dynamics
-      const growthDelta = obj.growthSpeed * deltaTime;
-      // Add some sine wave modulation to growth for more organic movement
-      const growthModulation =
-        Math.sin(currentTime * 0.002 + obj.pulsePhase) * 0.3;
-      obj.growthSpeed += growthDelta * (1 + growthModulation);
-
-      // Calculate growth scale with non-linear easing
-      const growthScale =
-        obj.growthSpeed < 0.5
-          ? 4 * obj.growthSpeed * obj.growthSpeed * obj.growthSpeed
-          : 1 - Math.pow(-2 * obj.growthSpeed + 2, 3) / 2;
-
-      mesh.scale.set(growthScale, growthScale, growthScale);
-
-      // Apply velocity with some random jitter for more organic movement
-      const jitter = new THREE.Vector3(
-        (Math.random() - 0.5) * 0.001 * deltaTime, // Reduced jitter for smoother movement
-        (Math.random() - 0.5) * 0.001 * deltaTime,
-        (Math.random() - 0.5) * 0.001 * deltaTime,
-      );
-
-      mesh.position.x += (velocity.x + jitter.x) * deltaTime;
-      mesh.position.y += (velocity.y + jitter.y) * deltaTime;
-      mesh.position.z += (velocity.z + jitter.z) * deltaTime;
-
-      // Calculate distance from center
-      const distanceToCenter = mesh.position.length();
-      const directionToCenter = mesh.position.clone().normalize();
-
-      // Distance oscillation effect - makes objects move away and come back
-      const distanceOscillation = Math.sin(
-        currentTime * obj.distanceSpeed + obj.distancePhase,
-      );
-      const targetDistance =
-        obj.initialDistance * (0.5 + 0.5 * distanceOscillation);
-
-      // Apply forces based on distance
-      if (distanceToCenter < targetDistance - 10) {
-        // Push away from center if too close to target
-        velocity.x +=
-          directionToCenter.x * REPULSION_FORCE * distanceToCenter * deltaTime;
-        velocity.y +=
-          directionToCenter.y * REPULSION_FORCE * distanceToCenter * deltaTime;
-        velocity.z +=
-          directionToCenter.z * REPULSION_FORCE * distanceToCenter * deltaTime;
-      } else if (distanceToCenter > targetDistance + 10) {
-        // Pull toward center if too far from target
-        velocity.x -=
-          directionToCenter.x * ATTRACTION_FORCE * distanceToCenter * deltaTime;
-        velocity.y -=
-          directionToCenter.y * ATTRACTION_FORCE * distanceToCenter * deltaTime;
-        velocity.z -=
-          directionToCenter.z * ATTRACTION_FORCE * distanceToCenter * deltaTime;
-      }
-
-      // Apply damping
-      velocity.multiplyScalar(DAMPING);
-
-      // Ensure minimum speed
-      const speed = velocity.length();
-      if (speed < MIN_SPEED) {
-        velocity.normalize().multiplyScalar(MIN_SPEED);
-      }
-
-      // Boundary collision detection and response
-      const halfBounds = SPACE_BOUNDS / 2;
-
-      // X boundaries
-      if (mesh.position.x > halfBounds) {
-        mesh.position.x = halfBounds;
-        velocity.x *= -1.1; // Bounce with slight energy gain
-        playCollisionSound(obj, 1.0);
-      } else if (mesh.position.x < -halfBounds) {
-        mesh.position.x = -halfBounds;
-        velocity.x *= -1.1;
-        playCollisionSound(obj, 1.0);
-      }
-
-      // Y boundaries
-      if (mesh.position.y > halfBounds) {
-        mesh.position.y = halfBounds;
-        velocity.y *= -1.1;
-        playCollisionSound(obj, 1.0);
-      } else if (mesh.position.y < -halfBounds) {
-        mesh.position.y = -halfBounds;
-        velocity.y *= -1.1;
-        playCollisionSound(obj, 1.0);
-      }
-
-      // Z boundaries
-      if (mesh.position.z > halfBounds) {
-        mesh.position.z = halfBounds;
-        velocity.z *= -1.1;
-        playCollisionSound(obj, 1.0);
-      } else if (mesh.position.z < -halfBounds) {
-        mesh.position.z = -halfBounds;
-        velocity.z *= -1.1;
-        playCollisionSound(obj, 1.0);
-      }
-
-      // Object-object collision detection
-      for (let j = i + 1; j < audioObjects.length; j++) {
-        const otherObj = audioObjects[j];
-        const otherMesh = otherObj.mesh;
-
-        // Calculate distance between objects
-        const distance = mesh.position.distanceTo(otherMesh.position);
-        const minDistance = obj.radius + otherObj.radius;
-
-        // Check for collision
-        if (
-          distance < minDistance &&
-          currentTime - obj.lastCollision > obj.collisionCooldown &&
-          currentTime - otherObj.lastCollision > otherObj.collisionCooldown
-        ) {
-          // Calculate collision response
-          const collisionNormal = new THREE.Vector3()
-            .subVectors(mesh.position, otherMesh.position)
-            .normalize();
-
-          // Apply impulse
-          const relativeVelocity = new THREE.Vector3().subVectors(
-            obj.velocity,
-            otherObj.velocity,
-          );
-
-          const impulseStrength = relativeVelocity.dot(collisionNormal) * 1.5;
-
-          // Apply impulse to both objects
-          obj.velocity.sub(
-            collisionNormal.clone().multiplyScalar(impulseStrength),
-          );
-          otherObj.velocity.add(
-            collisionNormal.clone().multiplyScalar(impulseStrength),
-          );
-
-          // Prevent objects from sticking together
-          const correction = (minDistance - distance) * 0.5;
-          mesh.position.add(collisionNormal.clone().multiplyScalar(correction));
-          otherMesh.position.sub(
-            collisionNormal.clone().multiplyScalar(correction),
-          );
-
-          // Play collision sounds
-          playCollisionSound(obj, 0.8);
-          playCollisionSound(otherObj, 0.8);
-
-          // Update collision timestamps
-          obj.lastCollision = currentTime;
-          otherObj.lastCollision = currentTime;
+      // Update grain player position if available
+      if (obj.grainPlayer && grainPlayers.length > 0) {
+        const grainPlayerData = grainPlayers.find(
+          (data) => data.sphere === obj.mesh,
+        );
+        if (grainPlayerData && grainPlayerData.panner) {
+          grainPlayerData.panner.positionX.value = obj.mesh.position.x;
+          grainPlayerData.panner.positionY.value = obj.mesh.position.y;
+          grainPlayerData.panner.positionZ.value = obj.mesh.position.z;
         }
       }
-    }
-  };
 
-  // Play a collision sound effect
-  const playCollisionSound = (obj: any, intensity: number) => {
-    if (!obj.sound || !obj.oscillator) return;
+      // Calculate growth factor based on time
+      const growthFactor =
+        1 +
+        Math.sin(currentTime * obj.growthSpeed + obj.pulsePhase) *
+          SPHERE_GROWTH_FACTOR;
 
-    // Create a brief frequency modulation
-    const currentFreq = obj.frequency;
-    const detune = obj.oscillator.detune.value;
+      // Apply growth to scale
+      obj.mesh.scale.set(growthFactor, growthFactor, growthFactor);
 
-    // Quick pitch bend up and down
-    const now = listener.context.currentTime;
-    obj.oscillator.detune.cancelScheduledValues(now);
-    obj.oscillator.detune.setValueAtTime(detune, now);
-    obj.oscillator.detune.linearRampToValueAtTime(
-      detune + 100 * intensity,
-      now + 0.05,
-    );
-    obj.oscillator.detune.linearRampToValueAtTime(
-      detune - 50 * intensity,
-      now + 0.1,
-    );
-    obj.oscillator.detune.linearRampToValueAtTime(detune, now + 0.2);
+      // Update transparency based on growth
+      const transparency =
+        SPHERE_MIN_TRANSPARENCY +
+        (SPHERE_MAX_TRANSPARENCY - SPHERE_MIN_TRANSPARENCY) *
+          ((growthFactor - 1) / SPHERE_GROWTH_FACTOR);
 
-    // Brief volume bump
-    const currentGain = obj.gainNode.gain.value;
-    obj.gainNode.gain.cancelScheduledValues(now);
-    obj.gainNode.gain.setValueAtTime(currentGain, now);
-    obj.gainNode.gain.linearRampToValueAtTime(
-      Math.min(0.3, currentGain + 0.2 * intensity),
-      now + 0.02,
-    );
-    obj.gainNode.gain.linearRampToValueAtTime(currentGain, now + 0.2);
-  };
-
-  // Initialize audio objects
-  const initAudioObjects = () => {
-    // Clear any existing objects
-    audioObjects.forEach((obj) => {
-      if (obj.mesh) scene.remove(obj.mesh);
-      if (obj.oscillator) obj.oscillator.stop();
+      // Apply transparency to material
+      if (
+        obj.material &&
+        obj.material.uniforms &&
+        obj.material.uniforms.transparency
+      ) {
+        obj.material.uniforms.transparency.value = transparency;
+      } else if (obj.material && obj.material.opacity !== undefined) {
+        obj.material.opacity = transparency;
+      }
     });
-
-    audioObjects = [];
-
-    // Create new objects
-    const objectCount = Math.floor(Math.random() * 5) + 10; // 10-15 objects
-
-    for (let i = 0; i < objectCount; i++) {
-      audioObjects.push(createAudioObject(i));
-    }
-
-    console.log(`Created ${audioObjects.length} spatial audio objects`);
   };
 
   const setupPostProcessing = () => {
-    const renderPass = new RenderPass(scene, camera);
+    // Create composer
     composer = new EffectComposer(renderer);
+
+    // Add render pass
+    const renderPass = new RenderPass(scene, camera);
     composer.addPass(renderPass);
 
+    // Add bloom pass for glow effect
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
       1.5, // strength
@@ -773,6 +1030,50 @@
       0.85, // threshold
     );
     composer.addPass(bloomPass);
+
+    // No need for GodRaysPass since we don't have it
+    // Instead, add a simple shader pass for color correction
+    const colorCorrectionShader = {
+      uniforms: {
+        tDiffuse: { value: null },
+        brightness: { value: 0.05 },
+        contrast: { value: 1.1 },
+        saturation: { value: 1.2 },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D tDiffuse;
+        uniform float brightness;
+        uniform float contrast;
+        uniform float saturation;
+        varying vec2 vUv;
+        
+        void main() {
+          vec4 color = texture2D(tDiffuse, vUv);
+          
+          // Brightness
+          color.rgb += brightness;
+          
+          // Contrast
+          color.rgb = (color.rgb - 0.5) * contrast + 0.5;
+          
+          // Saturation
+          float luminance = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+          color.rgb = mix(vec3(luminance), color.rgb, saturation);
+          
+          gl_FragColor = color;
+        }
+      `,
+    };
+
+    const colorCorrectionPass = new ShaderPass(colorCorrectionShader);
+    composer.addPass(colorCorrectionPass);
   };
 
   const setupControls = () => {
@@ -781,181 +1082,262 @@
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.screenSpacePanning = false;
-    controls.minDistance = 3; // Allow closer zoom
-    controls.maxDistance = 30; // Limit max zoom out
-    controls.maxPolarAngle = Math.PI; // Allow full vertical rotation
-    controls.enablePan = true;
-    controls.panSpeed = 0.5;
-    controls.rotateSpeed = 0.5;
+    controls.minDistance = 10;
+    controls.maxDistance = 50;
+    controls.maxPolarAngle = Math.PI / 1.5;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.5;
 
-    // Disable mousewheel for Y-axis to reserve it for page scrolling
-    controls.mouseButtons = {
-      LEFT: THREE.MOUSE.ROTATE,
-      MIDDLE: THREE.MOUSE.DOLLY,
-      RIGHT: THREE.MOUSE.PAN,
+    // Add random camera rotation on all axes
+    const randomRotateCamera = () => {
+      // Create random target rotation values
+      const targetX = (Math.random() * Math.PI) / 4 - Math.PI / 8; // -22.5 to 22.5 degrees
+      const targetY = (Math.random() * Math.PI) / 4 - Math.PI / 8;
+      const targetZ = (Math.random() * Math.PI) / 8 - Math.PI / 16; // smaller Z rotation (-11.25 to 11.25 degrees)
+
+      // Create tween for smooth rotation
+      new TWEEN.Tween(camera.rotation)
+        .to({ x: targetX, y: targetY, z: targetZ }, 10000) // 10 seconds
+        .easing(TWEEN.Easing.Sinusoidal.InOut)
+        .onComplete(() => {
+          // Schedule next random rotation
+          setTimeout(randomRotateCamera, Math.random() * 5000 + 5000); // 5-10 seconds delay
+        })
+        .start();
     };
 
-    // Disable scroll to zoom to reserve mousewheel for page scrolling
-    controls.enableZoom = false;
-
-    // Store last interaction time
-    camera.userData.lastUserInteraction = Date.now();
-    camera.userData.userInteractionTimeout = 5000; // 5 seconds
-
-    // WASD Controls with audio listener update and inertia
-    const onKeyDown = (event: KeyboardEvent) => {
-      let moved = false;
-      const moveSpeed = 0.5; // Reduced for slower movement
-
-      // Add inertia object if not present
-      if (!camera.userData.inertia) {
-        camera.userData.inertia = new THREE.Vector3(0, 0, 0);
-      }
-
-      switch (event.key) {
-        case "w":
-        case "W":
-          camera.userData.inertia.z -= moveSpeed;
-          moved = true;
-          break;
-        case "s":
-        case "S":
-          camera.userData.inertia.z += moveSpeed;
-          moved = true;
-          break;
-        case "a":
-        case "A":
-          camera.userData.inertia.x -= moveSpeed;
-          moved = true;
-          break;
-        case "d":
-        case "D":
-          camera.userData.inertia.x += moveSpeed;
-          moved = true;
-          break;
-        case "q":
-        case "Q":
-          camera.userData.inertia.y += moveSpeed;
-          moved = true;
-          break;
-        case "e":
-        case "E":
-          camera.userData.inertia.y -= moveSpeed;
-          moved = true;
-          break;
-      }
-
-      if (moved) {
-        // Update last interaction time
-        camera.userData.lastUserInteraction = Date.now();
-        cameraAutoRotationEnabled = false;
-
-        // Update camera and listener orientation
-        camera.updateMatrixWorld();
-        if (listener) {
-          listener.updateMatrixWorld();
-        }
-      }
-    };
-
-    // Add event listeners
-    window.addEventListener("keydown", onKeyDown);
-
-    controls.addEventListener("change", () => {
-      camera.updateMatrixWorld();
-      if (listener) {
-        listener.updateMatrixWorld();
-      }
-
-      // Update last interaction time
-      camera.userData.lastUserInteraction = Date.now();
-      cameraAutoRotationEnabled = false;
-    });
+    // Start random camera rotation after a delay
+    setTimeout(randomRotateCamera, 5000);
   };
 
+  // Add a visible button to start audio if it doesn't start automatically
+  const addAudioStartButton = () => {
+    // Check if button already exists
+    if (document.getElementById("start-audio-btn")) return;
+
+    // Create button
+    const button = document.createElement("button");
+    button.id = "start-audio-btn";
+    button.textContent = "Start Audio Experience";
+    button.style.position = "fixed";
+    button.style.top = "50%";
+    button.style.left = "50%";
+    button.style.transform = "translate(-50%, -50%)";
+    button.style.zIndex = "1000";
+    button.style.padding = "15px 30px";
+    button.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+    button.style.color = "#fff";
+    button.style.border = "2px solid #0ff";
+    button.style.borderRadius = "5px";
+    button.style.fontFamily = "sans-serif";
+    button.style.fontSize = "18px";
+    button.style.cursor = "pointer";
+    button.style.boxShadow = "0 0 20px rgba(0, 255, 255, 0.5)";
+
+    // Add hover effect
+    button.onmouseover = () => {
+      button.style.backgroundColor = "rgba(0, 0, 0, 0.9)";
+      button.style.boxShadow = "0 0 25px rgba(0, 255, 255, 0.7)";
+    };
+    button.onmouseout = () => {
+      button.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+      button.style.boxShadow = "0 0 20px rgba(0, 255, 255, 0.5)";
+    };
+
+    // Add click handler
+    button.onclick = async () => {
+      try {
+        // Start Tone.js
+        await Tone.start();
+        console.log("Tone.js started from button click");
+
+        // Resume audio context
+        if (Tone.context && Tone.context.state !== "running") {
+          await Tone.context.resume();
+        }
+
+        // Update modules with the running context
+        if (cubeModule) {
+          cubeModule.updateAudioContext(Tone.context);
+        }
+
+        if (sphereModule) {
+          sphereModule.updateAudioContext(Tone.context);
+        }
+
+        // Remove button after successful start
+        button.remove();
+      } catch (e) {
+        console.error("Error starting audio from button:", e);
+        button.textContent = "Retry Audio";
+      }
+    };
+
+    // Add to document
+    document.body.appendChild(button);
+  };
+
+  // Set up audio
   const setupAudio = async () => {
     try {
-      // Create and attach audio listener to camera
+      console.log("Setting up audio...");
+
+      // Create Three.js audio listener
+      threeAudioListener = new THREE.AudioListener();
+      camera.add(threeAudioListener);
+      console.log("Three.js audio listener created and added to camera");
+
+      // Check if Tone.js is already started
+      if (Tone.context.state === "running") {
+        console.log("Tone.js is already running");
+      } else {
+        console.log("Tone.js is not running, starting...");
+        await Tone.start();
+      }
+
+      // Initialize audio mixer
+      audioMixer = AudioMixer();
+      const mixerComponents = audioMixer.init();
+      console.log("Audio mixer initialized");
+
+      // Make mixer globally accessible for new audio nodes
+      // @ts-ignore - Adding audioMixer to window for global access
+      window.audioMixer = audioMixer;
+
+      // Use the mixer's reverb instead of creating a new one
+      reverb = mixerComponents.reverbNode;
+      console.log("Using mixer's reverb node");
+
+      // Set up listener
       listener = new THREE.AudioListener();
       camera.add(listener);
 
-      // Get audio context and ensure it's running
-      const audioContext = listener.context;
+      console.log("Audio setup complete. Context state:", Tone.context.state);
 
-      // Force start the audio context without user interaction
-      if (audioContext.state === "suspended") {
-        try {
-          // Create a silent buffer to play
-          const silentBuffer = audioContext.createBuffer(1, 1, 22050);
-          const source = audioContext.createBufferSource();
-          source.buffer = silentBuffer;
-          source.connect(audioContext.destination);
-          source.start(0);
+      // Set up audio context resumption handlers
+      setupAudioContextResumption();
 
-          // Try to resume the context
-          await audioContext.resume();
-          console.log("Forced audio context to start:", audioContext.state);
-        } catch (e) {
-          console.warn("Could not force start audio context:", e);
-        }
+      // Add visible button if audio context is not running
+      if (Tone.context.state !== "running") {
+        addAudioStartButton();
       }
 
-      // Wait for the context to be running
-      if (audioContext.state !== "running") {
-        await new Promise((resolve) => {
-          const checkState = () => {
-            if (audioContext.state === "running") {
-              resolve(true);
-            } else {
-              // Try to resume again
-              audioContext
-                .resume()
-                .catch((e: Error) => console.warn("Resume attempt failed:", e));
-              setTimeout(checkState, 100);
-            }
-          };
-          checkState();
-        });
-      }
+      // Load GLB model
+      loadFloatingModel();
 
-      console.log("Audio context is running:", audioContext.state);
-
-      // Create a shared ConvolverNode for reverb
-      const convolver = audioContext.createConvolver();
-      const reverbTime = 421.5; // Reverb duration in seconds - increased 3x (was 140.5)
-      const sampleRate = audioContext.sampleRate;
-      const length = sampleRate * reverbTime;
-      const impulse = audioContext.createBuffer(2, length, sampleRate);
-
-      // Generate an impulse response for the convolver
-      for (let channel = 0; channel < 2; channel++) {
-        const channelData = impulse.getChannelData(channel);
-        for (let i = 0; i < length; i++) {
-          channelData[i] =
-            (Math.random() * 2 - 1) * Math.exp(-i / (sampleRate * 0.1));
-        }
-      }
-
-      convolver.buffer = impulse;
-
-      // Create a GainNode to control the overall wet mix
-      reverbGain = audioContext.createGain();
-      reverbGain.gain.value = 0.7; // Adjusted for the larger reverb (was 1)
-
-      // Connect the convolver to the gain node, then to the destination
-      convolver.connect(reverbGain);
-      reverbGain.connect(audioContext.destination);
-
-      // Store the reverb node for modules to use
-      reverb = convolver;
-      console.log("Audio setup complete with reverb node.");
-
-      // Set up Tone.js master volume
-      initialVolume = Tone.getDestination().volume.value;
-      console.log("Initial Tone.js volume:", initialVolume);
+      return true;
     } catch (error) {
-      console.error("Error setting up audio:", error);
+      console.error("Audio setup error:", error);
+      // Add visible button if there was an error
+      addAudioStartButton();
+      return false;
     }
+  };
+
+  // Load GLB model
+  const loadFloatingModel = () => {
+    // Import GLTFLoader dynamically
+    import("three/examples/jsm/loaders/GLTFLoader.js")
+      .then(({ GLTFLoader }) => {
+        const loader = new GLTFLoader();
+
+        // Load the model
+        loader.load(
+          "https://boytchev.github.io/etudes/threejs/negative-morphs/LeePerrySmith.glb",
+          (gltf) => {
+            console.log("GLB model loaded successfully");
+
+            // Get the model
+            floatingModel = gltf.scene.children[0];
+
+            // Scale the model (make it giant)
+            floatingModel.scale.set(3.0, 3.0, 3.0);
+
+            // Create custom material with low opacity and emissive glow
+            floatingModel.material = new THREE.MeshPhysicalMaterial({
+              color: 0xffd000,
+              sheen: 1,
+              sheenColor: "white",
+              sheenRoughness: 0.25,
+              metalness: 0,
+              roughness: 0.5,
+              emissive: "orange",
+              emissiveIntensity: 0.5,
+              transparent: true,
+              opacity: 0.05, // Very low opacity (5%)
+            });
+
+            // Position the model
+            floatingModel.position.set(0, 0, 0);
+
+            // Add Three.js positional audio to the model
+            if (threeAudioListener) {
+              // Create a positional audio source
+              const sound = new THREE.PositionalAudio(threeAudioListener);
+
+              // Configure positional audio parameters
+              sound.setRefDistance(5);
+              sound.setDistanceModel("exponential");
+              sound.setRolloffFactor(2);
+              sound.setVolume(0.5);
+
+              // Load audio file for the model
+              const audioLoader = new THREE.AudioLoader();
+              audioLoader.load(
+                "/audio/heroic.mp3", // Use existing audio file
+                (buffer) => {
+                  sound.setBuffer(buffer);
+                  sound.setLoop(true);
+                  sound.play();
+
+                  // Connect to audio mixer
+                  if (audioMixer) {
+                    audioMixer.connectThreeAudio(sound, "floatingModelAudio");
+                  }
+
+                  console.log(
+                    "Positional audio loaded and playing on floating model",
+                  );
+                },
+                (progress) => {
+                  console.log(
+                    `Loading audio: ${Math.round((progress.loaded / progress.total) * 100)}%`,
+                  );
+                },
+                (error) => {
+                  console.error("Error loading audio:", error);
+                },
+              );
+
+              // Add sound to the model
+              floatingModel.add(sound);
+
+              // Store reference to the positional audio
+              positionalAudios.push(sound);
+
+              console.log("Added Three.js positional audio to floating model");
+            } else {
+              console.warn("Audio listener not available for positional audio");
+            }
+
+            // Add to scene
+            scene.add(floatingModel);
+
+            console.log("Floating model added to scene");
+          },
+          (progress) => {
+            console.log(
+              `Loading model: ${(progress.loaded / progress.total) * 100}%`,
+            );
+          },
+          (error) => {
+            console.error("Error loading GLB model:", error);
+          },
+        );
+      })
+      .catch((error) => {
+        console.error("Error importing GLTFLoader:", error);
+      });
   };
 
   const handleScroll = () => {
@@ -1004,14 +1386,16 @@
     }
   };
 
+  // Set up Three.js scene
   const setupScene = () => {
     // Set up renderer
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setClearColor(0x000000, 0);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0); // Transparent background
 
-    // Position camera at origin
-    camera.position.set(0, 0, 0); // Changed from z=10 to start at origin (0,0,0)
+    // Set up camera
+    camera.position.z = 15; // Increased from 5 to see more of the scene
+    camera.position.y = 5; // Slight elevation for better perspective
 
     // Add ambient light
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -1022,23 +1406,35 @@
     directionalLight.position.set(5, 5, 5);
     scene.add(directionalLight);
 
-    // Add point light for godray effect
-    const pointLight = new THREE.PointLight(0xffffff, 1, 100);
-    pointLight.position.copy(godrayParams.lightPos);
-    scene.add(pointLight);
+    // Add the renderer to the DOM
+    const container = document.getElementById("three-container");
+    if (container) {
+      // Clear any existing canvas
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+      container.appendChild(renderer.domElement);
+      console.log("Renderer added to DOM");
+    } else {
+      console.error("Could not find three-container element");
+    }
 
-    // Create HUD element
-    createHUD();
-
-    // Add event listener for window resize
+    // Handle window resize
     window.addEventListener("resize", () => {
+      // Update camera
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
+
+      // Update renderer
       renderer.setSize(window.innerWidth, window.innerHeight);
+
+      // Update composer if it exists
       if (composer) {
         composer.setSize(window.innerWidth, window.innerHeight);
       }
     });
+
+    console.log("Scene setup complete");
   };
 
   // Create HUD element to display camera position and rotation
@@ -1071,36 +1467,21 @@
     });
   };
 
-  // Update HUD with current camera position and rotation
-  const updateHUD = () => {
-    if (!hudElement || !hudVisible) return;
-
-    // Get camera position
-    const position = camera.position;
-
-    // Get camera rotation in degrees
-    const rotation = new THREE.Euler().setFromQuaternion(camera.quaternion);
-    const rotationDegrees = {
-      x: THREE.MathUtils.radToDeg(rotation.x).toFixed(1),
-      y: THREE.MathUtils.radToDeg(rotation.y).toFixed(1),
-      z: THREE.MathUtils.radToDeg(rotation.z).toFixed(1),
-    };
-
-    // Update HUD content
-    hudElement.innerHTML = `
-      ${position.x.toFixed(1)} ${position.y.toFixed(1)} ${position.z.toFixed(1)}<br>
-      ${rotationDegrees.x} ${rotationDegrees.y} ${rotationDegrees.z}
-    `;
-  };
-
+  // Set up modules
   const setupModules = () => {
-    // Initialize modules
+    // Initialize cube module
     cubeModule = CubeModule();
-    pulseModule = PulseModule();
-
-    // Pass shared resources to modules
     cubeModule.init(scene, listener, reverb);
+    // Explicitly start cube animation
+    cubeModule.startCubeAnimation();
+
+    // Initialize pulse module
+    pulseModule = PulseModule();
     pulseModule.init(scene, listener, reverb);
+
+    // Initialize sphere module
+    sphereModule = SphereModule();
+    sphereModule.init(scene, listener, reverb);
 
     console.log("Modules initialized");
   };
@@ -1111,6 +1492,7 @@
 
     // Get the cubes from the cubeModule
     const cubes = cubeModule.getCubes();
+    if (!cubes) return;
 
     // Add velocity to each cube
     cubes.forEach((cube: any) => {
@@ -1122,6 +1504,15 @@
           (Math.random() - 0.5) * 0.02,
           (Math.random() - 0.5) * 0.02,
           (Math.random() - 0.5) * 0.02,
+        );
+      }
+
+      // Add random rotation velocity if not already present
+      if (!cube.userData.rotationVelocity) {
+        cube.userData.rotationVelocity = new THREE.Vector3(
+          (Math.random() - 0.5) * 0.01,
+          (Math.random() - 0.5) * 0.01,
+          (Math.random() - 0.5) * 0.01,
         );
       }
 
@@ -1153,305 +1544,410 @@
     });
   };
 
-  // Update cubes from cubeModule
-  const updateCubes = (deltaTime: number) => {
-    if (!cubeModule || !cubeModule.getCubes) return;
-
-    const cubes = cubeModule.getCubes();
-    if (!cubes || !cubes.length) return;
-
-    cubes.forEach((cube: any) => {
-      if (!cube.userData || !cube.userData.velocity) return;
-
-      // Move the cube
-      cube.position.x += cube.userData.velocity.x * deltaTime;
-      cube.position.y += cube.userData.velocity.y * deltaTime;
-      cube.position.z += cube.userData.velocity.z * deltaTime;
-
-      // Rotate the cube
-      if (cube.userData.rotationVelocity) {
-        cube.rotation.x += cube.userData.rotationVelocity.x * deltaTime;
-        cube.rotation.y += cube.userData.rotationVelocity.y * deltaTime;
-        cube.rotation.z += cube.userData.rotationVelocity.z * deltaTime;
-      }
-
-      // Boundary checks with bounce
-      const cubeBounds = SPACE_BOUNDS / 4; // Keep cubes in a smaller area
-      const halfBounds = cubeBounds / 2;
-
-      if (Math.abs(cube.position.x) > halfBounds) {
-        cube.userData.velocity.x *= -1;
-        cube.position.x = Math.sign(cube.position.x) * halfBounds;
-      }
-
-      if (Math.abs(cube.position.y) > halfBounds) {
-        cube.userData.velocity.y *= -1;
-        cube.position.y = Math.sign(cube.position.y) * halfBounds;
-      }
-
-      if (Math.abs(cube.position.z) > halfBounds) {
-        cube.userData.velocity.z *= -1;
-        cube.position.z = Math.sign(cube.position.z) * halfBounds;
-      }
-    });
-  };
-
-  const animate = function () {
-    requestAnimationFrame(animate);
-
-    // Calculate delta time for smooth animation
-    const now = Date.now();
-    const deltaTime = Math.min(
-      (now - ((animate as any).lastTime || now)) / 16.6,
-      2,
-    ); // Cap at 2x normal speed
-    (animate as any).lastTime = now;
-
-    // Update audio objects
-    updateAudioObjects(deltaTime);
-
-    // Update lighting bars
-    updateLightingBars(deltaTime);
-
-    // Update cubes
-    updateCubes(deltaTime);
-
-    // Check if user interaction timeout has passed
-    const userInteractionElapsed = now - camera.userData.lastUserInteraction;
-    const autoRotationResumed =
-      userInteractionElapsed > camera.userData.userInteractionTimeout;
-
-    // Apply inertia to camera movement from WASD controls
-    if (camera.userData.inertia) {
-      // Apply inertia with damping
-      camera.position.x += camera.userData.inertia.x * deltaTime;
-      camera.position.y += camera.userData.inertia.y * deltaTime;
-      camera.position.z += camera.userData.inertia.z * deltaTime;
-
-      // Dampen inertia
-      camera.userData.inertia.multiplyScalar(0.95);
-
-      // Limit camera position to stay within bounds
-      camera.position.x = THREE.MathUtils.clamp(
-        camera.position.x,
-        -CAMERA_MAX_DISTANCE,
-        CAMERA_MAX_DISTANCE,
-      );
-      camera.position.y = THREE.MathUtils.clamp(
-        camera.position.y,
-        -CAMERA_MAX_DISTANCE,
-        CAMERA_MAX_DISTANCE,
-      );
-      camera.position.z = THREE.MathUtils.clamp(
-        camera.position.z,
-        -CAMERA_MAX_DISTANCE,
-        CAMERA_MAX_DISTANCE,
-      );
-
-      // Update camera matrix
-      camera.updateMatrixWorld();
-
-      // Update listener position
-      if (listener) {
-        listener.updateMatrixWorld();
-      }
-    }
-
-    // Free camera movement when auto rotation is enabled
-    if (cameraAutoRotationEnabled && autoRotationResumed) {
-      // Update camera rotation angle
-      cameraRotationAngle += deltaTime;
-
-      // Calculate radius with slow oscillation
-      const radiusOscillation =
-        Math.sin(cameraRotationAngle * 0.0001) * 0.5 + 0.5;
-      const currentRadius =
-        CAMERA_ROTATION_RADIUS_MIN +
-        (CAMERA_ROTATION_RADIUS_MAX - CAMERA_ROTATION_RADIUS_MIN) *
-          radiusOscillation;
-
-      // Calculate new camera position based on rotation with 3D movement
-      const x =
-        currentRadius * Math.sin(cameraRotationAngle * CAMERA_ROTATION_SPEED_X);
-      const y = 3 + 5 * Math.sin(cameraRotationAngle * CAMERA_ROTATION_SPEED_Y); // Reduced vertical movement
-      const z =
-        currentRadius * Math.cos(cameraRotationAngle * CAMERA_ROTATION_SPEED_Z);
-
-      // Set target position
-      cameraTargetPosition.set(x, y, z);
-
-      // Apply smooth transition to new position with inertia
-      camera.position.x +=
-        (cameraTargetPosition.x - camera.position.x) * 0.005 * deltaTime;
-      camera.position.y +=
-        (cameraTargetPosition.y - camera.position.y) * 0.005 * deltaTime;
-      camera.position.z +=
-        (cameraTargetPosition.z - camera.position.z) * 0.005 * deltaTime;
-
-      // Add slight random drift for more organic movement
-      camera.position.x += (Math.random() - 0.5) * 0.01 * deltaTime;
-      camera.position.y += (Math.random() - 0.5) * 0.01 * deltaTime;
-      camera.position.z += (Math.random() - 0.5) * 0.01 * deltaTime;
-
-      // Limit camera position to stay within bounds
-      camera.position.x = THREE.MathUtils.clamp(
-        camera.position.x,
-        -CAMERA_MAX_DISTANCE,
-        CAMERA_MAX_DISTANCE,
-      );
-      camera.position.y = THREE.MathUtils.clamp(
-        camera.position.y,
-        -CAMERA_MAX_DISTANCE,
-        CAMERA_MAX_DISTANCE,
-      );
-      camera.position.z = THREE.MathUtils.clamp(
-        camera.position.z,
-        -CAMERA_MAX_DISTANCE,
-        CAMERA_MAX_DISTANCE,
-      );
-
-      // Look at center with slight offset for more interesting view
-      const lookAtOffset = new THREE.Vector3(
-        Math.sin(cameraRotationAngle * 0.0001) * 3, // Reduced from 5
-        Math.cos(cameraRotationAngle * 0.00015) * 3, // Reduced from 5
-        Math.sin(cameraRotationAngle * 0.00012) * 3, // Reduced from 5
-      );
-      camera.lookAt(lookAtOffset.x, lookAtOffset.y, lookAtOffset.z);
-
-      // Update camera matrix
-      camera.updateMatrixWorld();
-
-      // Update listener position
-      if (listener) {
-        listener.updateMatrixWorld();
-      }
-    } else {
-      // Update controls
-      if (controls) {
-        controls.update();
-      }
-    }
-
-    // Update HUD
-    updateHUD();
-
-    // Update TWEEN animations
-    TWEEN.update();
-
-    // Render scene
-    if (composer) {
-      composer.render();
-    } else {
-      renderer.render(scene, camera);
-    }
-  };
-
-  const startVisualExperience = async () => {
-    // Start cube animation
-    await cubeModule.startCubeAnimation();
-
-    // Enhance cubes with movement after a short delay
-    setTimeout(() => {
-      enhanceCubeModule();
-    }, 500);
-
-    // Start pulse animation after a delay
-    setTimeout(async () => {
-      await pulseModule.startPulseAnimation();
-    }, 2000);
-  };
-
+  // Initialize function to set up everything
   const initialize = async () => {
-    console.log("Initializing Hero...");
+    try {
+      console.log("Initializing Three.js scene");
 
-    // Set up Three.js scene
-    setupScene();
+      // Set up renderer
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setClearColor(0x000022, 1);
 
-    // Set up post-processing
-    setupPostProcessing();
-
-    // Set up controls
-    setupControls();
-
-    // Initialize Tone.js with autostart - but only after user interaction
-    const startAudioContext = async () => {
-      try {
-        await Tone.start();
-        toneStarted = true;
-        console.log("Tone.js started successfully");
-
-        // Set initial volume
-        Tone.getDestination().volume.value = -10; // Start at a reasonable volume
-        initialVolume = -10;
-
-        // Set up audio
-        await setupAudio();
-
-        // Initialize spatial audio objects
-        initAudioObjects();
-      } catch (e) {
-        console.warn("Could not start Tone.js:", e);
+      // Find the container element
+      const container = document.getElementById("three-container");
+      if (!container) {
+        console.error("Could not find three-container element");
+        return;
       }
-    };
 
-    // Set up modules
-    setupModules();
-
-    // Add the renderer to the DOM
-    const container = document.getElementById("three-container");
-    if (container) {
+      // Append renderer to container
       container.appendChild(renderer.domElement);
+
+      // Set up camera
+      camera.position.set(0, 5, 15);
+
+      // Set up controls
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.minDistance = 10;
+      controls.maxDistance = 50;
+      controls.maxPolarAngle = Math.PI / 1.5;
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 0.5;
+
+      // Set up random camera rotation
+      setupControls();
+
+      // Set up lighting
+      const ambientLight = new THREE.AmbientLight(0x333333);
+      scene.add(ambientLight);
+
+      // Add directional light
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(5, 10, 7.5);
+      scene.add(directionalLight);
+
+      // Create post-processing composer
+      composer = new EffectComposer(renderer);
+
+      // Add render pass
+      const renderPass = new RenderPass(scene, camera);
+      composer.addPass(renderPass);
+
+      // Add bloom pass
+      const bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        1.5, // strength
+        0.4, // radius
+        0.85, // threshold
+      );
+      composer.addPass(bloomPass);
+
+      // Add color correction pass
+      const colorCorrectionShader = {
+        uniforms: {
+          tDiffuse: { value: null },
+          saturation: { value: 1.2 },
+          brightness: { value: 1.1 },
+          contrast: { value: 1.1 },
+        },
+        vertexShader: `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform sampler2D tDiffuse;
+          uniform float saturation;
+          uniform float brightness;
+          uniform float contrast;
+          varying vec2 vUv;
+          
+          void main() {
+            vec4 color = texture2D(tDiffuse, vUv);
+            
+            // Apply brightness
+            color.rgb *= brightness;
+            
+            // Apply contrast
+            color.rgb = (color.rgb - 0.5) * contrast + 0.5;
+            
+            // Apply saturation
+            float luminance = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+            color.rgb = mix(vec3(luminance), color.rgb, saturation);
+            
+            gl_FragColor = color;
+          }
+        `,
+      };
+
+      const colorCorrectionPass = new ShaderPass(colorCorrectionShader);
+      composer.addPass(colorCorrectionPass);
+
+      // Create lighting bars
+      for (let i = 0; i < 10; i++) {
+        const bar = createLightingBar(i);
+        lightingBars.push(bar);
+      }
+
+      // Create audio objects
+      for (let i = 0; i < 8; i++) {
+        const obj = createAudioObject(i);
+        audioObjects.push(obj);
+      }
+
+      // Set up audio with retry mechanism
+      await startAudioWithRetry();
+
+      // Set up window resize handler
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        composer.setSize(window.innerWidth, window.innerHeight);
+      });
 
       // Start animation loop
       animate();
 
-      // Add scroll event listener
-      window.addEventListener("scroll", handleScroll);
+      console.log("Three.js scene initialized successfully");
 
-      // Initialize lighting bars
-      setTimeout(() => {
-        initLightingBars();
-      }, 300);
+      // Show start button if audio context is not running
+      if (Tone.context && Tone.context.state !== "running") {
+        const startButton = document.getElementById("start-audio-btn");
+        if (startButton) {
+          startButton.style.display = "block";
+          startButton.addEventListener("click", async () => {
+            await startAudioWithRetry();
+            startButton.style.display = "none";
+          });
+        }
+      }
 
-      // Start visual experience after a short delay
-      setTimeout(() => {
-        startVisualExperience();
-      }, 1000);
-
-      // Add event listeners for user interaction to start audio
-      const userInteractionHandler = async () => {
-        await startAudioContext();
-        document.removeEventListener("click", userInteractionHandler);
-        document.removeEventListener("touchstart", userInteractionHandler);
-        document.removeEventListener("keydown", userInteractionHandler);
-      };
-
-      document.addEventListener("click", userInteractionHandler);
-      document.addEventListener("touchstart", userInteractionHandler);
-      document.addEventListener("keydown", userInteractionHandler);
-
-      console.log("Hero initialization complete");
-    } else {
-      console.error("Could not find three-container element");
+      return true;
+    } catch (error) {
+      console.error("Error initializing scene:", error);
+      return false;
     }
   };
 
-  // Initialize when the DOM is loaded
-  if (typeof document !== "undefined") {
-    document.addEventListener("DOMContentLoaded", () => {
-      initialize();
-    });
+  // Start audio with retry mechanism
+  const startAudioWithRetry = async (maxRetries = 3) => {
+    let retries = 0;
+    let success = false;
 
-    // Also listen for the custom event from index.astro
-    window.addEventListener("audioContextReady", () => {
-      console.log("Received audioContextReady event");
-      initialize();
+    while (!success && retries < maxRetries) {
+      try {
+        console.log(`Attempt ${retries + 1} to start audio`);
+
+        // Start Tone.js
+        await Tone.start();
+        console.log("Tone.js started successfully");
+
+        // Set up audio
+        await setupAudio();
+
+        // Create modules
+        cubeModule = CubeModule();
+        cubeModule.init(scene, listener, reverb);
+        // Explicitly start cube animation
+        cubeModule.startCubeAnimation();
+
+        sphereModule = SphereModule();
+        sphereModule.init(scene, listener, reverb);
+
+        pulseModule = PulseModule();
+        pulseModule.init(scene, listener, reverb);
+
+        // Connect module audio to mixer if available
+        if (audioMixer) {
+          // Connect cube oscillators to mixer
+          try {
+            setTimeout(() => {
+              try {
+                const cubeOscillators = cubeModule.getOscillators
+                  ? cubeModule.getOscillators()
+                  : [];
+                if (cubeOscillators && cubeOscillators.length > 0) {
+                  cubeOscillators.forEach((osc: any) => {
+                    audioMixer.connectNode(osc, "cubeOscillators");
+                  });
+                  console.log(
+                    "Connected cube oscillators to mixer:",
+                    cubeOscillators.length,
+                  );
+                } else {
+                  console.warn("No cube oscillators found to connect to mixer");
+                }
+              } catch (e) {
+                console.error("Error connecting cube oscillators to mixer:", e);
+              }
+            }, 1000); // Delay to ensure modules are fully initialized
+          } catch (e) {
+            console.error("Error setting up cube oscillator connection:", e);
+          }
+
+          // Connect sphere oscillators to mixer
+          try {
+            setTimeout(() => {
+              try {
+                const sphereOscillators = sphereModule.getOscillators
+                  ? sphereModule.getOscillators()
+                  : [];
+                if (sphereOscillators && sphereOscillators.length > 0) {
+                  sphereOscillators.forEach((osc: any) => {
+                    audioMixer.connectNode(osc, "sphereOscillators");
+                  });
+                  console.log(
+                    "Connected sphere oscillators to mixer:",
+                    sphereOscillators.length,
+                  );
+                } else {
+                  console.warn(
+                    "No sphere oscillators found to connect to mixer",
+                  );
+                }
+              } catch (e) {
+                console.error(
+                  "Error connecting sphere oscillators to mixer:",
+                  e,
+                );
+              }
+            }, 1000); // Delay to ensure modules are fully initialized
+          } catch (e) {
+            console.error("Error setting up sphere oscillator connection:", e);
+          }
+
+          // Connect pulse oscillators to mixer
+          try {
+            setTimeout(() => {
+              try {
+                const pulseOscillators = pulseModule.getOscillators
+                  ? pulseModule.getOscillators()
+                  : [];
+                if (pulseOscillators && pulseOscillators.length > 0) {
+                  pulseOscillators.forEach((osc: any) => {
+                    audioMixer.connectNode(osc, "pulseOscillators");
+                  });
+                  console.log("Connected pulse oscillators to mixer");
+                }
+              } catch (e) {
+                console.error(
+                  "Error connecting pulse oscillators to mixer:",
+                  e,
+                );
+              }
+            }, 1000); // Delay to ensure modules are fully initialized
+          } catch (e) {
+            console.error("Error setting up pulse oscillator connection:", e);
+          }
+        }
+
+        // Set up audio context resumption handlers
+        setupAudioContextResumption();
+
+        // Mark as started
+        toneStarted = true;
+        success = true;
+
+        console.log("Audio setup complete");
+
+        // Hide start button if it exists
+        const startButton = document.getElementById("start-audio-btn");
+        if (startButton) {
+          startButton.style.display = "none";
+        }
+
+        return true;
+      } catch (error) {
+        console.error(`Error starting audio (attempt ${retries + 1}):`, error);
+        retries++;
+
+        // Wait before retrying
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+
+    if (!success) {
+      console.error("Failed to start audio after multiple attempts");
+
+      // Show start button as fallback
+      const startButton = document.getElementById("start-audio-btn");
+      if (startButton) {
+        startButton.style.display = "block";
+      } else {
+        addAudioStartButton();
+      }
+
+      return false;
+    }
+  };
+
+  // Animation loop
+  const animate = () => {
+    requestAnimationFrame(animate);
+
+    // Update TWEEN
+    TWEEN.update();
+
+    // Get delta time for smooth animations
+    const deltaTime = clock.getDelta();
+    const now = Date.now() * 0.001; // Current time in seconds
+
+    // Update modules
+    if (sphereModule) {
+      sphereModule.updateSpheres();
+    }
+
+    if (cubeModule) {
+      cubeModule.updateCubes();
+      // Also update cube materials for transitions
+      if (typeof cubeModule.updateMaterials === "function") {
+        cubeModule.updateMaterials(deltaTime * 1000); // Convert to milliseconds
+      }
+    }
+
+    // Update lighting bars
+    updateLightingBars(deltaTime, now);
+
+    // Update audio objects
+    updateAudioObjects();
+
+    // Update floating model if it exists
+    if (floatingModel) {
+      floatingModel.rotation.y += 0.001;
+    }
+
+    // Update composer or renderer
+    if (composer) {
+      composer.render();
+    } else if (renderer && scene && camera) {
+      renderer.render(scene, camera);
+    }
+  };
+
+  // Set up event listeners
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("DOM content loaded, initializing...");
+    initialize();
+  });
+
+  // Listen for audioContextReady event (dispatched from index.astro)
+  window.addEventListener("audioContextReady", async () => {
+    console.log("audioContextReady event received");
+
+    // Start Tone.js if not already started
+    if (!toneStarted) {
+      try {
+        // Create a synthetic click event to start audio
+        setTimeout(async () => {
+          await startAudioWithRetry();
+        }, 500);
+      } catch (e) {
+        console.error("Error starting Tone.js:", e);
+      }
+    }
+  });
+
+  // Add event listeners to ensure audio context stays running
+  ["click", "touchstart", "keydown"].forEach((eventType) => {
+    document.addEventListener(eventType, async () => {
+      if (Tone.context && Tone.context.state !== "running") {
+        try {
+          await Tone.context.resume();
+          console.log("Audio context resumed after user interaction");
+
+          // Update modules with the resumed context
+          if (cubeModule) cubeModule.updateAudioContext(Tone.context);
+          if (sphereModule) sphereModule.updateAudioContext(Tone.context);
+          if (pulseModule) pulseModule.updateAudioContext(Tone.context);
+          if (audioMixer) audioMixer.updateAudioContext(Tone.context);
+        } catch (e) {
+          console.error("Error resuming audio context:", e);
+        }
+      }
     });
-  }
+  });
+
+  // Resume audio context when window gains focus
+  window.addEventListener("focus", async () => {
+    if (Tone.context && Tone.context.state !== "running") {
+      try {
+        await Tone.context.resume();
+        console.log("Audio context resumed on window focus");
+
+        // Update modules with the resumed context
+        if (cubeModule) cubeModule.updateAudioContext(Tone.context);
+        if (sphereModule) sphereModule.updateAudioContext(Tone.context);
+        if (pulseModule) pulseModule.updateAudioContext(Tone.context);
+        if (audioMixer) audioMixer.updateAudioContext(Tone.context);
+      } catch (e) {
+        console.error("Error resuming audio context on focus:", e);
+      }
+    }
+  });
 </script>
-
-<div
-  id="three-container"
-  style="width: 100%; height: 100vh; position: block; top: 0; left: 0; z-index: -1; pointer-events: auto; background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%);"
->
-</div>

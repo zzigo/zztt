@@ -4,11 +4,15 @@ import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
 import Hero from "../components/hero.astro";
-import { getCollection } from 'astro:content';
-import FormattedDate from '../components/FormattedDate.astro';
+import { getCollection } from "astro:content";
+import FormattedDate from "../components/FormattedDate.astro";
 
-const posts = (await getCollection('works')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+
+// REDIRECTION CONFIG - Set to false to disable redirection and enable the Astro site
+const REDIRECT_TO_ZZTT_HTML = true;
+
+const posts = (await getCollection("works")).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 ---
 
@@ -16,6 +20,9 @@ const posts = (await getCollection('works')).sort(
 <html lang="en" class="dark">
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		{REDIRECT_TO_ZZTT_HTML && (
+			<meta http-equiv="refresh" content="0;url=/zztt.html" />
+		)}
 		<style>
 			:root {
 				/* --background-color: #000000; */
@@ -40,7 +47,11 @@ const posts = (await getCollection('works')).sort(
 				margin: 0 auto;
 				position: relative;
 				z-index: 1;
-				background: linear-gradient(to bottom, transparent 0%, var(--background-color) 300px);
+				background: linear-gradient(
+					to bottom,
+					transparent 0%,
+					var(--background-color) 300px
+				);
 			}
 			.intro {
 				font-size: 1.5rem;
@@ -112,57 +123,111 @@ const posts = (await getCollection('works')).sort(
 		</style>
 	</head>
 	<body>
-		<Header />
-		<div class="hero-container">
-			<Hero />
-		</div>
-		<main>
-			<p class="intro">Sound artist and composer based in Bern, Switzerland.</p>
-			<section class="works-section">
-				<ul class="works-grid">
-					{
-						posts.map((post) => (
-							<li class="work-item">
-								<a href={`/works/${post.id}/`} class="work-image-container">
-									<img
-										width={600}
-										height={300}
-										src={post.data.heroImage}
-										alt=""
-										class="work-image"
-									/>
-								</a>
-								<div class="work-content">
-									<a href={`/works/${post.id}/`}>
-										<h2 class="work-title">{post.data.title}</h2>
-									</a>
-									<p class="work-date">
-										<FormattedDate date={post.data.pubDate} />
-									</p>
-									<p class="work-synopsis">{post.data.description}</p>
-								</div>
-							</li>
-						))
+		{!REDIRECT_TO_ZZTT_HTML && (
+			<>
+				<Header />
+				<div class="hero-container">
+					<Hero />
+				</div>
+				<main>
+					<p class="intro">
+						Sound artist and composer based in Bern, Switzerland.
+					</p>
+					<section class="works-section">
+						<ul class="works-grid">
+							{
+								posts.map((post) => (
+									<li class="work-item">
+										<a
+											href={`/works/${post.id}/`}
+											class="work-image-container"
+										>
+											<img
+												width={600}
+												height={300}
+												src={post.data.heroImage}
+												alt=""
+												class="work-image"
+											/>
+										</a>
+										<div class="work-content">
+											<a href={`/works/${post.id}/`}>
+												<h2 class="work-title">
+													{post.data.title}
+												</h2>
+											</a>
+											<p class="work-date">
+												<FormattedDate
+													date={post.data.pubDate}
+												/>
+											</p>
+											<p class="work-synopsis">
+												{post.data.description}
+											</p>
+										</div>
+									</li>
+								))
+							}
+						</ul>
+					</section>
+				</main>
+				<Footer />
+			</>
+		)}
+		
+		{!REDIRECT_TO_ZZTT_HTML && (
+			<script>
+				// Create a function to initialize the audio context with user interaction
+				const initAudioContext = async () => {
+					try {
+						// Create a new AudioContext
+						const audioContext = new AudioContext();
+
+						// Create a silent audio buffer
+						const buffer = audioContext.createBuffer(1, 1, 22050);
+						const source = audioContext.createBufferSource();
+						source.buffer = buffer;
+						source.connect(audioContext.destination);
+						source.start(0);
+
+						console.log(
+							"AudioContext initialized:",
+							audioContext.state,
+						);
+
+						// Wait a small amount of time to ensure AudioContext is ready
+						await new Promise((resolve) => setTimeout(resolve, 100));
+
+						// Dispatch a custom event to notify hero.astro that it can start
+						window.dispatchEvent(new CustomEvent("audioContextReady"));
+
+						return true;
+					} catch (error) {
+						console.error("Error initializing AudioContext:", error);
+						return false;
 					}
-				</ul>
-			</section>
-		</main>
-		<Footer />
-		<script>
-			window.onload = async function () {
-				// Create a silent audio buffer to initialize AudioContext
-				const audioContext = new AudioContext();
-				const buffer = audioContext.createBuffer(1, 1, 22050);
-				const source = audioContext.createBufferSource();
-				source.buffer = buffer;
-				source.connect(audioContext.destination);
-				source.start(0);
+				};
 
-				// Wait a small amount of time to ensure AudioContext is ready
-				await new Promise((resolve) => setTimeout(resolve, 100));
+				// Add event listeners for user interaction
+				const handleUserInteraction = async () => {
+					console.log("User interaction detected");
+					
+					// Initialize audio context
+					const success = await initAudioContext();
+					
+					if (success) {
+						// Remove event listeners after successful initialization
+						document.removeEventListener("click", handleUserInteraction);
+						document.removeEventListener("touchstart", handleUserInteraction);
+						document.removeEventListener("keydown", handleUserInteraction);
+					}
+				};
 
-				// Dispatch a custom event to notify hero.astro that it can start
-				window.dispatchEvent(new CustomEvent("audioContextReady"));
-			};
-		</script>
+				// Add event listeners for user interaction
+				document.addEventListener("click", handleUserInteraction);
+				document.addEventListener("touchstart", handleUserInteraction);
+				document.addEventListener("keydown", handleUserInteraction);
+			</script>
+		)}
 	</body>
+</html>
