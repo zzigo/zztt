@@ -187,7 +187,8 @@ let cubeInterval;
 // Create a cube with cyberpunk material
 const createCube = () => {
   // Create geometry
-  const size = Math.random() * 40.5 + 0.5; // Random size between 0.5 and 2.0
+  const size = Math.random() * 40
+  .5 + 0.5; // Random size between 0.5 and 2.0
   const geometry = new THREE.BoxGeometry(size, size, size);
   
   // Create cyberpunk material

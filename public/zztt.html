@@ -18,6 +18,7 @@ ___________________________________________________________
         content="luciano,azzigotti,classical music,argentine music,contemporary music,experimental music,noise music,feedback music,interactive music,installation,art installation,filmscoring,música argentina" />
     <meta name="robots" content="index, follow" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="apple-mobile-web-app-title" content="zztt.org" />
     <meta name="cache-control" content="no-cache" />
@@ -27,17 +28,34 @@ ___________________________________________________________
     <meta property="og:type" content="website" />
     <meta property="og:title" content="luciano azzigotti" />
     <meta property="og:description" content="luciano azzigotti buenos aires composer based in switzerland" />
-    <meta property="og:image" content="inc/img/zztt32.gif" />
+    <meta property="og:image" content="buenos aires.png" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:site" content="luciano azzigotti" />
     <meta name="twitter:creator" content="zztt.org" />
     <meta name="twitter:title" content="luciano azzigotti" />
     <meta name="twitter:description" content="luciano azzigotti buenos aires composer based in switzerland" />
-    <meta name="twitter:image" content="inc/img/zztt32.gif" />
+    <meta name="twitter:image" content="buenos aires.png" />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/gif" href="inc/zztt.gif" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <title>luciano azzigotti</title>
+
+    <!-- External Resources -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@100&family=Inconsolata:wght@200..900&family=Montserrat+Alternates:wght@200&family=Work+Sans:wght@200&display=swap"
+        rel="stylesheet" />
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/addons/p5.dom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@floating-ui/core@1.4.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.5.1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <!-- Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-h2T36DKPH1"></script>
@@ -65,24 +83,6 @@ ___________________________________________________________
         ]
       }
     </script>
-
-    <!-- External Resources -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@100&family=Inconsolata:wght@200..900&family=Montserrat+Alternates:wght@200&family=Work+Sans:wght@200&display=swap"
-        rel="stylesheet" />
-    <link rel="stylesheet" type="text/css" href="../style.css" />
-
-    <!-- Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/addons/p5.dom.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@floating-ui/core@1.4.1"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.5.1"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <style>
         :root {
@@ -238,7 +238,7 @@ ___________________________________________________________
 
         /* Video */
         .hero {
-            display: none;
+            display: block;
             overflow: hidden;
             position: fixed;
         }
@@ -636,34 +636,65 @@ ___________________________________________________________
         initSection();
 
         // Three.js setup and animation
-        video01 = document.getElementById("videoID");
-        video01.play();
-        init();
-        animate();
+        document.addEventListener('DOMContentLoaded', function () {
+            // Make sure video is loaded and ready
+            video01 = document.getElementById("videoID");
+
+            // Force video to play
+            video01.play().catch(e => {
+                console.log("Auto-play prevented. User interaction needed to play video.");
+                // Add a click event to the document to start video on first interaction
+                document.addEventListener('click', function startVideo() {
+                    video01.play().catch(e => console.error("Error playing video:", e));
+                    document.removeEventListener('click', startVideo);
+                }, { once: true });
+            });
+
+            // Initialize Three.js scene
+            init();
+            animate();
+        });
 
         function init() {
+            // Create scene
             scene = new THREE.Scene();
+
+            // Create camera
             camera = new THREE.PerspectiveCamera(
                 70,
                 window.innerWidth / window.innerHeight,
                 0.1,
                 1000
             );
-            renderer = new THREE.WebGLRenderer({ antialias: true });
+
+            // Create renderer with antialiasing
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 0); // Transparent background
             document.body.appendChild(renderer.domElement);
 
+            // Position camera
             camera.position.z = 1;
             camera.lookAt(new THREE.Vector3(0, 0, 0));
 
+            // Create cube with video texture
             const geometry = new THREE.BoxGeometry(1.77, 1, 1);
+
+            // Create video texture
+            video01 = document.getElementById("videoID");
             const texture = new THREE.VideoTexture(video01);
             texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            texture.format = THREE.RGBFormat;
+
+            // Create material with video texture
             material1 = new THREE.MeshBasicMaterial({ map: texture });
 
+            // Create cube mesh
             cube = new THREE.Mesh(geometry, material1);
             scene.add(cube);
 
+            // Handle window resize
             window.addEventListener("resize", onWindowResize, false);
         }
 
@@ -675,6 +706,13 @@ ___________________________________________________________
 
         function animate() {
             requestAnimationFrame(animate);
+
+            // Add subtle rotation to the cube
+            if (cube) {
+                cube.rotation.x += 0.001;
+                cube.rotation.y += 0.001;
+            }
+
             renderer.render(scene, camera);
         }
 
