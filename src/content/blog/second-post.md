@@ -1,6 +1,6 @@
 ---
 title: 'Second post'
-summary: 'Lorem ipsum dolor sit amet'
+description: 'Lorem ipsum dolor sit amet'
 pubDate: '2022-07-15'
 heroImage: '/blog-placeholder-4.jpg'
 ---

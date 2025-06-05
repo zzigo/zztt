@@ -1,6 +1,6 @@
 ---
 title: vilanos
-summary: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+description: Lorem ipsum dolor sit amet, consectetur adipiscing elit
 pubDate: 2022-07-08
 heroImage: https://i.imgur.com/DgcDiGn.png
 ---

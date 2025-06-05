@@ -1,6 +1,6 @@
 ---
 title: microBeatLogic
-summary: In the micro percussive scale, information is processed as a magnetic field, the chirp in a tone burst and the decision of every attack as an accident occurring inside the rattle.
+description: In the micro percussive scale, information is processed as a magnetic field, the chirp in a tone burst and the decision of every attack as an accident occurring inside the rattle.
 pubDate: 2013
 heroImage: https://i.imgur.com/QnASKjw.png
 ---

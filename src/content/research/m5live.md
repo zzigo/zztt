@@ -1,6 +1,6 @@
 ---
 title: m5live
-summary: is a web-based environment that reimagines Max Mathews' influential MUSIC V software for modern use
+description: is a web-based environment that reimagines Max Mathews' influential MUSIC V software for modern use
 pubDate: 2022
 paperURL:
 codeURL:
