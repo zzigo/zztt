@@ -9,7 +9,7 @@ import FormattedDate from "../components/FormattedDate.astro";
 
 
 // REDIRECTION CONFIG - Set to false to disable redirection and enable the Astro site
-const REDIRECT_TO_ZZTT_HTML = true;
+const REDIRECT_TO_ZZTT_HTML = false;
 
 const posts = (await getCollection("works")).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
