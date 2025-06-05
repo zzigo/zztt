@@ -9,7 +9,6 @@ const blog = defineCollection({
   schema: z.object({
     title: z.string(),
     description: z.string(),
-    summary: z.string(),
     // Transform string to Date object
     pubDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
@@ -24,7 +23,6 @@ const works = defineCollection({
   schema: z.object({
     title: z.string(),
     description: z.string(),
-    summary: z.string(),
     // Transform string to Date object
     pubDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
@@ -39,7 +37,6 @@ const research = defineCollection({
   schema: z.object({
     title: z.string(),
     description: z.string(),
-    summary: z.string(),
     // Transform string to Date object
     pubDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
