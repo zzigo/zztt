@@ -238,7 +238,7 @@ const createAudioForSphere = (sphere) => {
     const oscillator = new Tone.Oscillator({
       frequency: frequency,
       type: "sine",
-      volume: -30, // Lower volume
+      volume: -20, // Lower volume
     }).start();
     
     // Create a filter

@@ -92,7 +92,7 @@ export default function HeroScene() {
         // Create oscillator
         oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-        gainNode.gain.value = 0.1; // Lower volume
+        gainNode.gain.value = 0.01; // Lower volume
 
         // Connect nodes
         oscillator.connect(gainNode);

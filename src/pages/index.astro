@@ -11,6 +11,9 @@ import FormattedDate from "../components/FormattedDate.astro";
 // REDIRECTION CONFIG - Set to false to disable redirection and enable the Astro site
 const REDIRECT_TO_ZZTT_HTML = false;
 
+// HERO HEADER CONFIG - Set to true to enable the vaporwave z-tunnel header
+const ENABLE_HERO_HEADER = true;
+
 const posts = (await getCollection("works")).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
@@ -126,12 +129,14 @@ const posts = (await getCollection("works")).sort(
 		{!REDIRECT_TO_ZZTT_HTML && (
 			<>
 				<Header />
-				<div class="hero-container">
-					<Hero />
-				</div>
+				{ENABLE_HERO_HEADER && (
+					<div class="hero-container">
+						<Hero />
+					</div>
+				)}
 				<main>
 					<p class="intro">
-						Sound artist and composer based in Bern, Switzerland.
+						site under construction.
 					</p>
 					<section class="works-section">
 						<ul class="works-grid">
@@ -227,6 +232,49 @@ const posts = (await getCollection("works")).sort(
 				document.addEventListener("click", handleUserInteraction);
 				document.addEventListener("touchstart", handleUserInteraction);
 				document.addEventListener("keydown", handleUserInteraction);
+
+				// Handle scroll-based audio fade
+				let lastScrollY = 0;
+				let ticking = false;
+
+				const handleScroll = () => {
+					lastScrollY = window.scrollY;
+					
+					if (!ticking) {
+						window.requestAnimationFrame(() => {
+							// Hero is 100vh, start fading at 80vh and fully fade by 100vh
+							const heroHeight = window.innerHeight;
+							const fadeStartPoint = heroHeight * 0.8;
+							const fadeEndPoint = heroHeight;
+							
+							let volumeFactor = 1.0; // 1.0 = full volume, 0.0 = silent
+							
+							if (lastScrollY < fadeStartPoint) {
+								// In hero area - full volume
+								volumeFactor = 1.0;
+							} else if (lastScrollY >= fadeEndPoint) {
+								// Past hero - silent
+								volumeFactor = 0.0;
+							} else {
+								// In fade zone - interpolate
+								const fadeProgress = (lastScrollY - fadeStartPoint) / (fadeEndPoint - fadeStartPoint);
+								volumeFactor = 1.0 - fadeProgress; // Linear fade from 1.0 to 0.0
+							}
+							
+							// Dispatch event to hero component with volume factor
+							window.dispatchEvent(new CustomEvent("scrollVolumeChange", {
+								detail: { volumeFactor }
+							}));
+							
+							ticking = false;
+						});
+						
+						ticking = true;
+					}
+				};
+
+				// Add scroll listener
+				window.addEventListener("scroll", handleScroll, { passive: true });
 			</script>
 		)}
 	</body>

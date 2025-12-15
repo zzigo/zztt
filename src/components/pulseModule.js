@@ -118,7 +118,7 @@ export default function PulseModule() {
         updateFilterSweep(cylinder);
         
         // Fade out the sound using the gain node
-        new TWEEN.Tween({ volume: 0.2 })
+        new TWEEN.Tween({ volume: 0.02 })
           .to({ volume: 0 }, (60 / BPM) * 1000)
           .easing(TWEEN.Easing.Exponential.Out)
           .onUpdate(({ volume }) => {
