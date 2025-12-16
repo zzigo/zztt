@@ -1,7 +1,7 @@
 ---
 title: vilanos
-description: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-pubDate: 2022-07-08
+description: for amplified flute duet
+pubDate: 2014-10-28
 heroImage: https://i.imgur.com/DgcDiGn.png
 ---
 
