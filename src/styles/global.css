@@ -5,7 +5,7 @@
  */
 
 :root {
-  --accent: #666666;
+  --accent: #f510a171;
   --accent-dark: #999999;
   --black: 0, 0, 0;
   --white: 255, 255, 255;
@@ -35,8 +35,8 @@ body {
   word-wrap: break-word;
   overflow-wrap: break-word;
   overflow-x: hidden;
-  font-size: 17px; /* Reduced from 20px by 30% */
-  line-height: 1.7;
+  font-size: 16px; /* Reduced from 20px by 30% */
+  line-height: 1.5;
 }
 
 main {
@@ -82,7 +82,12 @@ h5 {
 
 strong,
 b {
-  font-weight: 700;
+  font-weight: 100;
+}
+
+em,
+i {
+  font-style: italic
 }
 
 a {

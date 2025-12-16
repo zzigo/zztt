@@ -2,8 +2,8 @@
 title: m5live
 description: is a web-based environment that reimagines Max Mathews' influential MUSIC V software for modern use
 pubDate: 2022-06-26
-paperURL:
-codeURL:
+codeURL: https://github.com/azzigotti/m5live
+url: https://m5live.zztt.org
 heroImage: https://i.imgur.com/q8tXSAq.png
 doi: 10.5281/zenodo.6819563
 ---
@@ -11,6 +11,9 @@ doi: 10.5281/zenodo.6819563
 # M5live: Revitalizing MUSIC V for Contemporary Exploration
 
 _M5live_ is a web-based environment that reimagines Max Mathews' influential MUSIC V software for modern use. This project, developed by Luciano Azzigotti and Nemanja Radivojević, bridges historical computer music practices with live-coding paradigms, providing a platform for real-time sound synthesis and performance. At its core, _M5live_ is a tribute to one of the foundational tools in electronic music history, while simultaneously being an open framework for creative experimentation.
+
+![](https://i.imgur.com/O19mwuO.png)
+
 
 ## The Historical Foundation: MUSIC V
 

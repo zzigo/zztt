@@ -25,7 +25,7 @@
 
   // === VAPORWAVE Z-TUNNEL CONFIGURATION ===
   const TUNNEL_CONFIG = {
-    zSpeed: 0.7,              // Slow camera Z advancement (was 0.1)
+    zSpeed: 0.5,              // Slow camera Z advancement (was 0.1)
     tunnelLength: 200,         // How far the tunnel extends
     moduleSpawnDistance: 150,  // Spawn modules ahead of camera
     moduleLifetime: 100,       // How long modules live before recycling
@@ -38,11 +38,11 @@
     reverbDecay: 10.0,          // Reverb decay (2 seconds)
     reverbWet: 1,           // 90% reverb mix (extremely wet)
     delayTime: 5.0,           // Delay time (2 seconds)
-    delayFeedback: 1,       // Delay feedback (20%)
+    delayFeedback: 0,       // Delay feedback (20%)
     delayWet: 0.1,            // 90% delay mix (extremely wet)
     masterVolume: -6,        // Audible volume
     spatialRolloff: 1.,      // Slower spatial falloff
-    oscVolume: -35,           // Base oscillator volume
+    oscVolume: -30,           // Base oscillator volume
   };
 
   const VISUAL_CONFIG = {
@@ -83,6 +83,16 @@
   let cameraZPosition = 0;
   let modules: any[] = [];
   let moduleIdCounter = 0;
+
+  // Camera orientation controls with inertial physics
+  let cameraRotationX = 0; // Up/Down look
+  let cameraRotationY = 0; // Left/Right look
+  let rotationVelocityX = 0; // Velocity for vertical rotation
+  let rotationVelocityY = 0; // Velocity for horizontal rotation
+  const rotationAcceleration = 0.0003; // Very subtle acceleration
+  const rotationDamping = 0.95; // Drag/friction (0.95 = 5% loss per frame)
+  const maxRotationVelocity = 0.005; // Cap maximum rotation speed
+  const keyState: { [key: string]: boolean } = {};
 
   // God rays shader
   const godRayVertexShader = `
@@ -613,9 +623,46 @@
     cameraZPosition += TUNNEL_CONFIG.zSpeed;
     camera.position.z = cameraZPosition;
 
-    // Gentle camera wobble for organic feel
-    camera.position.x = Math.sin(time * 0.1) * 0.5;
-    camera.position.y = Math.cos(time * 0.15) * 0.3;
+    // Handle keyboard input with inertial physics
+    // Apply acceleration when keys pressed
+    if (keyState['ArrowLeft'] || keyState['a'] || keyState['A']) {
+      rotationVelocityY += rotationAcceleration;
+    }
+    if (keyState['ArrowRight'] || keyState['d'] || keyState['D']) {
+      rotationVelocityY -= rotationAcceleration;
+    }
+    if (keyState['ArrowUp'] || keyState['w'] || keyState['W']) {
+      rotationVelocityX += rotationAcceleration;
+    }
+    if (keyState['ArrowDown'] || keyState['s'] || keyState['S']) {
+      rotationVelocityX -= rotationAcceleration;
+    }
+
+    // Apply damping (drag/friction)
+    rotationVelocityX *= rotationDamping;
+    rotationVelocityY *= rotationDamping;
+
+    // Clamp velocity to max speed
+    rotationVelocityX = Math.max(-maxRotationVelocity, Math.min(maxRotationVelocity, rotationVelocityX));
+    rotationVelocityY = Math.max(-maxRotationVelocity, Math.min(maxRotationVelocity, rotationVelocityY));
+
+    // Apply velocity to rotation
+    cameraRotationX += rotationVelocityX;
+    cameraRotationY += rotationVelocityY;
+
+    // Clamp rotation to prevent extreme angles
+    cameraRotationX = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, cameraRotationX));
+    cameraRotationY = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, cameraRotationY));
+
+    // Apply rotation to camera
+    camera.rotation.x = cameraRotationX;
+    camera.rotation.y = cameraRotationY;
+
+    // Gentle camera wobble for organic feel (reduced to not interfere with controls)
+    const wobbleX = Math.sin(time * 0.1) * 0.2;
+    const wobbleY = Math.cos(time * 0.15) * 0.15;
+    camera.position.x = wobbleX;
+    camera.position.y = wobbleY;
 
     // Update modules
     updateModules();
@@ -720,6 +767,26 @@
       
       // Debug log (uncomment if needed)
       // console.log(`Scroll volume: ${volumeFactor.toFixed(2)} -> ${targetVolume.toFixed(1)}dB`);
+    }
+  });
+
+  // Keyboard controls for camera orientation
+  window.addEventListener('keydown', (e: KeyboardEvent) => {
+    keyState[e.key] = true;
+  });
+
+  window.addEventListener('keyup', (e: KeyboardEvent) => {
+    keyState[e.key] = false;
+  });
+
+  // Reset rotation with spacebar (also reset velocities)
+  window.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === ' ' || e.key === 'Spacebar') {
+      cameraRotationX = 0;
+      cameraRotationY = 0;
+      rotationVelocityX = 0;
+      rotationVelocityY = 0;
+      e.preventDefault();
     }
   });
 </script>

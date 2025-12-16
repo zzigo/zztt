@@ -45,6 +45,9 @@ const research = defineCollection({
     doi: z.string().optional(),
     isbn: z.string().optional(),
     bibtex: z.string().optional(),
+    paperURL: z.string().optional(),
+    codeURL: z.string().optional(),
+    url: z.string().optional(),
   }),
 });
 
