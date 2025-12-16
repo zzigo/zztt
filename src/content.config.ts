@@ -43,6 +43,8 @@ const research = defineCollection({
     heroImage: z.string().optional(),
     tags: z.array(z.string()).optional(),
     doi: z.string().optional(),
+    isbn: z.string().optional(),
+    bibtex: z.string().optional(),
   }),
 });
 
