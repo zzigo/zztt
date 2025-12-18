@@ -1,8 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function HeroScene() {
   const containerRef = useRef(null);
-  
+  const [gyroEnabled, setGyroEnabled] = useState(false);
+  const gyroData = useRef({ beta: 0, gamma: 0 });
+
   useEffect(() => {
     if (typeof window === 'undefined' || !window.THREE) return;
 
@@ -12,58 +14,57 @@ export default function HeroScene() {
     let scene, camera, renderer, controls, movingCube, clock;
 
     const initializeThreeJS = () => {
-      // **Three.js setup**
       scene = new THREE.Scene();
-
-      camera = new THREE.PerspectiveCamera(
-        75,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        1000
-      );
-
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
       renderer = new THREE.WebGLRenderer({ alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       if (containerRef.current) {
         containerRef.current.appendChild(renderer.domElement);
       }
 
-      // Add grid helper
       const gridHelper = new THREE.GridHelper(20, 20);
       scene.add(gridHelper);
 
-      // Add a moving cube
       const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
       const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
       movingCube = new THREE.Mesh(cubeGeometry, cubeMaterial);
       scene.add(movingCube);
 
-      // Camera setup
       camera.position.set(0, 5, 10);
       camera.lookAt(0, 0, 0);
 
-      // Orbit Controls
       controls = new THREE.OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.1;
 
-      // WASD Controls
-      const keyState = { w: false, a: false, s: false, d: false };
+      const keyState = { w: false, a: false, s: false, d: false, arrowup: false, arrowdown: false, arrowleft: false, arrowright: false };
       window.addEventListener("keydown", (e) => (keyState[e.key.toLowerCase()] = true));
       window.addEventListener("keyup", (e) => (keyState[e.key.toLowerCase()] = false));
 
-      const handleWASD = (delta) => {
+      const handleKeyboard = (delta) => {
         const moveSpeed = 5 * delta;
-        if (keyState.w) camera.position.z -= moveSpeed;
-        if (keyState.s) camera.position.z += moveSpeed;
-        if (keyState.a) camera.position.x -= moveSpeed;
-        if (keyState.d) camera.position.x += moveSpeed;
+        if (keyState.w || keyState.arrowup) camera.position.z -= moveSpeed;
+        if (keyState.s || keyState.arrowdown) camera.position.z += moveSpeed;
+        if (keyState.a || keyState.arrowleft) camera.position.x -= moveSpeed;
+        if (keyState.d || keyState.arrowright) camera.position.x += moveSpeed;
+      };
+      
+      const handleGyro = (delta) => {
+        if (!gyroEnabled) return;
+        const moveSpeed = 2 * delta;
+        
+        // Beta is front-to-back tilt, Gamma is left-to-right tilt
+        const beta = gyroData.current.beta || 0;
+        const gamma = gyroData.current.gamma || 0;
 
-        // Keep camera looking at the origin
-        camera.lookAt(0, 0, 0);
+        // Simple mapping: tilt forward/backward to move along Z, left/right to move along X
+        // Adjust sensitivity and thresholds as needed
+        if (beta > 15) camera.position.z -= moveSpeed * Math.abs(beta-15)/10;
+        if (beta < -5) camera.position.z += moveSpeed * Math.abs(beta+5)/10;
+        if (gamma > 5) camera.position.x += moveSpeed * Math.abs(gamma-5)/10;
+        if (gamma < -5) camera.position.x -= moveSpeed * Math.abs(gamma+5)/10;
       };
 
-      // Resize listener
       const handleResize = () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -71,40 +72,28 @@ export default function HeroScene() {
       };
       window.addEventListener("resize", handleResize);
 
-      // Initialize clock
       clock = new THREE.Clock();
-
-      // Start animation
       animate();
 
-      // Return cleanup function for resize listener
       return () => {
         window.removeEventListener("resize", handleResize);
+        window.removeEventListener("keydown", (e) => (keyState[e.key.toLowerCase()] = true));
+        window.removeEventListener("keyup", (e) => (keyState[e.key.toLowerCase()] = false));
       };
     };
 
     const initializeAudio = async () => {
       try {
-        // Create audio context
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         await audioContext.resume();
-
-        // Create oscillator
         oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-        gainNode.gain.value = 0.01; // Lower volume
-
-        // Connect nodes
+        gainNode.gain.value = 0.01;
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
-
-        // Set oscillator type and frequency
         oscillator.type = 'sawtooth';
-        oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4 note
-
-        // Start oscillator
+        oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
         oscillator.start();
-        
         console.log("Audio initialized successfully");
         audioStarted = true;
       } catch (error) {
@@ -113,27 +102,25 @@ export default function HeroScene() {
     };
 
     const animate = () => {
+      requestAnimationFrame(animate);
       const delta = clock.getDelta();
 
-      // Update OrbitControls
+      handleKeyboard(delta);
+      handleGyro(delta);
+      
       controls.update();
 
-      // Rotate cube
       if (movingCube) {
         movingCube.rotation.x += delta * 0.5;
         movingCube.rotation.y += delta * 0.5;
       }
-
-      // Render scene
+      
+      camera.lookAt(0, 0, 0);
       renderer.render(scene, camera);
-
-      requestAnimationFrame(animate);
     };
 
-    // Initialize Three.js first
     const cleanup = initializeThreeJS();
 
-    // Add interaction listeners for audio
     const startAudioContext = async (event) => {
       if (!audioStarted) {
         console.log("Starting audio context from", event.type);
@@ -149,28 +136,63 @@ export default function HeroScene() {
       return { event, listener };
     });
 
-    // Cleanup
     return () => {
-      if (oscillator) {
-        oscillator.stop();
-      }
-      if (audioContext) {
-        audioContext.close();
-      }
-      if (renderer) {
-        renderer.dispose();
-      }
-      if (containerRef.current && renderer) {
+      if (oscillator) oscillator.stop();
+      if (audioContext) audioContext.close();
+      if (renderer) renderer.dispose();
+      if (containerRef.current && renderer.domElement.parentElement === containerRef.current) {
         containerRef.current.removeChild(renderer.domElement);
       }
-      // Remove event listeners
       audioListeners.forEach(({ event, listener }) => {
         window.removeEventListener(event, listener);
       });
-      // Call cleanup from initializeThreeJS
       if (cleanup) cleanup();
     };
-  }, []);
+  }, [gyroEnabled]);
+  
+  const handleGyroEnable = () => {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission()
+        .then(permissionState => {
+          if (permissionState === 'granted') {
+            window.addEventListener('deviceorientation', (e) => {
+              gyroData.current = { beta: e.beta, gamma: e.gamma };
+            });
+            setGyroEnabled(true);
+          }
+        })
+        .catch(console.error);
+    } else {
+      // For devices that don't require permission
+      window.addEventListener('deviceorientation', (e) => {
+        gyroData.current = { beta: e.beta, gamma: e.gamma };
+      });
+      setGyroEnabled(true);
+    }
+  };
 
-  return <div ref={containerRef} className="fixed top-0 left-0 w-full h-screen z-1 overflow-hidden" />;
+  return (
+    <div ref={containerRef} className="fixed top-0 left-0 w-full h-screen z-1 overflow-hidden">
+      {!gyroEnabled && (
+        <button
+          onClick={handleGyroEnable}
+          style={{
+            position: 'absolute',
+            bottom: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            padding: '10px 20px',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            color: 'white',
+            border: '1px solid white',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            zIndex: 10
+          }}
+        >
+          Enable Gyro Controls
+        </button>
+      )}
+    </div>
+  );
 }

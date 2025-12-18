@@ -3,7 +3,19 @@ title: espinor
 description: for extended guitar
 pubDate: 2016-10-18
 heroImage: https://i.imgur.com/K8Zy6HY.jpeg
+performedBy: "[[Ricardo Cuadros Pradilla]]"
+performances:  
+- "[[Gutarras del Mundo Teatro Tornavia UNSAM]]"
+- "[[Exformantes]]"
+- "[[Jardines del Servente Festival]]"
 ---
+
+
+
+<iframe title="Luciano Azzigotti — Espinor [m/ score]" src="https://www.youtube.com/embed/DWqAcVnPY5g?feature=oembed" height="113" width="200" style="aspect-ratio: 1.76991 / 1; width: 100%; height: 100%;" allowfullscreen="" allow="fullscreen"></iframe>
+
+
+<iframe title="Luciano Azzigotti Espinor (2016)" src="https://www.youtube.com/embed/opDIrmyO7Rw?feature=oembed" height="113" width="200" style="aspect-ratio: 1.76991 / 1; width: 100%; height: 100%;" allowfullscreen="" allow="fullscreen"></iframe>
 
 Espinor is an extended classic guitar piece. The system consists of a contact microphone amplifying the sound of the guitar body from the bone, a webcam located behind the bridge looking towards the headstock and a PD patch processing the audio and video in real time.
 The software is in charge of recording fragments of the piece indicated in the electronics staff (top line). These fragments are then played back in the video by varying their speed, direction and start time (annotated on the lower line). Each color correspond to a different buffer.
