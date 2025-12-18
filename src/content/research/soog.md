@@ -1,6 +1,6 @@
 ---
 title: SOOG
-description:The Speculative Organology Organogram Generator 
+description: The Speculative Organology Organogram Generator 
 pubDate: 2024-12-17
 codeURL: https://github.com/azzigotti/soog
 url: https://soog.zztt.org
@@ -38,7 +38,7 @@ This section documents a controlled experiment in which the SOOG model was fine-
 
 The following text is Mantle Hood’s original descriptive summary of an African xylophone, used here verbatim as a prompt. It condenses performer posture, playing technique, material classification (HSM), and resonator modification into a compact organological statement.
 
-```
+```python
 Resonator modified by membrane attachment (e.g., spider egg case in African xylophone gourd resonator producing buzz)—summary: player standing or seated on ground; instrument in horizontal position and supported by rail with body strap; 12 (#12) wooden (HSM 5) keys played with two padded sticks; gourd (HSM 1) resonators suspended singly and modified by attached membranes
 ```
 
@@ -49,7 +49,7 @@ Resonator modified by membrane attachment (e.g., spider egg case in African xylo
   
 This section presents SOOG’s response when prompted with Mantle Hood’s original description. The model reformulates the textual data into a step-by-step organogram construction, explicitly translating organological features into geometric primitives, interface elements, and performative relations, revealing both its interpretative logic and its divergence from Hood’s original graphical conventions.
 
-```
+```python
 Resonator modified by membrane attachment (e.g., spider egg case in African xylophone gourd resonator producing buzz)—description: player standing or seated on ground; instrument in horizontal position and supported by rail with body strap; 12 (#12) wooden (HSM 5) keys played with two padded sticks; gourd (HSM 1) resonators suspended singly and modified by attached membranes
 
 Alright, let's start by abstracting the shapes. The instrument is mainly a xylophone that falls within the category of Idiophones, so we'll depict that as a square. The resonator is a gourd which is attached by a membrane, and the performer's position is standing or seated on the ground. We'll represent the player's position with a dotted line and a small white circle. There's also a rail with a body strap, which we'll represent with another geometric shape.

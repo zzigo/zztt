@@ -31,7 +31,7 @@ const formatPublicationDate = (date: Date) => {
 				width: calc(100% - 2em);
 				max-width: 100%;
 				margin: 0;
-				background-color: #2a2a2a;
+				background-color: #000000;
 				color: #e0e0e0;
 			}
 			.hero-image {
@@ -113,7 +113,8 @@ const formatPublicationDate = (date: Date) => {
 			.bibtex-content {
 				color: #a0a0a0;
 				white-space: pre-wrap;
-				word-break: break-all;
+				word-wrap: break-word;
+				overflow-wrap: break-word;
 				line-height: 1.5;
 			}
 			.pub-date {
@@ -130,6 +131,10 @@ const formatPublicationDate = (date: Date) => {
 				border: none;
 				border-top: 1px solid #444;
 				margin: 1.5em 0;
+			}
+			
+			.pre.astro-code.github-dark {
+				white-space: normal !important;			
 			}
 		</style>
 	</head>
