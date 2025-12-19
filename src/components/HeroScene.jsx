@@ -13,6 +13,28 @@ export default function HeroScene() {
     let oscillator;
     let scene, camera, renderer, controls, movingCube, clock;
 
+    const handleGyroEnable = () => {
+      if (gyroEnabled) return;
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+          .then(permissionState => {
+            if (permissionState === 'granted') {
+              window.addEventListener('deviceorientation', (e) => {
+                gyroData.current = { beta: e.beta, gamma: e.gamma };
+              });
+              setGyroEnabled(true);
+            }
+          })
+          .catch(console.error);
+      } else {
+        // For devices that don't require permission
+        window.addEventListener('deviceorientation', (e) => {
+          gyroData.current = { beta: e.beta, gamma: e.gamma };
+        });
+        setGyroEnabled(true);
+      }
+    };
+
     const initializeThreeJS = () => {
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -53,12 +75,9 @@ export default function HeroScene() {
         if (!gyroEnabled) return;
         const moveSpeed = 2 * delta;
         
-        // Beta is front-to-back tilt, Gamma is left-to-right tilt
         const beta = gyroData.current.beta || 0;
         const gamma = gyroData.current.gamma || 0;
 
-        // Simple mapping: tilt forward/backward to move along Z, left/right to move along X
-        // Adjust sensitivity and thresholds as needed
         if (beta > 15) camera.position.z -= moveSpeed * Math.abs(beta-15)/10;
         if (beta < -5) camera.position.z += moveSpeed * Math.abs(beta+5)/10;
         if (gamma > 5) camera.position.x += moveSpeed * Math.abs(gamma-5)/10;
@@ -121,16 +140,19 @@ export default function HeroScene() {
 
     const cleanup = initializeThreeJS();
 
-    const startAudioContext = async (event) => {
+    const handleFirstInteraction = async (event) => {
       if (!audioStarted) {
         console.log("Starting audio context from", event.type);
         await initializeAudio();
       }
+      if (event.type === 'touchstart') {
+        handleGyroEnable();
+      }
     };
 
-    const audioListeners = ["click", "keydown", "touchstart"].map(event => {
+    const interactionListeners = ["click", "keydown", "touchstart"].map(event => {
       const listener = (e) => {
-        startAudioContext(e).catch(console.error);
+        handleFirstInteraction(e).catch(console.error);
       };
       window.addEventListener(event, listener, { once: true });
       return { event, listener };
@@ -143,56 +165,14 @@ export default function HeroScene() {
       if (containerRef.current && renderer.domElement.parentElement === containerRef.current) {
         containerRef.current.removeChild(renderer.domElement);
       }
-      audioListeners.forEach(({ event, listener }) => {
+      interactionListeners.forEach(({ event, listener }) => {
         window.removeEventListener(event, listener);
       });
       if (cleanup) cleanup();
     };
-  }, [gyroEnabled]);
+  }, []);
   
-  const handleGyroEnable = () => {
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-      DeviceOrientationEvent.requestPermission()
-        .then(permissionState => {
-          if (permissionState === 'granted') {
-            window.addEventListener('deviceorientation', (e) => {
-              gyroData.current = { beta: e.beta, gamma: e.gamma };
-            });
-            setGyroEnabled(true);
-          }
-        })
-        .catch(console.error);
-    } else {
-      // For devices that don't require permission
-      window.addEventListener('deviceorientation', (e) => {
-        gyroData.current = { beta: e.beta, gamma: e.gamma };
-      });
-      setGyroEnabled(true);
-    }
-  };
-
   return (
-    <div ref={containerRef} className="fixed top-0 left-0 w-full h-screen z-1 overflow-hidden">
-      {!gyroEnabled && (
-        <button
-          onClick={handleGyroEnable}
-          style={{
-            position: 'absolute',
-            bottom: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            padding: '10px 20px',
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            color: 'white',
-            border: '1px solid white',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            zIndex: 10
-          }}
-        >
-          Enable Gyro Controls
-        </button>
-      )}
-    </div>
+    <div ref={containerRef} className="fixed top-0 left-0 w-full h-screen z-1 overflow-hidden" />
   );
 }

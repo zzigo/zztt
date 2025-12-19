@@ -28,6 +28,8 @@ const works = defineCollection({
     updatedDate: z.coerce.date().optional(),
     heroImage: z.string().optional(),
     tags: z.array(z.string()).optional(),
+    performedBy: z.union([z.string(), z.array(z.string())]).optional(),
+    performances: z.array(z.string()).optional(),
   }),
 });
 
@@ -51,4 +53,20 @@ const research = defineCollection({
   }),
 });
 
-export const collections = { blog, works, research };
+const performers = defineCollection({
+  loader: glob({ base: "./src/content/performers", pattern: "**/*.{md,mdx}" }),
+  schema: z.object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+  }),
+});
+
+const events = defineCollection({
+  loader: glob({ base: "./src/content/events", pattern: "**/*.{md,mdx}" }),
+  schema: z.object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+  }),
+});
+
+export const collections = { blog, works, research, performers, events };

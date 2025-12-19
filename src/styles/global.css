@@ -160,6 +160,41 @@ blockquote {
   color: var(--text-muted);
 }
 
+.callout.callout-quote {
+  position: relative;
+  padding: 1.25rem 1.25rem 1.25rem 1.5rem;
+  border: 1px solid rgba(0, 255, 160, 0.35);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.callout.callout-quote::before {
+  content: "“";
+  position: absolute;
+  top: -0.25rem;
+  left: 0.4rem;
+  font-size: 7rem;
+  line-height: 1;
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
+}
+
+.callout-title {
+  font-size: 0.95rem;
+  opacity: 0.9;
+  margin-bottom: 0.75rem;
+}
+
+.callout-content {
+  opacity: 0.95;
+}
+
+.callout-content p {
+  margin: 0.35rem 0;
+}
+
 hr {
   border: none;
   border-top: 1px solid var(--accent);
