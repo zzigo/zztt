@@ -7,9 +7,12 @@ performedBy:
   - "[[Simon Foerster]]"
   - "[[Gunnildur Eisnadottir]]"
 performances:
-  - "[[Gutarras del Mundo Teatro Tornavia UNSAM]]"
-  - "[[Exformantes]]"
-  - "[[Jardines del Servente Festival]]"
+  - "[[Phonemes Concert Series]]"
+  - "[[History of my Instrument]]"
+  - "[[Concert International en Trptyque]]"
+  - "[[Harfen Musik]]"
+  - "[[Harp Workshop]]"
+  - "[[Carte Blanche]]"
 ---
 
 
