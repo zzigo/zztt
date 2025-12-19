@@ -1,6 +1,6 @@
 ---
 title: kokon
-description: for harp, objects and bifocal membrane
+description: harp, objects and bifocal membrane
 pubDate: 2018-07-28
 heroImage: https://i.imgur.com/V5Nau8q.jpeg
 performedBy:
