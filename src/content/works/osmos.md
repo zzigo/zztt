@@ -3,9 +3,7 @@ title: osmos
 description: sound installation, ceramic condenser mic-vessel and coded-speakers, DAC 8x1 channels.
 pubDate: 2008-09-20
 heroImage: https://i.imgur.com/jGHw9Zt.jpeg
-performedBy:
-performances:
-  - Estados del Agua
+performed: "[[Estados del Agua]]"
 tags:
   - installations
 ---

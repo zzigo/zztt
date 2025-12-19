@@ -3,6 +3,7 @@ title: microBeatLogic
 description: bearing balls, neodymium magnets, acrylic semisspheres, micro-springs and objects.
 pubDate: 2013-09-10
 heroImage: https://i.imgur.com/QnASKjw.png
+performedBy: reConvert
 ---
 
 
