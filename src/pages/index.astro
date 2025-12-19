@@ -125,6 +125,14 @@ const posts = (await getCollection("works")).sort(
 				.work-item:nth-child(even) {
 					direction: ltr;
 				}
+				.work-image-container,
+				.work-image {
+					height: 100vh;
+				}
+				.work-image {
+					object-fit: cover;
+					width: 100%;
+				}
 			}
 		</style>
 	</head>
