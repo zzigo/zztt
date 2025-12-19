@@ -2,34 +2,55 @@ import { useEffect, useRef } from "react";
 
 export default function HeroScene() {
   const containerRef = useRef(null);
+  const hudRef = useRef(null);
 
   const gyroEnabledRef = useRef(false);
-  const gyroDataRef = useRef({ beta: 0, gamma: 0 });
+  const gyroDataRef = useRef({ x: 0, y: 0, z: 0 });
+
   const audioStartedRef = useRef(false);
+  const isMobileRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.THREE) return;
 
     let audioContext;
     let oscillator;
+
     let scene, camera, renderer, controls, movingCube, clock;
 
+    isMobileRef.current =
+      matchMedia("(pointer: coarse)").matches ||
+      /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    const fmt = (v) => (Number.isFinite(v) ? v.toFixed(1) : "0.0");
+
+    const updateHUD = () => {
+      if (!hudRef.current) return;
+      if (!isMobileRef.current) return;
+      if (!gyroEnabledRef.current) return;
+
+      const { x, y, z } = gyroDataRef.current;
+      // x top, y middle, z bottom
+      hudRef.current.innerHTML = `${fmt(x)}<br/>${fmt(y)}<br/>${fmt(z)}`;
+    };
+
     const onDeviceOrientation = (e) => {
-      // e.beta/e.gamma can be null if not available
-      gyroDataRef.current.beta = e.beta ?? 0;
-      gyroDataRef.current.gamma = e.gamma ?? 0;
+      // x,y,z mapping (beta,gamma,alpha)
+      gyroDataRef.current.x = e.beta ?? 0;
+      gyroDataRef.current.y = e.gamma ?? 0;
+      gyroDataRef.current.z = e.alpha ?? 0;
+      updateHUD();
     };
 
     const enableGyro = async () => {
       if (gyroEnabledRef.current) return;
 
       if (typeof DeviceOrientationEvent === "undefined") {
-        console.warn("DeviceOrientationEvent not supported on this device/browser.");
+        console.warn("DeviceOrientationEvent not supported.");
         return;
       }
 
       try {
-        // iOS Safari permission model
         if (typeof DeviceOrientationEvent.requestPermission === "function") {
           const permissionState = await DeviceOrientationEvent.requestPermission();
           console.log("DeviceOrientation permission:", permissionState);
@@ -38,7 +59,8 @@ export default function HeroScene() {
 
         window.addEventListener("deviceorientation", onDeviceOrientation, true);
         gyroEnabledRef.current = true;
-        console.log("Gyro enabled, listening to deviceorientation.");
+        console.log("Gyro enabled.");
+        updateHUD();
       } catch (err) {
         console.error("Gyro enable failed:", err);
       }
@@ -46,6 +68,7 @@ export default function HeroScene() {
 
     const initializeAudio = async () => {
       if (audioStartedRef.current) return;
+
       try {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         await audioContext.resume();
@@ -71,7 +94,13 @@ export default function HeroScene() {
 
     const initializeThreeJS = () => {
       scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+      camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
 
       renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -94,12 +123,22 @@ export default function HeroScene() {
       controls.dampingFactor = 0.1;
 
       const keyState = {
-        w: false, a: false, s: false, d: false,
-        arrowup: false, arrowdown: false, arrowleft: false, arrowright: false,
+        w: false,
+        a: false,
+        s: false,
+        d: false,
+        arrowup: false,
+        arrowdown: false,
+        arrowleft: false,
+        arrowright: false,
       };
 
-      const onKeyDown = (e) => { keyState[e.key.toLowerCase()] = true; };
-      const onKeyUp = (e) => { keyState[e.key.toLowerCase()] = false; };
+      const onKeyDown = (e) => {
+        keyState[e.key.toLowerCase()] = true;
+      };
+      const onKeyUp = (e) => {
+        keyState[e.key.toLowerCase()] = false;
+      };
 
       window.addEventListener("keydown", onKeyDown);
       window.addEventListener("keyup", onKeyUp);
@@ -116,12 +155,12 @@ export default function HeroScene() {
         if (!gyroEnabledRef.current) return;
 
         const moveSpeed = 2 * delta;
-        const { beta, gamma } = gyroDataRef.current;
+        const { x, y } = gyroDataRef.current;
 
-        if (beta > 15) camera.position.z -= moveSpeed * Math.abs(beta - 15) / 10;
-        if (beta < -5) camera.position.z += moveSpeed * Math.abs(beta + 5) / 10;
-        if (gamma > 5) camera.position.x += moveSpeed * Math.abs(gamma - 5) / 10;
-        if (gamma < -5) camera.position.x -= moveSpeed * Math.abs(gamma + 5) / 10;
+        if (x > 15) camera.position.z -= (moveSpeed * Math.abs(x - 15)) / 10;
+        if (x < -5) camera.position.z += (moveSpeed * Math.abs(x + 5)) / 10;
+        if (y > 5) camera.position.x += (moveSpeed * Math.abs(y - 5)) / 10;
+        if (y < -5) camera.position.x -= (moveSpeed * Math.abs(y + 5)) / 10;
       };
 
       const onResize = () => {
@@ -135,6 +174,7 @@ export default function HeroScene() {
 
       const animate = () => {
         requestAnimationFrame(animate);
+
         const delta = clock.getDelta();
 
         handleKeyboard(delta);
@@ -160,14 +200,10 @@ export default function HeroScene() {
 
     const cleanupThree = initializeThreeJS();
 
-    // first interaction: no button, first touch/click anywhere
     const onFirstUserGesture = async (e) => {
       await initializeAudio();
-
-      // pointerup/touchend is more reliable for iOS permission prompts
       await enableGyro();
 
-      // prevent subsequent “first-time” triggers
       window.removeEventListener("pointerup", onFirstUserGesture);
       window.removeEventListener("touchend", onFirstUserGesture);
       window.removeEventListener("click", onFirstUserGesture);
@@ -179,6 +215,7 @@ export default function HeroScene() {
 
     return () => {
       window.removeEventListener("deviceorientation", onDeviceOrientation, true);
+
       window.removeEventListener("pointerup", onFirstUserGesture);
       window.removeEventListener("touchend", onFirstUserGesture);
       window.removeEventListener("click", onFirstUserGesture);
@@ -187,6 +224,7 @@ export default function HeroScene() {
       if (audioContext) audioContext.close();
 
       if (cleanupThree) cleanupThree();
+
       if (renderer) renderer.dispose();
 
       if (containerRef.current && renderer?.domElement?.parentElement === containerRef.current) {
@@ -199,7 +237,27 @@ export default function HeroScene() {
     <div
       ref={containerRef}
       className="fixed top-0 left-0 w-full h-screen z-1 overflow-hidden"
-      style={{ touchAction: "none" }}
-    />
+      style={{ touchAction: "none", position: "fixed" }}
+    >
+      <div ref={hudRef} className="gyro-hud" />
+      <style>{`
+        .gyro-hud{
+          display:none;
+          position:absolute;
+          left:10px;
+          bottom:10px;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+          font-size:12px;
+          line-height:1.15;
+          opacity:0.5;
+          color:white;
+          user-select:none;
+          pointer-events:none;
+        }
+        @media (pointer: coarse){
+          .gyro-hud{ display:block; }
+        }
+      `}</style>
+    </div>
   );
 }
