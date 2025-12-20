@@ -69,4 +69,13 @@ const events = defineCollection({
   }),
 });
 
-export const collections = { blog, works, research, performers, events };
+const scores = defineCollection({
+  loader: glob({ base: "./src/content/scores", pattern: "**/*.{md,mdx}" }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    pdf: z.string(),
+  }),
+});
+
+export const collections = { blog, works, research, performers, events, scores };

@@ -1,0 +1,8 @@
+---
+import Flipbook from './Flipbook.jsx';
+const { 'pdf-path': pdfPath } = Astro.props;
+---
+
+<div class="flipbook-container">
+    <Flipbook pdf={pdfPath} client:visible />
+</div>

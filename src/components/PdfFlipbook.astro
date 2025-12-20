@@ -1,0 +1,6 @@
+---
+import Flipbook from './Flipbook.jsx';
+const { 'pdf-path': pdfPath } = Astro.props;
+---
+
+<Flipbook pdf={pdfPath} client:only="react" />
