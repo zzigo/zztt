@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { Document, Page } from 'react-pdf';
-import 'turn.js';
 import '../lib/pdfWorker';
 
 const Flipbook = ({ pdf }) => {
