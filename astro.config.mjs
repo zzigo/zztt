@@ -4,7 +4,7 @@ import sitemap from "@astrojs/sitemap";
 import react from "@astrojs/react";
 
 import remarkQuoteCallout from "./remark-quote-callout.mjs";
-import { remarkObsidianPdf } from "./remark-obsidian-pdf.mjs";
+// import remarkObsidianPdf from "./remark-obsidian-pdf.mjs";
 
 export default defineConfig({
   output: "static",
@@ -15,7 +15,6 @@ export default defineConfig({
     mdx({
       remarkPlugins: [
         remarkQuoteCallout,
-        remarkObsidianPdf, // applies to .mdx
       ],
     }),
     sitemap(),
@@ -25,7 +24,7 @@ export default defineConfig({
   markdown: {
     remarkPlugins: [
       remarkQuoteCallout,
-      remarkObsidianPdf, // applies to .md
+      // remarkObsidianPdf, // applies to .md
     ],
   },
 
