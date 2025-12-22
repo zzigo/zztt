@@ -2,7 +2,7 @@
 title:  giant vibraslaps
 description: giant vibraslaps
 pubDate: 2017-05-02
-heroImge: https://i.imgur.com/OR71MCe.png
+heroImage:  https://i.imgur.com/OR71MCe.png
 ---
 
 
