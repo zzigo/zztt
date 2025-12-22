@@ -7,5 +7,10 @@ url: https://kimi.zztt.org
 heroImage: https://i.imgur.com/sI21Hbk.png
 Paper:
 ---
+*(preparing documentation)*
+## performances done with kimi
+
+https://spam.zztt.org/
+https://collision.zztt.org/
 
 
