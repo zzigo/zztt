@@ -6,10 +6,29 @@ import { render } from 'astro:content';
 
 export async function getStaticPaths() {
 	const posts = await getCollection('works');
-	return posts.map((post) => ({
-		params: { slug: post.id.replace(/\.md$/, '') },
-		props: post,
-	}));
+	// Generate all possible slug variations (lowercase, original case)
+	const paths: Array<{ params: { slug: string }; props: CollectionEntry<'works'> }> = [];
+	
+	posts.forEach((post) => {
+		const originalSlug = post.id.replace(/\.md$/, '');
+		const normalizedSlug = originalSlug.toLowerCase().replace(/\s+/g, '-');
+		
+		// Add the normalized lowercase version as primary
+		paths.push({
+			params: { slug: normalizedSlug },
+			props: post,
+		});
+		
+		// Also add original case version if different
+		if (originalSlug !== normalizedSlug) {
+			paths.push({
+				params: { slug: originalSlug.replace(/\s+/g, '-') },
+				props: post,
+			});
+		}
+	});
+	
+	return paths;
 }
 type Props = CollectionEntry<'works'>;
 

@@ -66,16 +66,25 @@ body {
   overflow-x: hidden;
   font-size: 16px;
   line-height: 1.5;
+  width: 100%;
+  min-width: 0;
 }
 
 main {
   width: 720px;
-  max-width: calc(100% - 2em);
+  max-width: 100%;
   margin: auto;
   padding: 3em 1em;
   position: relative;
   z-index: 1;
   background-color: var(--background);
+  box-sizing: border-box;
+}
+
+/* Ensure all children respect container width */
+main * {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* =========================================================
@@ -202,7 +211,7 @@ blockquote {
 }
 
 .callout.callout-quote::before {
-  content: """;
+  content: "\201C";
   position: absolute;
   top: -0.25rem;
   left: 0.4rem;
@@ -268,6 +277,38 @@ hr {
   }
 
   main {
-    padding: 1em;
+    padding: 0.5em;
+    width: 100%;
+  }
+  
+  /* Force all content to stay within bounds */
+  img, video, iframe, pre, table, figure {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+    object-fit: contain;
+  }
+  
+  /* Prevent code blocks from overflowing */
+  pre {
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  
+  /* Ensure headings wrap */
+  h1, h2, h3, h4, h5, h6 {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+}
+
+@media (max-width: 400px) {
+  main {
+    padding: 0.25em;
+  }
+  
+  body {
+    font-size: 11px;
   }
 }
