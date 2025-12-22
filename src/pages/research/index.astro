@@ -114,13 +114,13 @@ const getYear = (date: Date) => {
 						posts.map((post) => (
 							<li class="research-item">
 								<div class="research-image">
-									<a href={`/research/${post.id}/`}>
+									<a href={`/research/${post.id.replace(/\.md$/, '')}/`}>
 										<img src={post.data.heroImage} alt={post.data.title} />
 									</a>
 								</div>
 								<div class="research-content">
 									<h2 class="research-title">
-										<a href={`/research/${post.id}/`}>{post.data.title}</a>
+										<a href={`/research/${post.id.replace(/\.md$/, '')}/`}>{post.data.title}</a>
 									</h2>
 									<p class="research-year">{getYear(post.data.pubDate)}</p>
 									<p class="research-description">{post.data.description}</p>

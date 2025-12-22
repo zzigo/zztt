@@ -6,5 +6,7 @@ heroImage:  https://i.imgur.com/OR71MCe.png
 ---
 
 
-<iframe src="https://youtube.com/shorts/9mqe8uFjKXc" allow="fullscreen" allowfullscreen="" style="height:100%;width:100%; aspect-ratio: 9 / 16; "></iframe>
+[link to video](https://youtube.com/shorts/9mqe8uFjKXc)
+
+as if it were a giant vocal tract of iterated actions, we build a vibraslap in 20:1 ratio. The resonators are interchangeable and can be made of either wood or metal. Here are examples with metal resonators. The instrument was made by Efesto percussion on a author’s design.
 

@@ -11,21 +11,28 @@ function buildContentIndex() {
   const index = {};
   const contentPath = resolve(__dirname, 'src/content');
   
-  const collections = ['works', 'research'];
+  // Folders to exclude from scanning
+  const excludedFolders = ['inc'];
   
-  collections.forEach(collection => {
-    const collectionPath = resolve(contentPath, collection);
-    if (existsSync(collectionPath)) {
+  // Auto-discover all collection folders except excluded ones
+  if (existsSync(contentPath)) {
+    const folders = readdirSync(contentPath, { withFileTypes: true })
+      .filter(dirent => dirent.isDirectory() && !excludedFolders.includes(dirent.name))
+      .map(dirent => dirent.name);
+    
+    folders.forEach(collection => {
+      const collectionPath = resolve(contentPath, collection);
       const files = readdirSync(collectionPath);
       files.forEach(file => {
         if (file.endsWith('.md')) {
           const name = file.replace('.md', '');
-          const slug = name.toLowerCase().replace(/\s+/g, '-');
-          index[slug] = collection;
+          const slugLower = name.toLowerCase().replace(/\s+/g, '-');
+          // Store both the collection and the original filename for case-sensitive URLs
+          index[slugLower] = { collection, originalName: name };
         }
       });
-    }
-  });
+    });
+  }
   
   return index;
 }
@@ -57,17 +64,48 @@ export default function remarkWikilinks() {
           });
         }
 
-        // Convert to slug: lowercase and replace spaces with hyphens
-        const slug = linkText.toLowerCase().replace(/\s+/g, '-');
+        // Check if linkText has collection prefix (e.g., "research/diGLo")
+        let collection, slug, displayText;
         
-        // Determine collection from index
-        const collection = contentIndex[slug] || 'works';
+        if (linkText.includes('/')) {
+          // Has collection prefix - extract it
+          const slashIndex = linkText.indexOf('/');
+          collection = linkText.substring(0, slashIndex);
+          displayText = linkText.substring(slashIndex + 1);
+          
+          // Look up the actual file casing even when collection is specified
+          const lookupSlug = displayText.toLowerCase().replace(/\s+/g, '-');
+          const indexEntry = contentIndex[lookupSlug];
+          
+          if (indexEntry && indexEntry.collection === collection) {
+            // Use the original filename casing for case-sensitive URLs
+            slug = indexEntry.originalName.replace(/\s+/g, '-');
+          } else {
+            // File not found or wrong collection, use what was provided
+            slug = displayText.replace(/\s+/g, '-');
+          }
+        } else {
+          // No prefix, use index to determine collection
+          displayText = linkText;
+          const lookupSlug = linkText.toLowerCase().replace(/\s+/g, '-');
+          const indexEntry = contentIndex[lookupSlug];
+          
+          if (indexEntry) {
+            collection = indexEntry.collection;
+            // Use the original filename casing for case-sensitive URLs
+            slug = indexEntry.originalName.replace(/\s+/g, '-');
+          } else {
+            // Default to works if not found
+            collection = 'works';
+            slug = displayText.replace(/\s+/g, '-');
+          }
+        }
         
-        // Create link node
+        // Create link node with the determined collection and case-sensitive slug
         newNodes.push({
           type: 'link',
           url: `/${collection}/${slug}`,
-          children: [{ type: 'text', value: linkText }]
+          children: [{ type: 'text', value: displayText }]
         });
 
         lastIndex = matchStart + fullMatch.length;
