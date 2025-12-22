@@ -32,9 +32,7 @@ While clay is an ionic bridge and marble a petrified wave, silt is the sediment 
 <iframe src="https://online.fliphtml5.com/qemxs/hfon/" allow="fullscreen" allowfullscreen="" style="height:100%;width:100%; aspect-ratio: 16 / 9; "></iframe>
 
 ![](https://i.imgur.com/kuZyPhj.png)
-
 ![](https://i.imgur.com/RUnwMEo.png)
-
 ![](https://i.imgur.com/NMbhPg4.png)
 
 ## sketches and try-outs
