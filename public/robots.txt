@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://a.zztt.org/sitemap-index.xml

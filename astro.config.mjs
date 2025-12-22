@@ -18,7 +18,13 @@ export default defineConfig({
         remarkWikilinks,
       ],
     }),
-    sitemap(),
+    sitemap({
+      // Customize sitemap here if needed:
+      // filter: (page) => !page.includes('/private/'), // Exclude certain pages
+      // changefreq: 'weekly',
+      // priority: 0.7,
+      // lastmod: new Date(),
+    }),
     react(),
   ],
 
