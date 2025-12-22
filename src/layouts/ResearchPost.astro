@@ -72,27 +72,28 @@ const formatPublicationDate = (date: Date) => {
 				line-height: 1.6;
 			}
 			.metadata {
-				background-color: var(--color-bg-muted);
-				border-radius: 8px;
-				padding: 1.5em;
-				margin: 1.5em 0;
-				font-family: 'Courier New', monospace;
+				padding: 0;
+				margin: 0 0 2em 0;
 				font-size: 0.9rem;
+				text-align: left;
 			}
 			.metadata-item {
-				margin: 0.75em 0;
-				display: flex;
-				flex-wrap: wrap;
-				gap: 0.5em;
+				margin: 0.5em 0;
+				display: block;
+			}
+			.metadata-item:first-child .metadata-value {
+				color: var(--text-muted);
+				font-size: 0.95rem;
 			}
 			.metadata-label {
 				font-weight: 400;
 				color: var(--accent);
-				min-width: 120px;
+				display: inline;
+				margin-right: 0.5em;
 			}
 			.metadata-value {
-				color: var(--text);
-				flex: 1;
+				color: var(--text-muted);
+				display: inline;
 			}
 			.doi-link {
 				color: var(--accent);
@@ -178,31 +179,34 @@ const formatPublicationDate = (date: Date) => {
 				<div class="prose">
 					<div class="title">
 						<h1>{title}</h1>
-						
-						{description && (
-							<div class="description">
-								{description}
-							</div>
-						)}
-
-						{pubDate && (
-							<div class="pub-date">
-								{formatPublicationDate(pubDate)}
-							</div>
-						)}
-						
-						{updatedDate && (
-							<div class="last-updated-on">
-								Last updated: <FormattedDate date={updatedDate} />
-							</div>
-						)}
 					</div>
 
-					{(doi || isbn || bibtex || paperURL || codeURL || url) && (
-						<div class="metadata">
-							<h3 style="margin-top: 0; color: var(--text);">Publication Metadata</h3>
-							
-							{doi && (
+					<div class="metadata">
+						{pubDate && (
+							<div class="metadata-item">
+								<span class="metadata-value">
+									{formatPublicationDate(pubDate)}
+								</span>
+							</div>
+						)}
+
+						{description && (
+							<div class="metadata-item">
+								<span class="metadata-value">
+									{description}
+								</span>
+							</div>
+						)}
+
+						{updatedDate && (
+							<div class="metadata-item">
+								<span class="metadata-value last-updated-on">
+									Last updated: <FormattedDate date={updatedDate} />
+								</span>
+							</div>
+						)}
+						
+						{doi && (
 								<div class="metadata-item">
 									<span class="metadata-label">DOI:</span>
 									<span class="metadata-value">
@@ -244,7 +248,7 @@ const formatPublicationDate = (date: Date) => {
 
 							{codeURL && (
 								<div class="metadata-item">
-									<span class="metadata-label">Code:</span>
+									{/* <span class="metadata-label"></span> */}
 									<span class="metadata-value">
 										<a href={codeURL} target="_blank" rel="noopener noreferrer" class="doi-link">
 											<svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
@@ -266,8 +270,6 @@ const formatPublicationDate = (date: Date) => {
 								</div>
 							)}
 						</div>
-					)}
-
 					<hr />
 					
 					<slot />

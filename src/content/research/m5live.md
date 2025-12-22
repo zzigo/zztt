@@ -1,6 +1,6 @@
 ---
 title: m5live
-description: is a web-based environment that reimagines Max Mathews' influential MUSIC V software for modern use
+description: web-based environment that reimagines Max Mathews' influential MUSIC V software for modern use
 pubDate: 2022-06-26
 codeURL: https://github.com/azzigotti/m5live
 url: https://m5live.zztt.org
