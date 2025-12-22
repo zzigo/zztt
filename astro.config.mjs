@@ -4,6 +4,7 @@ import sitemap from "@astrojs/sitemap";
 import react from "@astrojs/react";
 
 import remarkQuoteCallout from "./remark-quote-callout.mjs";
+import remarkWikilinks from "./remark-wikilinks.mjs";
 
 export default defineConfig({
   output: "static",
@@ -14,6 +15,7 @@ export default defineConfig({
     mdx({
       remarkPlugins: [
         remarkQuoteCallout,
+        remarkWikilinks,
       ],
     }),
     sitemap(),
@@ -22,6 +24,7 @@ export default defineConfig({
 
   markdown: {
     remarkPlugins: [
+      remarkWikilinks,
     // remarkQuoteCallout,
     // remarmermaid, 
     ],

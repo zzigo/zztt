@@ -46,4 +46,5 @@ Metal tube 300x50x3 mm
 ![](https://i.imgur.com/NMbhPg4.png)
 
 
-![[Azzigotti_2021_Limo.pdf]]
+## sketches and try-outs
+

@@ -137,25 +137,25 @@ export default function AudioMixer() {
     mixerElement = document.createElement('div');
     mixerElement.id = 'audio-mixer';
     mixerElement.style.position = 'fixed';
-    mixerElement.style.bottom = '20px';
-    mixerElement.style.right = '20px';
-    mixerElement.style.width = '300px';
+    mixerElement.style.bottom = '15px';
+    mixerElement.style.right = '15px';
+    mixerElement.style.width = '200px';
     mixerElement.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    mixerElement.style.borderRadius = '10px';
-    mixerElement.style.padding = '15px';
+    mixerElement.style.borderRadius = '0px';
+    mixerElement.style.padding = '10px';
     mixerElement.style.color = '#fff';
     mixerElement.style.fontFamily = 'Arial, sans-serif';
     mixerElement.style.zIndex = '1000';
     mixerElement.style.display = 'none';
-    mixerElement.style.boxShadow = '0 0 20px rgba(0, 255, 255, 0.5)';
+    mixerElement.style.boxShadow = '0 0 20px rgba(197, 197, 197, 0.5)';
     mixerElement.style.backdropFilter = 'blur(10px)';
     
     // Create mixer title
     const title = document.createElement('h2');
-    title.textContent = 'Audio Mixer';
+    title.textContent = '';
     title.style.margin = '0 0 15px 0';
     title.style.textAlign = 'center';
-    title.style.color = '#0ff';
+    title.style.color = 'rgba(188, 188, 188, 1)';
     mixerElement.appendChild(title);
     
     // Create master volume control
@@ -196,7 +196,7 @@ export default function AudioMixer() {
     createDivider(mixerElement, 'Effects');
     
     // Create effect controls
-    createSlider(mixerElement, 'Reverb Amount', 0.5, (value) => {
+    createSlider(mixerElement, 'Reverb Amount', 1, (value) => {
       reverbNode.wet.value = Math.min(1, Math.max(0, value));
     });
     
@@ -214,23 +214,23 @@ export default function AudioMixer() {
     
     // Create toggle button
     const toggleButton = document.createElement('button');
-    toggleButton.textContent = 'Show Mixer';
+    toggleButton.textContent = 'mixer';
     toggleButton.style.position = 'fixed';
-    toggleButton.style.bottom = '20px';
-    toggleButton.style.right = '20px';
-    toggleButton.style.padding = '10px 15px';
+    toggleButton.style.bottom = '15px';
+    toggleButton.style.right = '15px';
+    toggleButton.style.padding = '10px 10px';
     toggleButton.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    toggleButton.style.color = '#0ff';
-    toggleButton.style.border = '1px solid #0ff';
+    toggleButton.style.color = 'rgba(147, 147, 147, 1)';
+    toggleButton.style.border = '1px solid rgba(218, 218, 218, 1)';
     toggleButton.style.borderRadius = '5px';
     toggleButton.style.cursor = 'pointer';
     toggleButton.style.zIndex = '1001';
-    toggleButton.style.boxShadow = '0 0 10px rgba(0, 255, 255, 0.5)';
+    toggleButton.style.boxShadow = '0 0 10px rgba(146, 146, 146, 0.5)';
     
     toggleButton.onclick = () => {
       isVisible = !isVisible;
       mixerElement.style.display = isVisible ? 'block' : 'none';
-      toggleButton.textContent = isVisible ? 'Hide Mixer' : 'Show Mixer';
+      toggleButton.textContent = isVisible ? 'mixer-' : 'mixer+';
     };
     
     // Add elements to document
@@ -260,7 +260,7 @@ export default function AudioMixer() {
     slider.value = defaultValue.toString();
     slider.style.flex = '1';
     slider.style.height = '20px';
-    slider.style.accentColor = '#0ff';
+    slider.style.accentColor = 'rgba(222, 222, 222, 1)';
     
     const valueDisplay = document.createElement('span');
     valueDisplay.textContent = defaultValue.toFixed(2);
@@ -286,9 +286,9 @@ export default function AudioMixer() {
   const createDivider = (parent, title) => {
     const divider = document.createElement('div');
     divider.style.margin = '15px 0';
-    divider.style.borderBottom = '1px solid #0ff';
+    divider.style.borderBottom = '1px solid rgba(164, 164, 164, 1)';
     divider.style.paddingBottom = '5px';
-    divider.style.color = '#0ff';
+    divider.style.color = 'rgba(118, 118, 118, 1)';
     divider.style.fontWeight = 'bold';
     divider.textContent = title;
     parent.appendChild(divider);

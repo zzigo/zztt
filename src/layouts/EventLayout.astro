@@ -4,20 +4,25 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
-import PdfFlipbook from '../components/PdfFlipbook.astro';
 
-type Props = CollectionEntry<'blog' | 'works' | 'research'>['data'];
+type Props = CollectionEntry<'events'>['data'];
 
-const { title, description, pubDate, updatedDate, heroImage, performedBy, performances } = Astro.props as Props;
+const { title, description, dates, venue, city, country, work, performers, heroImage } = Astro.props as Props;
 
 const slugify = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 const parseWikilink = (link: string) => link.replace(/\[\[|\]\]/g, '');
 
-const performancesArray = Array.isArray(performances) ? performances : (performances ? [performances] : []);
-const performedByArray = Array.isArray(performedBy) ? performedBy : (performedBy ? [performedBy] : []);
+const parseVenue = (venueString: string) => {
+    const match = venueString.match(/^(.*)\((.*)\)$/);
+    if (match) {
+        return { name: match[1].trim(), url: match[2].trim() };
+    }
+    return { name: venueString, url: null };
+};
+const venueInfo = parseVenue(venue);
 ---
 
-<html lang="en" data-theme="dark">
+<html lang="en">
 	<head>
 		<BaseHead title={title} description={description} />
 		<style>
@@ -25,6 +30,7 @@ const performedByArray = Array.isArray(performedBy) ? performedBy : (performedBy
 				width: calc(100% - 2em);
 				max-width: 100%;
 				margin: 0;
+				margin-top: 3rem;
 				padding: 1em;
 				background-color: var(--background);
 				color: var(--text);
@@ -33,6 +39,7 @@ const performedByArray = Array.isArray(performedBy) ? performedBy : (performedBy
 				display: flex;
 				flex-direction: column;
 				gap: 2em;
+				padding-top: 8rem;
 			}
 			.sidebar {
 				width: 100%;
@@ -89,12 +96,11 @@ const performedByArray = Array.isArray(performedBy) ? performedBy : (performedBy
 
 			.meta-section a {
 				color: var(--text);
-				text-decoration: none;
-				border-bottom: 1px solid var(--accent-light);
+				text-decoration: underline;
+				text-decoration-color: var(--accent);
 			}
 			.meta-section a:hover {
 				color: var(--accent);
-				border-bottom-color: var(--accent);
 			}
 
 			.hero-image {
@@ -115,44 +121,8 @@ const performedByArray = Array.isArray(performedBy) ? performedBy : (performedBy
 				color: var(--text);
 			}
 			
-			.date {
-				margin-bottom: 0.5em;
-				color: var(--text-muted);
-				font-size: 0.9em;
-			}
-			.last-updated-on {
-				font-style: italic;
-			}
-
-			/* Callout for quotes */
-			.callout[data-callout='quote'] {
-				position: relative;
-				text-align: center;
-				padding: 1rem;
-				z-index: 0;
-				margin: 2em 0;
-			}
-			.callout[data-callout='quote']::before {
-				content: '"';
-				font-family: serif;
-				font-size: 8em;
-				font-weight: bold;
-				color: var(--text-muted);
-				opacity: 0.2;
-				position: absolute;
-				left: 50%;
-				top: 50%;
-				transform: translate(-50%, -50%);
-				z-index: -1;
-			}
-			.callout[data-callout="quote"] .callout-title {
-				font-style: italic;
-				display: block;
-			}
-			.callout[data-callout="quote"] .callout-content {
-				font-size: 1.0em;
-				line-height: 1.32;
-				padding-block: 1.1rem;
+			.dates-list li {
+				margin-bottom: 0.25rem;
 			}
 		</style>
 	</head>
@@ -162,20 +132,18 @@ const performedByArray = Array.isArray(performedBy) ? performedBy : (performedBy
 			// Theme initialization script
 			const theme = (() => {
 				if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
-					return localStorage.getItem('theme') || 'dark';
+					return localStorage.getItem('theme') || 'light';
 				}
 				if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
 					return 'dark';
 				}
-				return 'dark';
+				return 'light';
 			})();
 
 			if (theme === 'light') {
-				document.documentElement.classList.add('light');
-                document.documentElement.setAttribute('data-theme', 'light');
+				document.documentElement.classList.remove('dark');
 			} else {
 				document.documentElement.classList.add('dark');
-                document.documentElement.setAttribute('data-theme', 'dark');
 			}
 
 			window.localStorage.setItem('theme', theme);
@@ -201,36 +169,45 @@ const performedByArray = Array.isArray(performedBy) ? performedBy : (performedBy
 						{description && <p class="description">{description}</p>}
 					</div>
 
-					<div class="date">
-						<FormattedDate date={pubDate} />
-						{updatedDate && (
-							<div class="last-updated-on">
-								Last updated on <FormattedDate date={updatedDate} />
-							</div>
-						)}
-					</div>
-					
 					<hr />
 
-					{performedByArray.length > 0 && (
-						<div class="meta-section">
-							<h3>Performed By</h3>
-							<ul>
-								{performedByArray.map(performer => {
-									const performerName = parseWikilink(performer);
-									return <li><a href={`/performers/${slugify(performerName)}`}>{performerName}</a></li>
-								})}
-							</ul>
-						</div>
-					)}
+                    <div class="meta-section">
+                        <h3>Dates</h3>
+                        <ul class="dates-list">
+                            {dates.map(({ date, hour }) => (
+                                <li>
+                                    <FormattedDate date={new Date(date)} />
+                                    {hour && ` at ${hour}`}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
 
-					{performancesArray.length > 0 && (
+                    <div class="meta-section">
+                        <h3>Location</h3>
+                        <p>
+                            {venueInfo.url ? <a href={venueInfo.url} target="_blank" rel="noopener noreferrer">{venueInfo.name}</a> : venueInfo.name}
+                            <br/>
+                            {city}, {country}
+                        </p>
+                    </div>
+
+                    {work && (
+                        <div class="meta-section">
+                            <h3>Work</h3>
+                            <p><a href={`/works/${slugify(parseWikilink(work))}`}>{parseWikilink(work)}</a></p>
+                        </div>
+                    )}
+
+					{performers && performers.length > 0 && (
 						<div class="meta-section">
-							<h3>Performances</h3>
+							<h3>Performers</h3>
 							<ul>
-								{performancesArray.map(performance => {
-									const eventName = parseWikilink(performance);
-									return <li><a href={`/events/${slugify(eventName)}`}>{eventName}</a></li>
+								{performers.map(performer => {
+									const performerName = parseWikilink(performer);
+									const performerSlug = slugify(performerName);
+									// A check could be added here to see if the performer page exists
+									return <li><a href={`/performers/${performerSlug}`}>{performerName}</a></li>
 								})}
 							</ul>
 						</div>

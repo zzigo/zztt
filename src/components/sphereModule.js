@@ -238,7 +238,7 @@ const createAudioForSphere = (sphere) => {
     const oscillator = new Tone.Oscillator({
       frequency: frequency,
       type: "sine",
-      volume: -20, // Lower volume
+      volume: -10, // Lower volume
     }).start();
     
     // Create a filter
@@ -254,7 +254,7 @@ const createAudioForSphere = (sphere) => {
       frequency: Math.random() * 0.5 + 0.1, // Slow chop rate between 0.1-0.6 Hz
       min: 0,
       max: 1,
-      type: "square"
+      type: "sine"
     }).start();
     
     // Connect LFO to chopper gain
@@ -267,7 +267,7 @@ const createAudioForSphere = (sphere) => {
       positionZ: sphere.position.z,
       rolloffFactor: 2,
       distanceModel: "exponential",
-      maxDistance: 10000,
+      maxDistance: 1000,
       refDistance: 5,
     });
     

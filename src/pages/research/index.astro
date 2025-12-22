@@ -3,11 +3,14 @@ import BaseHead from '../../components/BaseHead.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
-import { getCollection } from 'astro:content';
+import { getCollection, getEntry } from 'astro:content';
 
-const posts = (await getCollection('research')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+const posts = (await getCollection('research'))
+  .filter((post) => post.id !== 'research-statement.md')
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const researchStatementEntry = await getEntry('research', 'research-statement');
+const { Content } = await researchStatementEntry.render();
 
 // Extract year from date
 const getYear = (date: Date) => {
@@ -104,6 +107,7 @@ const getYear = (date: Date) => {
 	<body>
 		<Header />
 		<main>
+			<Content />
 			<section>
 				<ul class="research-list">
 					{

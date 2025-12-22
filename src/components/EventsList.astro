@@ -1,0 +1,430 @@
+---
+import { getCollection } from 'astro:content';
+import FormattedDate from './FormattedDate.astro';
+
+interface Props {
+  filterByWork?: string;
+  showFilters?: boolean;
+}
+
+const { filterByWork, showFilters = true } = Astro.props;
+
+// Get all events and performers
+let allEvents = await getCollection('events');
+const allPerformers = await getCollection('performers');
+const performerSlugs = allPerformers.map(p => p.slug);
+
+// Slugify helper
+const slugify = (text: string) => {
+    return text.toString().toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/&/g, '-and-')
+        .replace(/[^\w\-]+/g, '')
+        .replace(/\-\-+/g, '-')
+        .replace(/^-+/, '')
+        .replace(/-+$/, '');
+}
+
+// Filter by work if specified
+if (filterByWork) {
+  allEvents = allEvents.filter(event => 
+    event.data.work.toLowerCase() === filterByWork.toLowerCase()
+  );
+}
+
+// Filter out events that might not have dates
+let validEvents = allEvents.filter(event => event.data.dates && event.data.dates.length > 0);
+
+// Create a new array with one entry for each date in an event's `dates` array
+const eventInstances = validEvents.flatMap(event => 
+  event.data.dates.map(d => ({
+    ...event,
+    date: d.date,
+    hour: d.hour,
+  }))
+);
+
+// Sort all instances by date (newest first by default)
+eventInstances.sort((a, b) => b.date.valueOf() - a.date.valueOf());
+
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+---
+
+<div class="events-container">
+  {showFilters && (
+    <div class="controls-section">
+      <div class="sort-buttons">
+        <button class="sort-btn active" data-sort="date">Date</button>
+        <button class="sort-btn" data-sort="work">Work</button>
+        <button class="sort-btn" data-sort="performedby">Performer</button>
+        <button class="sort-btn" data-sort="venue">Venue</button>
+        <button class="sort-btn" data-sort="city">City</button>
+        <button class="sort-btn" data-sort="country">Country</button>
+      </div>
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="Search..." class="search-input" />
+      </div>
+    </div>
+  )}
+
+  <div class="table-container">
+    <table class="events-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Hour</th>
+          <th>Work</th>
+          <th>Performed By</th>
+          <th>Event Name</th>
+          <th>Venue</th>
+          <th>City</th>
+          <th>Country</th>
+        </tr>
+      </thead>
+      <tbody id="events-tbody">
+        {eventInstances.map(eventInstance => {
+          const performersArray = Array.isArray(eventInstance.data.performedBy) 
+            ? eventInstance.data.performedBy
+            : [eventInstance.data.performedBy];
+
+          const performersString = performersArray.join(', ');
+          const isPast = eventInstance.date < today;
+          
+          return (
+            <tr 
+              class={`event-row ${isPast ? 'past-event' : 'upcoming-event'}`}
+              data-date={eventInstance.date.toISOString()}
+              data-hour={eventInstance.hour || ''}
+              data-work={eventInstance.data.work}
+              data-performedby={performersString}
+              data-eventname={eventInstance.data.eventName}
+              data-venue={eventInstance.data.venue}
+              data-city={eventInstance.data.city}
+              data-country={eventInstance.data.country}
+              data-ispast={isPast ? 'true' : 'false'}
+            >
+              <td class="date-cell">
+                <FormattedDate date={eventInstance.date} />
+              </td>
+              <td>{eventInstance.hour || '—'}</td>
+              <td class="work-cell">
+                {(() => {
+                  const workName = eventInstance.data.work.replace(/\.md$/, '');
+                  const workSlug = workName.toLowerCase().replaceAll(' ', '-');
+                  return <a href={`/works/${workSlug}`}>{workName}</a>;
+                })()}
+              </td>
+              <td>
+                {performersArray.map((performer, index) => {
+                  const linkMatch = performer.match(/^\[\[(.*?)\]\]$/);
+                  if (linkMatch) {
+                    const performerName = linkMatch[1];
+                    const performerSlug = slugify(performerName);
+                    if (performerSlugs.includes(performerSlug)) {
+                      return (
+                        <>
+                          <a href={`/performers/${performerSlug}`}>{performerName}</a>{index < performersArray.length - 1 ? ', ' : ''}
+                        </>
+                      );
+                    } else {
+                      return (
+                        <>
+                          {performerName}{index < performersArray.length - 1 ? ', ' : ''}
+                        </>
+                      );
+                    }
+                  }
+                  return (
+                    <>
+                      {performer}{index < performersArray.length - 1 ? ', ' : ''}
+                    </>
+                  );
+                })}
+              </td>
+              <td>
+                {eventInstance.data.url ? (
+                  <a href={eventInstance.data.url} target="_blank" rel="noopener noreferrer">
+                    {eventInstance.data.eventName}
+                  </a>
+                ) : (
+                  eventInstance.data.eventName
+                )}
+              </td>
+              <td>
+                {(() => {
+                  const venueString = eventInstance.data.venue;
+                  const match = venueString.match(/(.*?)\s*\((https?:\/\/[^\)]+)\)/);
+                  if (match) {
+                    const name = match[1].trim();
+                    const url = match[2];
+                    return <a href={url} target="_blank" rel="noopener noreferrer">{name}</a>;
+                  }
+                  return venueString;
+                })()}
+              </td>
+              <td>{eventInstance.data.city}</td>
+              <td>{eventInstance.data.country}</td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+
+  <div id="no-results" class="no-results" style="display: none;">
+    No events found matching your criteria.
+  </div>
+</div>
+
+<style>
+  .events-container {
+    width: 100%;
+    margin: 2rem 0;
+  }
+
+  .controls-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: rgb(var(--color-bg-muted));
+  }
+
+  .sort-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .sort-btn {
+    padding: 0.4rem 1rem;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--accent-light);
+    cursor: pointer;
+    font-weight: 400;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: inherit;
+  }
+
+  .sort-btn:hover {
+    border-color: var(--accent);
+  }
+
+  .sort-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--background);
+  }
+
+  .search-box {
+    flex: 1 1 auto;
+    min-width: 200px;
+    max-width: 400px;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--accent-light);
+    font-size: 0.85rem;
+    background: var(--background);
+    color: var(--text);
+    font-family: inherit;
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .table-container {
+    overflow-x: auto;
+    border: 1px solid rgb(var(--color-bg-muted));
+  }
+
+  .events-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--background);
+  }
+
+  .events-table th {
+    background: rgb(var(--color-bg-muted));
+    padding: 0.75rem;
+    text-align: left;
+    font-weight: 400;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--accent-light);
+    color: var(--text);
+  }
+
+  .events-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid rgb(var(--color-bg-muted));
+    font-size: 0.9rem;
+    color: var(--text);
+  }
+
+  .event-row.past-event {
+    opacity: 0.5;
+  }
+
+  .work-cell a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 400;
+    transition: opacity 0.2s;
+  }
+
+  .work-cell a:hover {
+    opacity: 0.7;
+  }
+
+  .events-table a {
+    color: var(--accent);
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+
+  .events-table a:hover {
+    opacity: 0.7;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  @media (max-width: 768px) {
+    .controls-section {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .sort-buttons {
+      justify-content: center;
+    }
+
+    .events-table {
+      font-size: 0.8rem;
+    }
+
+    .events-table th,
+    .events-table td {
+      padding: 0.5rem 0.3rem;
+      font-size: 0.75rem;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const tbody = document.getElementById('events-tbody');
+    const noResults = document.getElementById('no-results');
+    const searchInput = document.getElementById('search-input') as HTMLInputElement;
+    const sortButtons = document.querySelectorAll('.sort-btn');
+
+    let currentSort = { column: 'date', direction: 'desc' };
+
+    function filterAndSortRows() {
+      if (!tbody) return;
+      
+      const rows = Array.from(tbody.querySelectorAll('.event-row')) as HTMLElement[];
+      const searchTerm = searchInput?.value.toLowerCase() || '';
+      let visibleRows = [];
+
+      // 1. Filter
+      rows.forEach(row => {
+        const work = row.dataset.work || '';
+        const performedBy = row.dataset.performedby || '';
+        const eventName = row.dataset.eventname || '';
+        const venue = row.dataset.venue || '';
+        const city = row.dataset.city || '';
+        const country = row.dataset.country || '';
+
+        const matchesSearch = !searchTerm || 
+          work.toLowerCase().includes(searchTerm) ||
+          performedBy.toLowerCase().includes(searchTerm) ||
+          eventName.toLowerCase().includes(searchTerm) ||
+          venue.toLowerCase().includes(searchTerm) ||
+          city.toLowerCase().includes(searchTerm) ||
+          country.toLowerCase().includes(searchTerm);
+
+        if (matchesSearch) {
+          visibleRows.push(row);
+        }
+      });
+
+      // 2. Sort
+      visibleRows.sort((a, b) => {
+        let aVal = a.dataset[currentSort.column.toLowerCase()] || '';
+        let bVal = b.dataset[currentSort.column.toLowerCase()] || '';
+
+        // Special handling for date
+        if (currentSort.column === 'date') {
+          return currentSort.direction === 'asc' 
+            ? new Date(aVal).getTime() - new Date(bVal).getTime() 
+            : new Date(bVal).getTime() - new Date(aVal).getTime();
+        }
+
+        const comparison = aVal.localeCompare(bVal, undefined, { sensitivity: 'base' });
+        return currentSort.direction === 'asc' ? comparison : -comparison;
+      });
+
+      // Clear table body before re-rendering
+      tbody.innerHTML = '';
+      
+      // 3. Render
+      visibleRows.forEach(row => {
+        tbody.appendChild(row);
+      });
+
+      if (noResults) {
+        noResults.style.display = visibleRows.length === 0 ? 'block' : 'none';
+      }
+      if (tbody.parentElement) {
+        (tbody.parentElement as HTMLElement).style.display = visibleRows.length === 0 ? 'none' : 'table';
+      }
+    }
+
+    function handleSort(column: string, button: HTMLElement) {
+      if (currentSort.column === column) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.column = column;
+        // Default to descending for date, ascending for others
+        currentSort.direction = column === 'date' ? 'desc' : 'asc';
+      }
+      
+      sortButtons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+      filterAndSortRows();
+    }
+    
+    // Event listeners
+    if (searchInput) {
+      searchInput.addEventListener('input', filterAndSortRows);
+    }
+
+    sortButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const column = button.getAttribute('data-sort');
+        if (column) handleSort(column, button as HTMLElement);
+      });
+    });
+
+    // Initial sort and render
+    filterAndSortRows();
+  });
+</script>

@@ -1,4 +1,9 @@
 ---
+// THEME CONFIG
+const DEFAULT_THEME = "dark"; // "dark" | "light"
+const REDIRECT_TO_ZZTT_HTML = false; //REDIRECT
+const ENABLE_HERO_HEADER = true; //HERO HEADER
+
 import BaseHead from "../components/BaseHead.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
@@ -7,33 +12,22 @@ import Hero from "../components/hero.astro";
 import { getCollection } from "astro:content";
 import FormattedDate from "../components/FormattedDate.astro";
 
-
-// REDIRECTION CONFIG - Set to false to disable redirection and enable the Astro site
-const REDIRECT_TO_ZZTT_HTML = false;
-
-// HERO HEADER CONFIG - Set to true to enable the vaporwave z-tunnel header
-const ENABLE_HERO_HEADER = true;
-
 const posts = (await getCollection("works")).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 ---
 
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
 		{REDIRECT_TO_ZZTT_HTML && (
 			<meta http-equiv="refresh" content="0;url=/zztt.html" />
 		)}
 		<style>
-			:root {
-				/* --background-color: #000000; */
-				--text-color: #ffffff;
-			}
 			body {
-				background-color: var(--background-color);
-				color: var(--text-color);
+				background-color: var(--background);
+				color: var(--text);
 				overflow-y: auto;
 			}
 			.hero-container {
@@ -44,7 +38,7 @@ const posts = (await getCollection("works")).sort(
 				left: 0;
 			}
 			main {
-				color: var(--text-color);
+				color: var(--text);
 				padding: 2rem;
 				max-width: 1200px;
 				margin: 0 auto;
@@ -53,7 +47,7 @@ const posts = (await getCollection("works")).sort(
 				background: linear-gradient(
 					to bottom,
 					transparent 0%,
-					var(--background-color) 300px
+					var(--background) 300px
 				);
 			}
 			.intro {
@@ -100,16 +94,16 @@ const posts = (await getCollection("works")).sort(
 			.work-title {
 				font-size: 2rem;
 				margin: 0 0 0.25rem 0;
-				color: var(--text-color);
+				color: var(--text);
 				font-weight: 400;
 			}
 			.work-date {
-				color: #666;
+				color: var(--text-muted);
 				font-size: 1rem;
 				margin: 0;
 			}
 			.work-synopsis {
-				color: #999;
+				color: var(--text-muted);
 				line-height: 1.6;
 				margin: 0;
 			}
@@ -134,9 +128,25 @@ const posts = (await getCollection("works")).sort(
 					width: 100%;
 				}
 			}
+			h4.title {
+				color: var(--text);
+			}
 		</style>
 	</head>
 	<body>
+	<script>
+(() => {
+  const storedTheme = localStorage.getItem("theme");
+
+  if (storedTheme === "light") {
+    document.documentElement.classList.add("light");
+  } else {
+    document.documentElement.classList.remove("light");
+    localStorage.removeItem("theme"); // keep storage clean
+  }
+})();
+</script>
+
 		{!REDIRECT_TO_ZZTT_HTML && (
 			<>
 				<Header />
@@ -155,7 +165,7 @@ const posts = (await getCollection("works")).sort(
 								posts.map((post) => (
 									<li class="work-item">
 										<a
-											href={`/works/${post.id}/`}
+											href={`/works/${post.id.replace(/\.md$/, '')}/`}
 											class="work-image-container"
 										>
 											<img
@@ -167,7 +177,7 @@ const posts = (await getCollection("works")).sort(
 											/>
 										</a>
 										<div class="work-content">
-											<a href={`/works/${post.id}/`}>
+											<a href={`/works/${post.id.replace(/\.md$/, '')}/`}>
 												<h2 class="work-title">
 													{post.data.title}
 												</h2>
@@ -193,7 +203,7 @@ const posts = (await getCollection("works")).sort(
 		
 		{!REDIRECT_TO_ZZTT_HTML && (
 			<script>
-				// Create a function to initialize the audio context with user interaction
+				// Create a function to initialize audio context with user interaction
 				const initAudioContext = async () => {
 					try {
 						// Create a new AudioContext

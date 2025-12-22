@@ -4,6 +4,13 @@ description: bearing balls, neodymium magnets, acrylic semisspheres, micro-sprin
 pubDate: 2013-09-10
 heroImage: https://i.imgur.com/QnASKjw.png
 performedBy: reConvert
+performances:
+- "[[reConvert Latin Tour@conDiT]]"
+- "[[Percussion Workshop @Teatro Argentino de La Plata]]"
+- "[[Darmstädter Ferienkurse 2014]]"
+- "[[Concert Series Zurich]]"
+- "[[Percussion Festival Danish National Conservatoire]]"
+- "[[Cafe OTO London]]"
 ---
 
 

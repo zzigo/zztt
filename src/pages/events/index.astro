@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EventsList from '../../components/EventsList.astro';
+---
+
+<BaseLayout title="Events" description="All events">
+	<main>
+		<h1>Events</h1>
+		<EventsList showFilters={true} />
+	</main>
+</BaseLayout>
+
+<style>
+	main {
+		width: 100%;
+		max-width: 1400px;
+		margin: auto;
+		padding: 6rem 1rem 2rem;
+	}
+
+	h1 {
+		font-size: 2rem;
+		font-weight: 400;
+		margin-bottom: 2rem;
+		color: var(--text);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		text-align: left;
+	}
+</style>

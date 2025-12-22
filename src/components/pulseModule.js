@@ -44,7 +44,7 @@ export default function PulseModule() {
         // Create a biquad filter with high resonance (DJ-style filter)
         const filter = new Tone.Filter({
           type: "bandpass",
-          frequency: 1000,
+          frequency: 100,
           Q: 10 // High resonance for that DJ filter sweep effect
         });
         
@@ -61,7 +61,7 @@ export default function PulseModule() {
         
         // Create lowpass filter for smoother transitions in the chopping
         const chopFilter = new Tone.Filter({
-          frequency: 30,
+          frequency: 300,
           type: "lowpass"
         });
         

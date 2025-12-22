@@ -1,12 +1,13 @@
 ---
 import { type CollectionEntry, getCollection } from 'astro:content';
 import BlogPost from '../../layouts/BlogPost.astro';
+import EventsList from '../../components/EventsList.astro';
 import { render } from 'astro:content';
 
 export async function getStaticPaths() {
 	const posts = await getCollection('works');
 	return posts.map((post) => ({
-		params: { slug: post.id },
+		params: { slug: post.id.replace(/\.md$/, '') },
 		props: post,
 	}));
 }
@@ -14,8 +15,36 @@ type Props = CollectionEntry<'works'>;
 
 const post = Astro.props;
 const { Content } = await render(post);
+
+// Get events for this work
+const allEvents = await getCollection('events');
+const workEvents = allEvents.filter(event => 
+	event.data.work.toLowerCase() === post.data.title.toLowerCase()
+);
+const hasEvents = workEvents.length > 0;
 ---
 
 <BlogPost {...post.data}>
 	<Content />
+	
+	{hasEvents && (
+		<section class="work-events-section">
+			<h2>Performances & Events</h2>
+			<EventsList filterByWork={post.data.title} showFilters={false} />
+		</section>
+	)}
 </BlogPost>
+
+<style>
+	.work-events-section {
+		margin-top: 4rem;
+		padding-top: 3rem;
+		border-top: 2px solid var(--border, #ddd);
+	}
+
+	.work-events-section h2 {
+		font-size: 2rem;
+		margin-bottom: 2rem;
+		color: var(--text);
+	}
+</style>

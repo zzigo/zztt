@@ -1,0 +1,79 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import EventsList from '../components/EventsList.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`Calendar | ${SITE_TITLE}`} description="Complete calendar of performances and events" />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<section>
+				<div class="page-header">
+					<!-- <h1>Calendar</h1>
+					<p class="subtitle">Complete list of performances and events</p> -->
+				</div>
+				<EventsList showFilters={true} />
+			</section>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	main {
+		width: 100%;
+		max-width: 1400px;
+		margin: auto;
+		padding: 6rem 1rem 2rem;
+	}
+
+	section {
+		margin: 0 auto;
+		width: 100%;
+	}
+
+	.page-header {
+		margin-bottom: 2rem;
+		text-align: left;
+		/* border-bottom: 1px solid var(--accent); */
+		padding-bottom: 1rem;
+	}
+
+	h1 {
+		font-size: 2rem;
+		font-weight: 400;
+		margin-bottom: 0.5rem;
+		color: var(--text);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+	}
+
+	.subtitle {
+		font-size: 0.85rem;
+		color: var(--text-muted);
+		font-weight: 400;
+	}
+
+
+
+	@media (max-width: 768px) {
+		main {
+			padding: 5rem 1rem 2rem;
+		}
+
+		h1 {
+			font-size: 1.5rem;
+		}
+
+		.subtitle {
+			font-size: 0.8rem;
+		}
+	}
+</style>
