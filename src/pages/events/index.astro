@@ -1,14 +1,43 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
 import EventsList from '../../components/EventsList.astro';
 ---
 
-<BaseLayout title="Events" description="All events">
-	<main>
-		<h1>Events</h1>
-		<EventsList showFilters={true} />
-	</main>
-</BaseLayout>
+<html lang="en">
+	<head>
+		<BaseHead title="Events" description="All events" />
+	</head>
+	<body>
+		<script>
+			// Theme initialization script
+			const theme = (() => {
+				if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+					return localStorage.getItem('theme') || 'dark';
+				}
+				if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+					return 'dark';
+				}
+				return 'dark';
+			})();
+
+			if (theme === 'light') {
+				document.documentElement.classList.remove('dark');
+			} else {
+				document.documentElement.classList.add('dark');
+			}
+
+			window.localStorage.setItem('theme', theme);
+		</script>
+		<Header />
+		<main>
+			<h1>Events</h1>
+			<EventsList showFilters={true} />
+		</main>
+		<Footer />
+	</body>
+</html>
 
 <style>
 	main {
