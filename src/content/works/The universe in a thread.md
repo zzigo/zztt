@@ -19,4 +19,4 @@ I was comissioned by Teatro Argentino to create the music of this performatic wo
 
 Trying to generate a homogeneous orchestration, he first modified the percussion instruments.
 
-Check [[giants vibraslaps]]
+Check [[giants-vibraslaps]]
