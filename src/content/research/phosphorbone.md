@@ -22,7 +22,6 @@ this is my first prototype based on speculative organology methods and [[soog]]:
     <div class="callout-section">
       <div class="callout-section-title">OUTPUT</div>
       <p>The organogram abstracts the bioluminescent trombone as a speculative hybrid of aerophone and electronophone. The acoustical body is represented by a blue fluorescent circle (aerophone) and a rhombus (electronophone), merged into a single polygon to signify embedded computing. A double-length slide is shown as two parallel blue lines extending from the circle, with arrows indicating bidirectional performer movement. The embedded amplification system is visualized as a small horizontal cone (speaker) inside the bell, colored grey for plastic, with signal flow arrows pointing outward. Performer interaction is marked by a white dotted circle and line connecting to the slide. Numbers in blue denote key components: 7 slide positions (extended range), 1 embedded speaker, and 1 microcontroller. The acoustical rationale combines the trombone’s cylindrical/conical bore resonance (circle) with digital wave shaping (rhombus), using PLA’s material properties to enhance high-frequency diffusion. The design merges acoustic projection with self-amplification, creating a closed-loop system where the performer’s slide manipulation directly modulates both acoustic output and embedded digital processing.</p>
-      
     </div>
     <hr />
     <div class="callout-section">
