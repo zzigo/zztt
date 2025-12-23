@@ -2,6 +2,8 @@ import { defineConfig } from "astro/config";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 import react from "@astrojs/react";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 
 import remarkQuoteCallout from "./remark-quote-callout.mjs";
 import remarkWikilinks from "./remark-wikilinks.mjs";
@@ -14,8 +16,12 @@ export default defineConfig({
   integrations: [
     mdx({
       remarkPlugins: [
+        remarkMath,
         remarkQuoteCallout,
         remarkWikilinks,
+      ],
+      rehypePlugins: [
+        rehypeKatex,
       ],
     }),
     sitemap({
@@ -30,9 +36,13 @@ export default defineConfig({
 
   markdown: {
     remarkPlugins: [
+      remarkMath,
       remarkWikilinks,
-    // remarkQuoteCallout,
+      remarkQuoteCallout,
     // remarmermaid, 
+    ],
+    rehypePlugins: [
+      rehypeKatex,
     ],
   },
 

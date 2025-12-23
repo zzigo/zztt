@@ -2,41 +2,51 @@ import { visit } from "unist-util-visit";
 
 export default function remarkQuoteCallout() {
   return (tree) => {
-    visit(tree, "blockquote", (node) => {
-      const first = node.children?.[0];
-      if (!first || first.type !== "paragraph") return;
+    visit(tree, "blockquote", (node, index, parent) => {
+      if (!parent || !node.children?.length) return;
 
-      const firstText = first.children?.[0];
-      if (!firstText || firstText.type !== "text") return;
+      const first = node.children[0];
+      if (first.type !== "paragraph") return;
 
-      const m = firstText.value.match(/^\[!quote\]\s*(.*)$/);
-      if (!m) return;
+      const text = first.children?.[0];
+      if (!text || text.type !== "text") return;
 
-      const author = (m[1] || "").trim();
+      const match = text.value.match(/^\[!(\w+)\]([+-]?)\s*(.*)$/i);
+      if (!match) return;
 
-      node.data = node.data || {};
-      node.data.hName = "div";
-      node.data.hProperties = {
-        ...(node.data.hProperties || {}),
-        className: ["callout", "callout-quote"],
-        "data-callout": "quote",
+      const type = match[1].toLowerCase();
+      const fold = match[2];
+      const isFoldable = fold === "-" || fold === "+";
+      const open = fold === "+";
+      const title = (match[3] || type).trim();
+
+      const contentChildren = node.children.slice(1);
+
+      const titleNode = {
+        type: "element",
+        tagName: isFoldable ? "summary" : "div",
+        properties: { className: ["callout-title"] },
+        children: [{ type: "text", value: title }],
       };
 
-      // title
-      first.data = first.data || {};
-      first.data.hName = "p"; // keep it a <p> if you prefer (your CSS already targets p fine)
-      first.data.hProperties = { className: ["callout-title"] };
-      first.children = [{ type: "text", value: author || "Quote" }];
-
-      // content wrapper: must be a flow container, not a paragraph
-      const rest = node.children.slice(1);
-      const content = {
-        type: "blockquote",
-        data: { hName: "div", hProperties: { className: ["callout-content"] } },
-        children: rest,
+      const contentNode = {
+        type: "element",
+        tagName: "div",
+        properties: { className: ["callout-content"] },
+        children: contentChildren,
       };
 
-      node.children = [first, content];
+      const wrapper = {
+        type: "element",
+        tagName: isFoldable ? "details" : "div",
+        properties: {
+          className: ["callout", `callout-${type}`],
+          ...(isFoldable && open ? { open: true } : {}),
+        },
+        children: [titleNode, contentNode],
+      };
+
+      parent.children[index] = wrapper;
     });
   };
 }

@@ -202,15 +202,16 @@ blockquote {
   color: var(--text-muted);
 }
 
-.callout.callout-quote {
+/* Base callout styles */
+.callout {
   position: relative;
-  padding: 1.25rem 1.5rem;
-  border: 1px solid rgba(0, 255, 160, 0.35);
-  border-radius: 14px;
-  background: rgba(0, 0, 0, 0.35);
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+  border: none;
 }
 
-.callout.callout-quote::before {
+.callout-quote::before {
   content: "\201C";
   position: absolute;
   top: -0.25rem;
@@ -220,18 +221,154 @@ blockquote {
   pointer-events: none;
 }
 
+/* Callout title */
 .callout-title {
-  font-size: 0.95rem;
-  opacity: 0.9;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--text);
+  text-transform: capitalize;
+}
+
+/* Summary for foldable callouts */
+details.callout summary.callout-title {
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+  padding: 0.25rem 0;
+}
+
+details.callout summary.callout-title::marker {
+  content: "";
+}
+
+details.callout summary.callout-title::before {
+  content: "▶";
+  display: inline-block;
+  margin-right: 0.75rem;
+  transition: transform 0.2s ease;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+details.callout[open] summary.callout-title::before {
+  transform: rotate(90deg);
+}
+
+details.callout[open] summary.callout-title {
   margin-bottom: 0.75rem;
 }
 
+/* Remove default marker */
+details.callout summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Callout content */
 .callout-content {
-  opacity: 0.95;
+  padding-top: 0.5rem;
 }
 
 .callout-content p {
-  margin: 0.35rem 0;
+  margin: 0.5rem 0;
+}
+
+.callout-content p:first-child {
+  margin-top: 0;
+}
+
+.callout-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Callout type variants */
+.callout-tip {
+  background: rgba(0, 200, 100, 0.15);
+}
+
+.callout-tip .callout-title {
+  color: rgba(0, 255, 160, 0.9);
+}
+
+.callout-note {
+  background: rgba(100, 149, 237, 0.15);
+}
+
+.callout-note .callout-title {
+  color: rgba(100, 200, 255, 0.9);
+}
+
+.callout-warning {
+  background: rgba(255, 165, 0, 0.15);
+}
+
+.callout-warning .callout-title {
+  color: rgba(255, 200, 0, 0.9);
+}
+
+.callout-danger {
+  background: rgba(255, 69, 58, 0.15);
+}
+
+.callout-danger .callout-title {
+  color: rgba(255, 100, 90, 0.9);
+}
+
+.callout-quote {
+  background: rgba(150, 150, 150, 0.15);
+}
+
+.callout-quote .callout-title {
+  color: rgba(200, 200, 200, 0.9);
+}
+
+details.callout {
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+}
+
+details.callout > summary {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+details.callout > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.callout > summary::before {
+  content: "▶";
+  display: inline-block;
+  margin-right: 0.6rem;
+  font-size: 0.7rem;
+  opacity: 0.7;
+  transition: transform 0.2s ease;
+}
+
+details.callout[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.callout-content section {
+  margin: 0.75rem 0;
+}
+
+.callout-content h4 {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+  margin-bottom: 0.25rem;
+}
+
+.callout-content hr {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin: 0.75rem 0;
 }
 
 /* =========================================================
