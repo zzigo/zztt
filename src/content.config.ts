@@ -158,6 +158,20 @@ const scores = defineCollection({
 });
 
 /* =========================
+   PAGES
+   ========================= */
+
+const pages = defineCollection({
+  schema: z.object({
+    title: z.string(),
+    description: z.string().optional(),
+    pubDate: z.coerce.date().optional(),
+    updatedDate: z.coerce.date().optional(),
+    heroImage: z.string().optional(),
+  }),
+});
+
+/* =========================
    EXPORT
    ========================= */
 
@@ -168,4 +182,5 @@ export const collections = {
   performers,
   events,
   scores,
+  pages,
 };
