@@ -1,9 +1,8 @@
 ---
-title: vocal helments
+title: vocal helmets
 description: vocal helmets hard and software for the whorl
 pubDate: 2022-03-03
 heroImage: https://i.imgur.com/llMlV8D.png
-
 ---
 
 
