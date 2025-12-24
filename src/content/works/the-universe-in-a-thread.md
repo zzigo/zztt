@@ -3,9 +3,12 @@ title: the universe in a thread
 description: chamber opera
 pubDate: "2017-08-10"
 performedBy: 
+- "[[Victoria Inés Barquiza]]"
 - "[[Roberto Maqueda]]"
 - "[[Victor Barceló]]"
 - "[[Gabriela Czerednikov]]"
+- "[[Esteban Manzano]]"
+- "[[Alejandro Becerra]]"
 tags:
   - opera
 performances: 
