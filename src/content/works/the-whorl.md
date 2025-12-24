@@ -14,8 +14,7 @@ performances:
   - "[[thewhorld @HKB Traffic22]]"
 ---
 
-https://youtu.be/yjX_d49lcnU?si=wlue1g36BtyAErs1
-
+<iframe title="The Whorl [for networked choir]" src="https://www.youtube.com/embed/yjX_d49lcnU?feature=oembed" height="113" width="200" style="aspect-ratio: 1.76991 / 1; width: 100%; height: 100%;" allowfullscreen="" allow="fullscreen"></iframe>
 
 The leaves twist and turn, the pronouncers chant a language of equalizers, the space around them is filled with the swirls and whirls of the waves. The leaves create a sphere of life, a world of thresholds that surrounds and wraps around the stem or stalk. The leaves create a sphere of time, a song of the lumpy successors that forever succeed one another.
 
