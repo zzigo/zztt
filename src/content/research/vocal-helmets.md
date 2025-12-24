@@ -9,7 +9,9 @@ heroImage: https://i.imgur.com/llMlV8D.png
 <img src="https://i.imgur.com/CSrWdlL.png" style="display:flex; align-items:center; filter: invert(1);" />
 <img src="https://i.imgur.com/DTBjVr8.png" style="display:flex; align-items:center; filter: invert(1);" />
 <img src="https://i.imgur.com/dTPdYGf.png" style="display:flex; align-items:center; filter: invert(1);" />
+
 ![](https://i.imgur.com/aQhJmw2.png)
+
 ![](https://i.imgur.com/TKeQW2F.png)
 
 
@@ -20,9 +22,9 @@ heroImage: https://i.imgur.com/llMlV8D.png
 ![](https://i.imgur.com/atJc7hg.png)
 ![](https://i.imgur.com/QfDXzC1.png)
 
-<iframe src="https://whimsical.com/macp-s40-trail-studies-CzxMAZhxg38HnSJXM58PTr@2Ux7TurymMpXJzxm5RYP" allow="fullscreen" allowfullscreen="" style="height:100%;width:100%; aspect-ratio: 16 / 9; "></iframe>
+## interaction flow diagram
 
-
+<iframe style="border:none" width="800" height="450" src="https://whimsical.com/embed/CzxMAZhxg38HnSJXM58PTr@6HYTAunKLgTVzftnuf9t5fchD9PbzymrUbaimCtEagaDybc"></iframe>
 
 # Inspirations
 
