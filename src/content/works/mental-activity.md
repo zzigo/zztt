@@ -23,7 +23,7 @@ performances:
 
 During 2012 I collaborated with choreographer Luis Garay developing a conlang made of gestures and sounds. The piece was premiered at FIBA Buenos Aires 2011, and later it toured in Brazil and Japan. The track is a live recording of a very soupy pd patch.
 
-<iframe src="https://soundcloud.com/lucianoazzigotti/actividadmental" allow="fullscreen" allowfullscreen="" style="height:100%;width:100%; aspect-ratio: 16 / 9; "></iframe>
+<iframe style="border: 0; width: 100%; height: 120px;" src="https://bandcamp.com/EmbeddedPlayer/track=2142249971/size=large/bgcol=333333/linkcol=0f91ff/tracklist=false/artwork=small/transparent=true/" seamless><a href="https://lucianoazzigotti.bandcamp.com/track/actividad-mental">Actividad Mental by Luciano Azzigotti</a></iframe>
 
 
 <iframe title="ACTIVIDAD MENTAL/ Luis Garay (Reel)" height="480" width="640" src="https://player.vimeo.com/video/33908334?app_id=122963" style="aspect-ratio: 1.33333 / 1; width: 100%; height: 100%;" allowfullscreen="" allow="fullscreen"></iframe>
