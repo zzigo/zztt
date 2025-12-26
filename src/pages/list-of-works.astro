@@ -1,0 +1,181 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+// Get collections
+const works = await getCollection('works');
+const events = await getCollection('events');
+
+// Helper: parse wikilinks [[...]]
+const parseWikilink = (link) =>
+  typeof link === 'string' ? link.replace(/\[\[|\]\]/g, '') : '';
+
+// Process works
+const processedWorks = works.map((work) => {
+  // Normalize performedBy to array
+  const performedByArray = Array.isArray(work.data.performedBy)
+    ? work.data.performedBy
+    : work.data.performedBy
+      ? [work.data.performedBy]
+      : [];
+
+  // Priority logic for performers
+  let performersDisplay = 'unknown performers';
+
+  if (work.data.listPerformers) {
+    performersDisplay = work.data.listPerformers;
+  } else if (performedByArray.length > 0) {
+    performersDisplay = parseWikilink(performedByArray[0]);
+  }
+
+
+  // Find related events
+const workEvents = events.filter(
+  (event) =>
+    event.data.work?.toLowerCase() === work.data.title.toLowerCase()
+);
+
+// --- NEW: date comes from work ---
+const firstPerformanceYear = work.data.pubDate
+  ? new Date(work.data.pubDate).getFullYear()
+  : null;
+
+// --- KEEP venue logic ---
+let firstPerformanceEvent = null;
+
+if (workEvents.length > 0) {
+  firstPerformanceEvent = workEvents[0].data.venue;
+}
+
+/*
+// --- COMMENTED OUT: date-from-events logic ---
+if (workEvents.length > 0) {
+  const allDates = workEvents.flatMap((event) =>
+    event.data.dates.map((dateInfo) => ({
+      date: dateInfo.date,
+      venue: event.data.venue,
+    }))
+  );
+
+  if (allDates.length > 0) {
+    const earliest = allDates.reduce((a, b) =>
+      b.date < a.date ? b : a
+    );
+
+    firstPerformanceYear = earliest.date.getFullYear();
+    firstPerformanceEvent = earliest.venue;
+  }
+}
+*/
+
+  return {
+    ...work,
+    performersDisplay,
+    firstPerformanceYear,
+    firstPerformanceEvent,
+  };
+});
+
+// Sort: newest first, then title
+const sortedWorks = processedWorks.sort((a, b) => {
+  if (a.firstPerformanceYear && b.firstPerformanceYear) {
+    return b.firstPerformanceYear - a.firstPerformanceYear;
+  }
+  if (a.firstPerformanceYear) return -1;
+  if (b.firstPerformanceYear) return 1;
+  return a.data.title.localeCompare(b.data.title);
+});
+---
+<html lang="en" data-theme="dark">
+  <head>
+    <BaseHead
+      title="List of Works"
+      description="Complete list of works by Luciano Azzigotti"
+    />
+
+    <style>
+      main {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2em 1em;
+        background-color: var(--background);
+        color: var(--text);
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        /* margin-bottom: 2em; */
+        text-align: center;
+        /* border-bottom: 1px solid var(--accent); */
+        padding-bottom: 1em;
+      }
+
+      .works-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .work-item {
+        /* margin-bottom: 2.5em; */
+        padding-bottom: 1.5em;
+        /* border-bottom: 1px solid var(--border, #333); */
+      }
+
+      .work-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+
+      .work-content {
+        /* line-height: 1.6; */
+      }
+
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 2rem;
+        }
+        
+        main {
+          padding: 1em 0.5em;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <Header />
+
+    <main>
+      <h1>List of Works</h1>
+
+      <ul class="works-list">
+        {sortedWorks.map((work) => (
+          <li class="work-item">
+            <div
+              class="work-content"
+              set:html={`
+                <strong style="color: orange;">${work.data.title}</strong>
+                <em>${work.data.description}</em>
+                (${work.firstPerformanceYear ?? '—'})<br>
+                <small>
+                  premiered by ${work.performersDisplay}
+                  at ${work.firstPerformanceEvent ?? 'unknown event'}
+                  ${
+                    work.data.tags?.length
+                      ? ` - <em style="opacity:0.2;">${work.data.tags.join(', ')}</em>`
+                      : ''
+                  }
+                </small>
+              `}
+            />
+          </li>
+        ))}
+      </ul>
+    </main>
+
+    <Footer />
+  </body>
+</html>

@@ -6,6 +6,8 @@ performedBy: "[[Esteban Manzano]]"
 tags:
   - vocal
 heroImage: https://i.imgur.com/SklKwea.png
+listPerformers: Esteban Manzano
+performances: "[[El universo en un hilo @TACEC]]"
 ---
 
 

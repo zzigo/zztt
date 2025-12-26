@@ -7,12 +7,14 @@ performedBy:
   - "[[Simon Foerster]]"
   - "[[Gunnildur Eisnadottir]]"
 performances:
+  - "[[Darmstädter Ferienkurse 2018]]"
   - "[[Phonemes Concert Series]]"
   - "[[History of my Instrument]]"
   - "[[Concert International en Trptyque]]"
   - "[[Harfen Musik]]"
   - "[[Harp Workshop]]"
   - "[[Carte Blanche]]"
+listPerformers: Simon Foerster
 ---
 
 

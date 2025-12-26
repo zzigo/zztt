@@ -1,23 +1,25 @@
 ---
 title: apomixis
 description: 4-manuals Klais organ with automated midi system
-pubDate: 2019/12/01
+pubDate: 01-12-2019
 heroImage: https://i.imgur.com/0UWsxV8.png
-performedBy: "[[Luciano Azzigotti]]"
+performedBy: 
+- "[[Luciano Azzigotti]]"
 tags:
   - generative
+performances: "[[apomixis @CCK]]"
 ---
 <iframe title="Apomixis Megáspora Teaser" src="https://www.youtube.com/embed/Qgl_nK7T8ME?feature=oembed" height="113" width="200" style="aspect-ratio: 1.76991 / 1; width: 100%; height: 100%;" allowfullscreen="" allow="fullscreen"></iframe>
 
-Apomixis is a set of pieces for large organ, composed to be played automatically through a generative MIDI system on the 4-manual Klais organ, installed in the Symphonic Hall of the Kirchner Cultural Centre.
+Apomixis is a set of pieces for large organ, composed to be played automatically through a generative MIDI system on the 4-manual Klais organ, installed in the Symphonic Hall of Kirchner Cultural Centre.
 
 ## development
-Megáspora is the fourth piece in the Apomixis cycle, a set of pieces for large organ, composed to be performed automatically through a generative MIDI system on the 4-manual Klais organ installed in the Symphony Hall of the Kirchner Cultural Centre.
+Megáspora is the fourth piece in the Apomixis cycle, a set of pieces for large organ, composed to be performed automatically through a generative MIDI system on the 4-manual Klais organ installed in the Symphony Hall of Kirchner Cultural Centre.
 
-The piece must be performed from a remote location outdoors. There, a performer is recorded who, in relation to the two-dimensional plane of the image frame, arranges both gestures and objects from the environment (branches, leaves, stones, seeds) in geometric arrangements to form a collection. The gestures of the hands and body position are also read in their durational and rhythmic components.
-This image is transmitted in real time and interpreted by a computer connected to the microprocessor of the CCK's Klais Organ, with the router already in place.
+The piece must be performed from a remote location outdoors. There, a performer is recorded who, in relation to the two-dimensional plane of the image frame, arranges both gestures and objects from the environment (branches, leaves, stones, seeds) in geometric arrangements to form a collection. The gestures of hands and body position are also read in their durational and rhythmic components.
+This image is transmitted in real time and interpreted by a computer connected to the microprocessor of CCK's Klais Organ, with the router already in place.
 
-The image is interpreted and translated into a very simple numerical message consisting of the parameters X, Y, accelerationOfX, accelerationOfY, blob (colour outline).
+The image is interpreted and translated into a very simple numerical message consisting of parameters X, Y, accelerationOfX, accelerationOfY, blob (colour outline).
 These parameters are in turn translated into a dictionary of musical events that control the registers (different sounds), pitches and rhythms of the organ.
 
 Eventually, the interactive link may be reinforced by the projection of the image of the remote performance - using the existing screen in the room - although this is not exclusive. Rather than verification, the fundamental aspect of the work concerns the latency and liminality of a minimal gesture, its resonance and remote amplification.
@@ -47,7 +49,7 @@ m.write; //save
 (
 var dict = IdentityDictionary[\A -> "AB", \B -> "A", \C -> "DB", \D -> "BC"]; //These are the production rules of the L-system var word = "AC"; //Axiom word var string_temp = ""; var iter = 10;
 
-//These are diction for the mapping of the alphabet to "artistic" parameters: degrees in a scale, beat occurrence, etc.
+//These are dictionaries for mapping of the alphabet to "artistic" parameters: degrees in a scale, beat occurrence, etc.
 var dictnotes = IdentityDictionary[\A -> 50, \B -> 55, \C -> 54, \D -> 57]; var dictkick = IdentityDictionary[\A -> 1, \B -> 0, \C -> 1, \D -> 0]; var dicthat = IdentityDictionary[\A -> 1, \B -> 0, \C -> 1, \D -> 1]; var notes=[]; var beat=[]; var beat2=[];
 
 //This iteration generates the system recursively
@@ -74,5 +76,3 @@ Pbind(*[\type, \midi, \midiout, m, \chan, 3 , \note: Pseq(notes,inf)/2, \amp: 60
 
 //gen3
 Pbind(_[\type, \midi, \midiout, m, \chan, 0 , \note: Pseq(notes,inf)/2, \amp: 60, \t: Prand([Pseq([0,0,1,0],4), Pseq([0,1,0,0],1)],inf), \r: 1, \dur: 1/4]).play(quant:32 + 32 + 8);_/ )
-
-```

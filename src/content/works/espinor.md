@@ -6,6 +6,7 @@ heroImage: https://i.imgur.com/K8Zy6HY.jpeg
 performedBy: 
 - "[[Ricardo Cuadros Pradilla]]"
 - "[[Iván Adriano]]"
+listPerformers: Ricardo Cuadros Pradilla
 performances:
   - "[[Gutarras del Mundo Teatro Tornavia UNSAM]]"
   - "[[Exformantes]]"

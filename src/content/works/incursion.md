@@ -22,8 +22,6 @@ tags:
 
 Following a long-term collaboration between composer Luciano Azzigotti, and tubist Jack Adler-McKean, the piece forms an initial artistic realization of the development of two microphone-based sonic interventions. A piezo-electric microphone is connected to a modified fourth valve slide, which is connected to an amplification pedal, and outputted to a loudspeaker which is suspended inside the bell by means of a 3D printed mount. By depressing the fourth valve and opening the connected valve chamber, it can therefore create a feedback loop resonating inside the valve loop itself.
 
-## harmonic’s out against valves
+## harmonic's out against valves
 
 ![](https://i.imgur.com/OmlsXPz.png)
-
-

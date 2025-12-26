@@ -9,8 +9,9 @@ tags:
   - dance
   - symphonic
 length: 63:00
-performeedBy: 
+performedBy: 
 - "[[Orquesta do Teatro Municipal do São Paulo]]"
+listPerformers: HELLO
 ---
 
 
