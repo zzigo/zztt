@@ -11,6 +11,7 @@ tags:
   - chamber
 ---
 
+
 <iframe title="Panspermic [teaser] 2021" src="https://www.youtube.com/embed/KYIpEI_XgqY?feature=oembed" height="113" width="200" style="aspect-ratio: 1.76991 / 1; width: 100%; height: 100%;" allowfullscreen="" allow="fullscreen"></iframe>
 
 Panspermia hypotheses propose (for example) that microscopic life-forms that can survive the effects of space (such as extremophiles) can become trapped in debris ejected into space after collisions between planets and small Solar System bodies that harbor life.
