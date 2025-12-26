@@ -12,6 +12,7 @@ performedBy:
 tags: [choir,vocal, generative, networked,chamber]
 performances:
   - "[[thewhorld @HKB Traffic22]]"
+listPerformers: JJDTC choir
 ---
 
 <iframe title="The Whorl [for networked choir]" src="https://www.youtube.com/embed/yjX_d49lcnU?feature=oembed" height="113" width="200" style="aspect-ratio: 1.76991 / 1; width: 100%; height: 100%;" allowfullscreen="" allow="fullscreen"></iframe>

@@ -88,6 +88,7 @@ const events = defineCollection({
       city: z.string(),
       country: z.string(),
       url: z.string().optional(),
+      audio: z.string().optional(),
     })
     .transform((data) => {
       let finalDates = [];
@@ -106,6 +107,7 @@ const events = defineCollection({
 
       return {
         ...rest,
+        title: data.work,
         dates: finalDates,
       };
     })
@@ -135,12 +137,14 @@ const events = defineCollection({
             )
           ),
         work: z.string(),
+        title: z.string(),
         performedBy: z.union([z.string(), z.array(z.string())]),
         eventName: z.string(),
         venue: z.string(),
         city: z.string(),
         country: z.string(),
         url: z.string().optional(),
+        audio: z.string().optional(),
       })
     ),
 });
