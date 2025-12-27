@@ -1,8 +1,21 @@
 ---
 import { getCollection } from 'astro:content';
 
-const posts = await getCollection('events');
-const audioPosts = posts.filter(p => p.data.audio);
+const events = await getCollection('events');
+const works = await getCollection('works');
+
+const workMap = new Map(works.map(w => [w.data.title.toLowerCase(), w]));
+
+const audioPosts = events
+  .filter(e => e.data.audio)
+  .map(e => {
+    const w = workMap.get(e.data.work?.toLowerCase());
+    return {
+      event: e,
+      workDesc: w?.data.description || '',
+      workUrl: w ? `/works/${w.slug}/` : ''
+    };
+  });
 ---
 <html lang="en">
 <head>
@@ -11,60 +24,125 @@ const audioPosts = posts.filter(p => p.data.audio);
 <title>Listen</title>
 
 <style>
-  body {
-    margin: 0;
-    background: black;
-    color: white;
-    font-family: monospace;
-    overflow: hidden;
-  }
+:root { --fadeTime: 3000ms; }
 
-  #spectrogram {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 50vh;
-  }
+body {
+  margin: 0;
+  background: black;
+  color: white;
+  font-family: monospace;
+  overflow: hidden;
+}
 
-  #works-hud {
-    position: fixed;
-    top: 55vh;
-    left: 20px;
-    opacity: 0.8;
-  }
+/* generic fade */
+.fade {
+  opacity: 0;
+  transition: opacity var(--fadeTime) linear;
+  pointer-events: none;
+}
+.fade.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
 
-  #works-hud ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
+/* INFO HUD */
+#info-hud {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  right: 26%;
+  line-height: 1.4;
+}
 
-  #works-hud li {
-    cursor: pointer;
-    padding: 4px 0;
-  }
+/* TRACK LIST */
+#works-hud {
+  position: fixed;
+  top: 50%;
+  left: 20px;
+  transform: translateY(-50%);
+  max-height: 40vh;
+  width: 25%;
+  overflow-y: auto;
+  mask-image: linear-gradient(to bottom, transparent, white 10%, white 90%, transparent);
+}
+#works-hud ul { list-style: none; padding: 0; margin: 0; }
+#works-hud li { padding: 6px 0; cursor: pointer; opacity: .35; transition: opacity 200ms; }
+#works-hud li.selected { opacity: 1; }
+#works-hud.visible { opacity: .8; pointer-events: auto; }
 
-  #works-hud li.selected {
-    background: rgba(255,255,255,0.2);
-  }
+/* SPECTROGRAM */
+#spectrogram-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 40vh;
+}
+#spectrogram {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+#playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: white;
+  mix-blend-mode: difference;
+  pointer-events: none;
+}
 
-  #info-hud {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    opacity: 0.7;
-  }
+/* MODAL */
+#modal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 75vw;
+  height: 60vh;
+  background: black;
+  padding: 40px;
+  overflow-y: auto;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--fadeTime) linear;
+}
+#modal.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
 
-  #exit {
-    position: fixed;
-    top: 10px;
-    right: 20px;
-    font-size: 2em;
-    color: white;
-    text-decoration: none;
-    opacity: 0.5;
-  }
+/* HELP */
+#helpToggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  opacity: .65;
+  cursor: pointer;
+  user-select: none;
+}
+#help {
+  position: fixed;
+  bottom: 55px;
+  right: 20px;
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--fadeTime) linear;
+}
+#help.visible { opacity: .75; }
+#help span { display: block; opacity: .7; }
+
+/* EXIT */
+#exit {
+  position: fixed;
+  top: 10px;
+  right: 20px;
+  font-size: 2em;
+  text-decoration: none;
+  color: white;
+  opacity: .5;
+}
 </style>
 </head>
 
@@ -72,167 +150,310 @@ const audioPosts = posts.filter(p => p.data.audio);
 
 <a id="exit" href="/">&times;</a>
 
-<canvas id="spectrogram"></canvas>
+<div id="info-hud" class="fade"></div>
 
-<div id="works-hud">
+<div id="works-hud" class="visible">
   <ul>
-    {audioPosts.map((post, i) => (
-      <li
-        class={i === 0 ? 'selected' : ''}
-        data-audio={post.data.audio}
-        data-performedby={post.data.performedBy?.[0]}
-        data-event={post.data.eventName}
-        data-venue={post.data.venue}
-        data-city={post.data.city}
-        data-country={post.data.country}
-        data-date={post.data.dates?.[0]}
-      >
-        {post.data.title}
+    {audioPosts.map((p,i)=>(
+      <li class={i===0?'selected':''}
+          data-audio={p.event.data.audio}
+          data-work={p.event.data.work}
+          data-desc={p.workDesc}
+          data-perf={JSON.stringify(p.event.data.performedBy || null)}
+          data-event={p.event.data.eventName}
+          data-venue={p.event.data.venue}
+          data-city={p.event.data.city}
+          data-country={p.event.data.country}
+          data-date={p.event.data.dates?.[0]}
+          data-workurl={p.workUrl}>
+        {p.event.data.work}
       </li>
     ))}
   </ul>
 </div>
 
-<div id="info-hud"></div>
+<div id="spectrogram-container" class="fade visible">
+  <canvas id="spectrogram"></canvas>
+  <div id="playhead"></div>
+</div>
+
+<div id="modal"></div>
+
+<div id="helpToggle">?</div>
+<div id="help">
+  <span>ESC exit / close modal</span>
+  <span>SPACE play / pause</span>
+  <span>f fullscreen</span>
+  <span>m minimal</span>
+  <span>i modal</span>
+  <span>? help</span>
+  <span>↑ ↓ navigate</span>
+  <span>click seek</span>
+</div>
 
 <script>
-const works = document.querySelectorAll('#works-hud li');
-const infoHud = document.getElementById('info-hud');
+const fadeTime = 3000;
+document.documentElement.style.setProperty('--fadeTime', fadeTime+'ms');
+
+const infoHUD = document.getElementById('info-hud');
+const worksHUD = document.getElementById('works-hud');
+const specC = document.getElementById('spectrogram-container');
+const modal = document.getElementById('modal');
+const help = document.getElementById('help');
+const helpToggle = document.getElementById('helpToggle');
+
 const canvas = document.getElementById('spectrogram');
 const ctx = canvas.getContext('2d');
+const playhead = document.getElementById('playhead');
+const items = [...worksHUD.querySelectorAll('li')];
 
-let audioContext;
-let analyser;
-let source;
+let audioCtx, gainNode, source, buffer;
 let selected = 0;
+let minimal = false;
+let switching = false;
+let playheadRAF = 0;
 
-function resizeCanvas() {
+let isPlaying = false;
+let pausedAt = 0;
+let startTime = 0;
+
+/* ---------- helpers ---------- */
+function formatPerformers(p) {
+  if (!p) return '';
+
+  const arr = Array.isArray(p) ? p : [p];
+
+  return arr
+    .map(s => s.replace(/\[\[|\]\]/g, '').trim())
+    .join(', ');
+}
+
+function year(d){ return d?.match(/^(\d{4})/)?.[1] || ''; }
+function show(el){ el.classList.add('visible'); }
+function hide(el){ el.classList.remove('visible'); }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+/* ---------- resize ---------- */
+function resize(){
   canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight * 0.5;
+  canvas.height = window.innerHeight * 0.4;
+  if (buffer) renderSpectrogramTimeline(buffer);
 }
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
+window.addEventListener('resize', resize);
+document.addEventListener('fullscreenchange', resize);
 
-function parseWikilink(s) {
-  return s ? s.replace(/\[\[|\]\]/g, '') : '';
-}
-
-function parseDateSafe(dateStr) {
-  if (!dateStr) return null;
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    return new Date(dateStr);
-  }
-
-  if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
-    const [dd, mm, yyyy] = dateStr.split('-');
-    return new Date(`${yyyy}-${mm}-${dd}`);
-  }
-
-  return null;
-}
-
-function updateHUD(el) {
-  const dateObj = parseDateSafe(el.dataset.date);
-  const date = dateObj
-    ? dateObj.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-    : '';
-
-  infoHud.innerHTML = `
-    ${parseWikilink(el.dataset.performedby)}<br>
-    ${el.dataset.event || ''}<br>
-    ${el.dataset.venue || ''}${el.dataset.city ? ', ' + el.dataset.city : ''}${el.dataset.country ? ', ' + el.dataset.country : ''}<br>
-    ${date}
+/* ---------- HUD ---------- */
+function updateHUD(el){
+  infoHUD.innerHTML = `
+    ${el.dataset.work}<br>
+    ${el.dataset.desc}<br>
+    ${formatPerformers(JSON.parse(el.dataset.perf || 'null'))}<br>    
+    ${el.dataset.event}<br>
+    ${el.dataset.venue}, ${el.dataset.city}, ${el.dataset.country}<br>
+    ${year(el.dataset.date)}
   `;
 }
 
-async function play(index) {
-  const el = works[index];
-  if (!el) return;
-
-  works[selected]?.classList.remove('selected');
-  selected = index;
-  el.classList.add('selected');
-  updateHUD(el);
-
-  if (!audioContext) {
-    audioContext = new AudioContext();
-    analyser = audioContext.createAnalyser();
-    analyser.fftSize = 2048;
+/* ---------- audio ---------- */
+async function ensureAudio(){
+  if(!audioCtx){
+    audioCtx = new AudioContext();
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = 1;
+    gainNode.connect(audioCtx.destination);
   }
-
-  if (audioContext.state === 'suspended') {
-    await audioContext.resume();
-  }
-
-  if (source) {
-    source.stop();
-    source.disconnect();
-  }
-
-  const audioPath = encodeURI(`/audio/${el.dataset.audio}`);
-  const res = await fetch(audioPath);
-
-  if (!res.ok) {
-    console.error('Audio fetch failed:', res.status);
-    return;
-  }
-
-  const buf = await res.arrayBuffer();
-  if (!buf.byteLength) {
-    console.error('Empty audio buffer');
-    return;
-  }
-
-  const audioBuffer = await audioContext.decodeAudioData(buf);
-
-  source = audioContext.createBufferSource();
-  source.buffer = audioBuffer;
-  source.connect(analyser);
-  analyser.connect(audioContext.destination);
-  source.start();
-
-  drawSpectrogram();
+  if(audioCtx.state==='suspended') await audioCtx.resume();
 }
 
-function drawSpectrogram() {
-  const freqData = new Uint8Array(analyser.frequencyBinCount);
-  const width = canvas.width;
-  const height = canvas.height;
+function stopSource(){
+  if(!source || !audioCtx || !buffer) return;
 
-  ctx.fillStyle = 'black';
-  ctx.fillRect(0, 0, width, height);
+  pausedAt = audioCtx.currentTime - startTime;
+  pausedAt = Math.max(0, Math.min(pausedAt, buffer.duration));
 
-  function frame() {
-    analyser.getByteFrequencyData(freqData);
+  try{ source.stop(); }catch{}
+  try{ source.disconnect(); }catch{}
 
-    const imageData = ctx.getImageData(1, 0, width - 1, height);
-    ctx.putImageData(imageData, 0, 0);
+  source = null;
+  isPlaying = false;
+}
 
-    for (let y = 0; y < height; y++) {
-      const idx = Math.floor((y / height) * freqData.length);
-      const val = freqData[idx];
-      ctx.fillStyle = `rgb(${val},${val},${val})`;
-      ctx.fillRect(width - 1, height - y, 1, 1);
+async function fadeTo(target){
+  const now = audioCtx.currentTime;
+  gainNode.gain.cancelScheduledValues(now);
+  gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+  gainNode.gain.linearRampToValueAtTime(target, now + fadeTime/1000);
+  await sleep(fadeTime);
+}
+
+function cancelPlayhead(){
+  if(playheadRAF) cancelAnimationFrame(playheadRAF);
+  playheadRAF = 0;
+}
+
+function startPlayhead(offset){
+  const start = audioCtx.currentTime - offset;
+  const loop = () => {
+    if(!source || !buffer) return;
+    const t = audioCtx.currentTime - start;
+    playhead.style.left = `${(t/buffer.duration)*100}%`;
+    playheadRAF = requestAnimationFrame(loop);
+  };
+  loop();
+}
+
+/* ---------- spectrogram (unchanged FFT version) ---------- */
+function hann(n,N){ return 0.5-0.5*Math.cos(2*Math.PI*n/(N-1)); }
+function fftRadix2(re,im){
+  const N=re.length;let j=0;
+  for(let i=0;i<N;i++){
+    if(i<j){[re[i],re[j]]=[re[j],re[i]];[im[i],im[j]]=[im[j],im[i]];}
+    let m=N>>1;while(m>=1&&j>=m){j-=m;m>>=1;}j+=m;
+  }
+  for(let len=2;len<=N;len<<=1){
+    const ang=-2*Math.PI/len,wlenRe=Math.cos(ang),wlenIm=Math.sin(ang);
+    for(let i=0;i<N;i+=len){
+      let wRe=1,wIm=0;
+      for(let k=0;k<len/2;k++){
+        const uRe=re[i+k],uIm=im[i+k];
+        const vRe=re[i+k+len/2]*wRe-im[i+k+len/2]*wIm;
+        const vIm=re[i+k+len/2]*wIm+im[i+k+len/2]*wRe;
+        re[i+k]=uRe+vRe;im[i+k]=uIm+vIm;
+        re[i+k+len/2]=uRe-vRe;im[i+k+len/2]=uIm-vIm;
+        const nRe=wRe*wlenRe-wIm*wlenIm;
+        wIm=wRe*wlenIm+wIm*wlenRe;wRe=nRe;
+      }
     }
-    requestAnimationFrame(frame);
   }
-  frame();
 }
 
-works.forEach((el, i) => el.onclick = () => play(i));
+function renderSpectrogramTimeline(buf){
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const N=2048,half=N>>1,ch=buf.getChannelData(0);
+  const hop=Math.max(1,Math.floor((ch.length-N)/W));
+  const re=new Array(N),im=new Array(N),mag=new Float32Array(half);
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowUp') play(selected - 1);
-  if (e.key === 'ArrowDown') play(selected + 1);
-  if (e.key === 'Escape') location.href = '/';
+  for(let x=0;x<W;x++){
+    const start=x*hop;
+    if(start+N>=ch.length) break;
+    for(let i=0;i<N;i++){re[i]=ch[start+i]*hann(i,N);im[i]=0;}
+    fftRadix2(re,im);
+    let max=1e-9;
+    for(let k=0;k<half;k++){mag[k]=Math.hypot(re[k],im[k]);if(mag[k]>max)max=mag[k];}
+    for(let y=0;y<H;y++){
+      const k=Math.floor(y/H*half);
+      const v=Math.log10(1+9*(mag[k]/max));
+      const g=Math.floor(v*255);
+      ctx.fillStyle=`rgb(${g},${g},${g})`;
+      ctx.fillRect(x,H-y-1,1,1);
+    }
+  }
+}
+
+/* ---------- playback ---------- */
+async function loadBuffer(file){
+  const r=await fetch('/audio/'+encodeURIComponent(file));
+  return audioCtx.decodeAudioData(await r.arrayBuffer());
+}
+
+function startPlayback(offset=0){
+  stopSource();
+  cancelPlayhead();
+
+  source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(gainNode);
+
+  startTime = audioCtx.currentTime - offset;
+  source.start(0, offset);
+
+  isPlaying = true;
+  startPlayhead(offset);
+}
+
+async function togglePlayPause(){
+  if(!buffer) return;
+
+  if(isPlaying){
+    await fadeTo(0);
+    stopSource();
+  } else {
+    await ensureAudio();
+    startPlayback(pausedAt || 0);
+    await fadeTo(1);
+  }
+}
+
+async function changeTrack(i){
+  if(switching||i<0||i>=items.length) return;
+  switching=true;
+
+  const el=items[i];
+  items[selected]?.classList.remove('selected');
+  selected=i;el.classList.add('selected');
+
+  updateHUD(el);
+  await ensureAudio();
+
+  hide(infoHUD);hide(worksHUD);hide(specC);
+  await fadeTo(0);
+
+  buffer=await loadBuffer(el.dataset.audio);
+  pausedAt = 0;
+
+  renderSpectrogramTimeline(buffer);
+  startPlayback(0);
+
+  show(infoHUD);show(worksHUD);show(specC);
+  await fadeTo(1);
+
+  switching=false;
+}
+
+/* ---------- modal ---------- */
+async function toggleModal(){
+  if(modal.classList.contains('visible')){
+    hide(modal); return;
+  }
+  modal.innerHTML='';
+  show(modal);
+  const url=items[selected].dataset.workurl;
+  if(url){
+    const r=await fetch(url);
+    modal.innerHTML=await r.text();
+  }
+}
+
+/* ---------- events ---------- */
+items.forEach((el,i)=>el.onclick=()=>changeTrack(i));
+
+canvas.onclick=e=>{
+  if(!buffer) return;
+  const r=canvas.getBoundingClientRect();
+  const t=(e.clientX-r.left)/r.width*buffer.duration;
+  startPlayback(Math.max(0,t));
+};
+
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){ e.preventDefault(); togglePlayPause(); }
+  if(e.key==='ArrowUp') changeTrack(selected-1);
+  if(e.key==='ArrowDown') changeTrack(selected+1);
+  if(e.key==='i') toggleModal();
+  if(e.key==='m'){ minimal=!minimal; minimal?(hide(infoHUD),hide(worksHUD),hide(specC)):(show(infoHUD),show(worksHUD),show(specC)); }
+  if(e.key==='f') document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
+  if(e.key==='Escape') modal.classList.contains('visible')?hide(modal):location.href='/';
+  if(e.key==='?') help.classList.toggle('visible');
 });
 
-if (works.length) play(0);
+helpToggle.onclick=()=>help.classList.toggle('visible');
+
+/* ---------- start ---------- */
+resize();
+show(infoHUD);
+show(worksHUD);
+show(specC);
+changeTrack(0);
 </script>
 
 </body>

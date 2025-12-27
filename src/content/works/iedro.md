@@ -1,6 +1,6 @@
 ---
 title: iedro
-description: por solo piano
+description:  for piano
 pubDate: 2009-10-12
 performedBy:
   - Bruno Mesz

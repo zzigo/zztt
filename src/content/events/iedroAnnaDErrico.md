@@ -8,5 +8,5 @@ eventName: Impuls
 venue: KUG
 city: Graz
 country: Austria
-audio: "iedro.mp3"
+audio: "iedro.ogg"
 ---
