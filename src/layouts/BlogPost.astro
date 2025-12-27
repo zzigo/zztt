@@ -15,8 +15,29 @@ const parseWikilink = (link: string) => link.replace(/\[\[|\]\]/g, '');
 
 const performancesArray = Array.isArray(performances) ? performances : (performances ? [performances] : []);
 const performedByArray = Array.isArray(performedBy) ? performedBy : (performedBy ? [performedBy] : []);
+
+const isPartial = Astro.url.searchParams.get('partial') === 'true';
 ---
 
+{isPartial ? (
+	<>
+		{heroImage && (
+			<div class="hero-image">
+				<img 
+					width={1020} 
+					height={510} 
+					src={heroImage} 
+					alt={title}
+					loading="lazy"
+					style="max-width: 100%; height: auto;"
+				/>
+			</div>
+		)}
+		<div class="prose">
+			<slot />
+		</div>
+	</>
+) : (
 <html lang="en" data-theme="dark">
 	<head>
 		<BaseHead title={title} description={description} />
@@ -247,3 +268,4 @@ const performedByArray = Array.isArray(performedBy) ? performedBy : (performedBy
 		<Footer />
 	</body>
 </html>
+)}

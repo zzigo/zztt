@@ -1,21 +1,29 @@
 ---
 import { getCollection } from 'astro:content';
+import WorkContent from '../components/WorkContent.astro';
 
 const events = await getCollection('events');
 const works = await getCollection('works');
 
 const workMap = new Map(works.map(w => [w.data.title.toLowerCase(), w]));
 
-const audioPosts = events
+let audioPosts = events
   .filter(e => e.data.audio)
   .map(e => {
     const w = workMap.get(e.data.work?.toLowerCase());
     return {
       event: e,
       workDesc: w?.data.description || '',
-      workUrl: w ? `/works/${w.slug}/` : ''
+      workUrl: w ? `/works/${w.slug}/` : '',
+      workSlug: w?.slug
     };
   });
+
+// Shuffle the posts
+for (let i = audioPosts.length - 1; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1));
+  [audioPosts[i], audioPosts[j]] = [audioPosts[j], audioPosts[i]];
+}
 ---
 <html lang="en">
 <head>
@@ -63,23 +71,12 @@ body {
   max-height: 40vh;
   width: 25%;
   overflow-y: auto;
-  overscroll-behavior: none;
-  -webkit-overflow-scrolling: touch;
   mask-image: linear-gradient(to bottom, transparent, white 10%, white 90%, transparent);
 }
 #works-hud ul { list-style: none; padding: 0; margin: 0; }
-#works-hud li {
-  padding: 6px 0;
-  cursor: pointer;
-  opacity: .35;
-  transition: opacity 200ms;
-}
+#works-hud li { padding: 6px 0; cursor: pointer; opacity: .35; transition: opacity 200ms; }
 #works-hud li.selected { opacity: 1; }
 #works-hud.visible { opacity: .8; pointer-events: auto; }
-
-/* hide scrollbars */
-#works-hud::-webkit-scrollbar { display: none; }
-#works-hud { scrollbar-width: none; }
 
 /* SPECTROGRAM */
 #spectrogram-container {
@@ -89,7 +86,11 @@ body {
   width: 100vw;
   height: 40vh;
 }
-#spectrogram { width: 100%; height: 100%; display: block; }
+#spectrogram {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
 #playhead {
   position: absolute;
   top: 0;
@@ -98,6 +99,16 @@ body {
   background: white;
   mix-blend-mode: difference;
   pointer-events: none;
+}
+#time-display {
+  position: absolute;
+  bottom: -25px;
+  font-size: 12px;
+  color: white;
+  pointer-events: none;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  transition: left 0.1s ease-out;
 }
 
 /* MODAL */
@@ -114,7 +125,10 @@ body {
   pointer-events: none;
   transition: opacity var(--fadeTime) linear;
 }
-#modal.visible { opacity: 1; pointer-events: auto; }
+#modal.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
 
 /* HELP */
 #helpToggle {
@@ -171,6 +185,9 @@ body {
           data-date={p.event.data.dates?.[0]}
           data-workurl={p.workUrl}>
         {p.event.data.work}
+        <div class="modal-content" style="display: none;">
+          <WorkContent slug={p.workSlug} />
+        </div>
       </li>
     ))}
   </ul>
@@ -179,6 +196,7 @@ body {
 <div id="spectrogram-container" class="fade visible">
   <canvas id="spectrogram"></canvas>
   <div id="playhead"></div>
+  <div id="time-display">0:00</div>
 </div>
 
 <div id="modal"></div>
@@ -192,56 +210,15 @@ body {
   <span>i modal</span>
   <span>? help</span>
   <span>↑ ↓ navigate</span>
-  <span>drag scroll list</span>
+  <span>click seek</span>
 </div>
 
 <script>
 const fadeTime = 3000;
 document.documentElement.style.setProperty('--fadeTime', fadeTime+'ms');
 
-/* ------------------ INERTIAL SCROLL (TOUCH + MOUSE) ------------------ */
-
-const worksHUD = document.getElementById('works-hud');
-
-let isDragging = false;
-let lastY = 0;
-let velocity = 0;
-let raf = null;
-
-worksHUD.addEventListener('pointerdown', e => {
-  isDragging = true;
-  lastY = e.clientY;
-  velocity = 0;
-  worksHUD.setPointerCapture(e.pointerId);
-});
-
-worksHUD.addEventListener('pointermove', e => {
-  if (!isDragging) return;
-  const dy = e.clientY - lastY;
-  worksHUD.scrollTop -= dy;
-  velocity = dy;
-  lastY = e.clientY;
-});
-
-worksHUD.addEventListener('pointerup', e => {
-  isDragging = false;
-  worksHUD.releasePointerCapture(e.pointerId);
-  startInertia();
-});
-
-worksHUD.addEventListener('pointercancel', () => isDragging = false);
-
-function startInertia() {
-  function step() {
-    velocity *= 0.95;
-    if (Math.abs(velocity) < 0.5) return;
-    worksHUD.scrollTop -= velocity;
-    raf = requestAnimationFrame(step);
-  }
-  raf = requestAnimationFrame(step);
-}
-
 const infoHUD = document.getElementById('info-hud');
+const worksHUD = document.getElementById('works-hud');
 const specC = document.getElementById('spectrogram-container');
 const modal = document.getElementById('modal');
 const help = document.getElementById('help');
@@ -250,6 +227,7 @@ const helpToggle = document.getElementById('helpToggle');
 const canvas = document.getElementById('spectrogram');
 const ctx = canvas.getContext('2d');
 const playhead = document.getElementById('playhead');
+const timeDisplay = document.getElementById('time-display');
 const items = [...worksHUD.querySelectorAll('li')];
 
 let audioCtx, gainNode, source, buffer;
@@ -257,6 +235,7 @@ let selected = 0;
 let minimal = false;
 let switching = false;
 let playheadRAF = 0;
+let changeTrackId = 0;
 
 let isPlaying = false;
 let pausedAt = 0;
@@ -277,6 +256,13 @@ function year(d){ return d?.match(/^(\d{4})/)?.[1] || ''; }
 function show(el){ el.classList.add('visible'); }
 function hide(el){ el.classList.remove('visible'); }
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+/* ---------- time formatting ---------- */
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
 
 /* ---------- resize ---------- */
 function resize(){
@@ -341,7 +327,29 @@ function startPlayhead(offset){
   const loop = () => {
     if(!source || !buffer) return;
     const t = audioCtx.currentTime - start;
-    playhead.style.left = `${(t/buffer.duration)*100}%`;
+    const progress = t / buffer.duration;
+    const position = progress * 100;
+    
+    playhead.style.left = `${position}%`;
+    
+    // Update time display with positioning logic
+    const timeText = formatTime(t);
+    timeDisplay.textContent = timeText;
+    
+    // Position time display: follow playhead, but align left when in last 20%
+    const windowWidth = window.innerWidth;
+    const thresholdPosition = 80; // 80% = last 20%
+    
+    if (position >= thresholdPosition) {
+      // In the last 20%, align to the left edge of the playhead
+      timeDisplay.style.left = `${position}%`;
+      timeDisplay.style.transform = 'translateX(0)';
+    } else {
+      // Normal positioning: centered on playhead
+      timeDisplay.style.left = `${position}%`;
+      timeDisplay.style.transform = 'translateX(-50%)';
+    }
+    
     playheadRAF = requestAnimationFrame(loop);
   };
   loop();
@@ -430,44 +438,82 @@ async function togglePlayPause(){
   }
 }
 
-async function changeTrack(i){
-  if(switching||i<0||i>=items.length) return;
-  switching=true;
+async function changeTrack(i) {
+  if (i < 0 || i >= items.length) return;
 
-  const el=items[i];
+  const currentChangeId = ++changeTrackId;
+  switching = true;
+
+  const el = items[i];
   items[selected]?.classList.remove('selected');
-  selected=i;el.classList.add('selected');
+  selected = i;
+  el.classList.add('selected');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
   updateHUD(el);
   await ensureAudio();
 
-  hide(infoHUD);hide(worksHUD);hide(specC);
-  await fadeTo(0);
+  // Stop any playing sound and fade out
+  if (isPlaying) {
+    await fadeTo(0);
+    stopSource();
+  }
+  
+  // Hide elements for the transition
+  hide(infoHUD);
+  hide(worksHUD);
+  hide(specC);
+  
+  // If another track change was initiated, abort this one.
+  if (currentChangeId !== changeTrackId) {
+    switching = false;
+    return;
+  }
 
-  buffer=await loadBuffer(el.dataset.audio);
+  try {
+    buffer = await loadBuffer(el.dataset.audio);
+  } catch(e) {
+    console.error("Failed to load audio:", e);
+    if (currentChangeId === changeTrackId) switching = false;
+    // still show the HUDs
+    show(infoHUD);
+    show(worksHUD);
+    return;
+  }
+
+  if (currentChangeId !== changeTrackId) {
+    switching = false;
+    return;
+  }
+
   pausedAt = 0;
-
   renderSpectrogramTimeline(buffer);
   startPlayback(0);
 
-  show(infoHUD);show(worksHUD);show(specC);
+  // Show elements and fade in audio
+  show(infoHUD);
+  show(worksHUD);
+  show(specC);
   await fadeTo(1);
 
-  switching=false;
+  if (currentChangeId === changeTrackId) {
+    switching = false;
+  }
 }
 
 /* ---------- modal ---------- */
-async function toggleModal(){
+function toggleModal(){
   if(modal.classList.contains('visible')){
     hide(modal); return;
   }
   modal.innerHTML='';
-  show(modal);
-  const url=items[selected].dataset.workurl;
-  if(url){
-    const r=await fetch(url);
-    modal.innerHTML=await r.text();
+
+  const contentEl = items[selected].querySelector('.modal-content');
+  if (contentEl) {
+    modal.innerHTML = contentEl.innerHTML;
   }
+  
+  show(modal);
 }
 
 /* ---------- events ---------- */
@@ -494,11 +540,35 @@ document.addEventListener('keydown',e=>{
 helpToggle.onclick=()=>help.classList.toggle('visible');
 
 /* ---------- start ---------- */
-resize();
-show(infoHUD);
-show(worksHUD);
-show(specC);
-changeTrack(0);
+async function init() {
+  resize();
+  const el = items[selected]; // selected is 0
+  updateHUD(el);
+
+  // Create audio context without resuming it, so we can decode
+  if (!audioCtx) {
+    audioCtx = new AudioContext();
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = 0; // Start silent
+    gainNode.connect(audioCtx.destination);
+  }
+
+  try {
+    // Load buffer for the first track
+    buffer = await loadBuffer(el.dataset.audio);
+    pausedAt = 0; // ready to play from start
+    renderSpectrogramTimeline(buffer);
+  } catch (e) {
+    console.error("Failed to load initial audio:", e);
+  }
+
+  // Show UI elements
+  show(infoHUD);
+  show(worksHUD);
+  show(specC);
+}
+
+init();
 </script>
 
 </body>

@@ -1,0 +1,65 @@
+---
+import { getEntry } from 'astro:content';
+
+const { slug } = Astro.props;
+let entry;
+if (slug) {
+  try {
+    entry = await getEntry('works', slug);
+  } catch (e) {
+    console.error(`Could not find entry for slug: ${slug}`);
+    console.error(e);
+  }
+}
+
+const Content = entry ? (await entry.render()).Content : null;
+---
+{
+  Content ? (
+    <div class="prose">
+      <Content />
+    </div>
+  ) : (
+    <p>Content not found for "{slug}".</p>
+  )
+}
+
+<style is:global>
+/* Scoped styles for the modal content */
+.prose {
+  color: white;
+  line-height: 1.6;
+  max-width: 100%;
+}
+.prose h1, .prose h2, .prose h3 {
+  color: #ccc;
+  border-bottom: 1px solid #555;
+  padding-bottom: .3em;
+}
+.prose a {
+  color: #f89;
+  text-decoration: none;
+}
+.prose a:hover {
+  text-decoration: underline;
+}
+.prose img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+.prose p {
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+}
+
+/*
+  This is a fallback, but the primary mechanism is that we are only
+  rendering the <Content /> component from the markdown file, not the
+  full page layout that would typically contain headers and footers.
+*/
+.prose header, .prose footer, .prose nav, .prose .header, .prose .footer {
+    display: none !important;
+}
+
+</style>
