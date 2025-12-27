@@ -50,7 +50,6 @@ Composition Seminars, UNTREF University<br>
 
 
 ## ph
-%% <img src="https://i.imgur.com/CRr6ziy.jpeg" width="180"> %%
 <img src="https://i.imgur.com/5CPHC8i.jpeg" width="80"><br>
 <small>@Catalina Bartolome</small>
 

@@ -101,14 +101,15 @@ body {
   pointer-events: none;
 }
 #time-display {
-  position: absolute;
-  bottom: -25px;
+  position: fixed;
+  bottom: 10px;
   font-size: 12px;
   color: white;
   pointer-events: none;
   white-space: nowrap;
   transform: translateX(-50%);
   transition: left 0.1s ease-out;
+  z-index: 1000;
 }
 
 /* MODAL */
@@ -196,8 +197,8 @@ body {
 <div id="spectrogram-container" class="fade visible">
   <canvas id="spectrogram"></canvas>
   <div id="playhead"></div>
-  <div id="time-display">0:00</div>
 </div>
+<div id="time-display">0:00</div>
 
 <div id="modal"></div>
 
@@ -236,6 +237,7 @@ let minimal = false;
 let switching = false;
 let playheadRAF = 0;
 let changeTrackId = 0;
+let userHasInteracted = false; // Track if user has interacted
 
 let isPlaying = false;
 let pausedAt = 0;
@@ -290,10 +292,11 @@ async function ensureAudio(){
   if(!audioCtx){
     audioCtx = new AudioContext();
     gainNode = audioCtx.createGain();
-    gainNode.gain.value = 1;
+    gainNode.gain.value = 0; // Keep silent until user interaction
     gainNode.connect(audioCtx.destination);
+    console.log('Audio context created, gain set to 0');
   }
-  if(audioCtx.state==='suspended') await audioCtx.resume();
+  // NEVER resume automatically - wait for explicit user interaction
 }
 
 function stopSource(){
@@ -307,14 +310,17 @@ function stopSource(){
 
   source = null;
   isPlaying = false;
+  console.log('Source stopped, isPlaying:', isPlaying);
 }
 
 async function fadeTo(target){
+  console.log('Fading to gain:', target);
   const now = audioCtx.currentTime;
   gainNode.gain.cancelScheduledValues(now);
   gainNode.gain.setValueAtTime(gainNode.gain.value, now);
   gainNode.gain.linearRampToValueAtTime(target, now + fadeTime/1000);
   await sleep(fadeTime);
+  console.log('Fade complete, current gain:', gainNode.gain.value);
 }
 
 function cancelPlayhead(){
@@ -323,6 +329,7 @@ function cancelPlayhead(){
 }
 
 function startPlayhead(offset){
+  console.log('Starting playhead with offset:', offset);
   const start = audioCtx.currentTime - offset;
   const loop = () => {
     if(!source || !buffer) return;
@@ -406,11 +413,19 @@ function renderSpectrogramTimeline(buf){
 
 /* ---------- playback ---------- */
 async function loadBuffer(file){
+  console.log('Loading buffer for file:', file);
   const r=await fetch('/audio/'+encodeURIComponent(file));
   return audioCtx.decodeAudioData(await r.arrayBuffer());
 }
 
 function startPlayback(offset=0){
+  // NEVER start without user interaction
+  if (!userHasInteracted) {
+    console.log('BLOCKING playback: user has not interacted yet');
+    return;
+  }
+  
+  console.log('Starting playback with offset:', offset, 'current gain:', gainNode.gain.value);
   stopSource();
   cancelPlayhead();
 
@@ -429,9 +444,12 @@ async function togglePlayPause(){
   if(!buffer) return;
 
   if(isPlaying){
+    console.log('Pausing playback');
     await fadeTo(0);
     stopSource();
   } else {
+    console.log('Starting playback from togglePlayPause');
+    userHasInteracted = true; // Mark that user has interacted
     await ensureAudio();
     startPlayback(pausedAt || 0);
     await fadeTo(1);
@@ -455,6 +473,7 @@ async function changeTrack(i) {
 
   // Stop any playing sound and fade out
   if (isPlaying) {
+    console.log('Stopping current track during track change');
     await fadeTo(0);
     stopSource();
   }
@@ -488,13 +507,12 @@ async function changeTrack(i) {
 
   pausedAt = 0;
   renderSpectrogramTimeline(buffer);
-  startPlayback(0);
+  // Don't auto-play - just load the track and wait for user interaction
 
-  // Show elements and fade in audio
+  // Show elements but don't fade in audio yet
   show(infoHUD);
   show(worksHUD);
   show(specC);
-  await fadeTo(1);
 
   if (currentChangeId === changeTrackId) {
     switching = false;
@@ -517,21 +535,40 @@ function toggleModal(){
 }
 
 /* ---------- events ---------- */
-items.forEach((el,i)=>el.onclick=()=>changeTrack(i));
+items.forEach((el,i)=>el.onclick=()=>{
+  console.log('Track clicked, index:', i);
+  userHasInteracted = true; // Mark user interaction
+  changeTrack(i);
+});
 
 canvas.onclick=e=>{
+  console.log('Canvas clicked');
+  userHasInteracted = true; // Mark user interaction
   if(!buffer) return;
   const r=canvas.getBoundingClientRect();
   const t=(e.clientX-r.left)/r.width*buffer.duration;
   startPlayback(Math.max(0,t));
 };
 
+// Add user interaction detection for first interaction
+document.addEventListener('click', ()=>{
+  if (!userHasInteracted) {
+    console.log('First user interaction detected');
+    userHasInteracted = true;
+  }
+}, { once: true });
+
 document.addEventListener('keydown',e=>{
-  if(e.code==='Space'){ e.preventDefault(); togglePlayPause(); }
+  if(e.code==='Space'){ 
+    e.preventDefault(); 
+    console.log('Space pressed, toggling play/pause');
+    userHasInteracted = true; // Mark user interaction
+    togglePlayPause(); 
+  }
   if(e.key==='ArrowUp') changeTrack(selected-1);
   if(e.key==='ArrowDown') changeTrack(selected+1);
   if(e.key==='i') toggleModal();
-  if(e.key==='m'){ minimal=!minimal; minimal?(hide(infoHUD),hide(worksHUD),hide(specC)):(show(infoHUD),show(worksHUD),show(specC)); }
+  if(e.key==='m'){ minimal=!minimal; minimal?(hide(infoHUD),hide(worksHUD),hide(specC),hide(timeDisplay)):(show(infoHUD),show(worksHUD),show(specC),show(timeDisplay)); }
   if(e.key==='f') document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
   if(e.key==='Escape') modal.classList.contains('visible')?hide(modal):location.href='/';
   if(e.key==='?') help.classList.toggle('visible');
@@ -541,16 +578,18 @@ helpToggle.onclick=()=>help.classList.toggle('visible');
 
 /* ---------- start ---------- */
 async function init() {
+  console.log('Initializing audio player');
   resize();
   const el = items[selected]; // selected is 0
   updateHUD(el);
 
-  // Create audio context without resuming it, so we can decode
+  // Create audio context WITHOUT resuming it, so we can decode
   if (!audioCtx) {
     audioCtx = new AudioContext();
     gainNode = audioCtx.createGain();
     gainNode.gain.value = 0; // Start silent
     gainNode.connect(audioCtx.destination);
+    console.log('Audio context created in init, gain set to 0');
   }
 
   try {
@@ -558,6 +597,7 @@ async function init() {
     buffer = await loadBuffer(el.dataset.audio);
     pausedAt = 0; // ready to play from start
     renderSpectrogramTimeline(buffer);
+    console.log('Initial track loaded, no auto-playback');
   } catch (e) {
     console.error("Failed to load initial audio:", e);
   }
