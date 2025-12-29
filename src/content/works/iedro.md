@@ -8,5 +8,6 @@ performedBy:
   - Asia Atmetsalojia
 tags: [solo, pno]
 length: 5'45''
+heroImage: https://i.imgur.com/Ennuaka.png
 ---
 
