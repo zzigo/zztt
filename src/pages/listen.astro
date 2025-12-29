@@ -152,6 +152,37 @@ body {
 #help.visible { opacity: .75; }
 #help span { display: block; opacity: .7; }
 
+/* SHORTCUT BUTTONS */
+#shortcut-buttons {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  display: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  z-index: 1001;
+}
+#shortcut-buttons.visible {
+  display: flex;
+}
+#shortcut-buttons button {
+  background: none;
+  border: none;
+  color: white;
+  opacity: 0.3;
+  font-size: 1.5em; /* Big letters */
+  font-family: monospace;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+#shortcut-buttons button:hover {
+  opacity: 0.6;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
 /* EXIT */
 #exit {
   position: fixed;
@@ -205,6 +236,7 @@ body {
 <div id="helpToggle">?</div>
 <div id="help">
   <span>ESC exit / close modal</span>
+  <span>p panic stop</span>
   <span>SPACE play / pause</span>
   <span>f fullscreen</span>
   <span>m minimal</span>
@@ -213,6 +245,8 @@ body {
   <span>↑ ↓ navigate</span>
   <span>click seek</span>
 </div>
+
+<div id="shortcut-buttons"></div>
 
 <script>
 const fadeTime = 3000;
@@ -238,6 +272,7 @@ let switching = false;
 let playheadRAF = 0;
 let changeTrackId = 0;
 let userHasInteracted = false; // Track if user has interacted
+let playPauseBtn; // for mobile
 
 let isPlaying = false;
 let pausedAt = 0;
@@ -310,17 +345,27 @@ function stopSource(){
 
   source = null;
   isPlaying = false;
+  if (playPauseBtn) playPauseBtn.textContent = 'PLAY';
   console.log('Source stopped, isPlaying:', isPlaying);
 }
 
 async function fadeTo(target){
   console.log('Fading to gain:', target);
+  if (!audioCtx) return;
   const now = audioCtx.currentTime;
   gainNode.gain.cancelScheduledValues(now);
   gainNode.gain.setValueAtTime(gainNode.gain.value, now);
   gainNode.gain.linearRampToValueAtTime(target, now + fadeTime/1000);
   await sleep(fadeTime);
   console.log('Fade complete, current gain:', gainNode.gain.value);
+}
+
+async function panicStop() {
+  console.log('PANIC');
+  userHasInteracted = true; // Panic is an interaction
+  await ensureAudio();
+  await fadeTo(0);
+  stopSource();
 }
 
 function cancelPlayhead(){
@@ -437,6 +482,7 @@ function startPlayback(offset=0){
   source.start(0, offset);
 
   isPlaying = true;
+  if (playPauseBtn) playPauseBtn.textContent = 'PAUSE';
   startPlayhead(offset);
 }
 
@@ -555,6 +601,7 @@ document.addEventListener('click', ()=>{
   if (!userHasInteracted) {
     console.log('First user interaction detected');
     userHasInteracted = true;
+    ensureAudio();
   }
 }, { once: true });
 
@@ -564,6 +611,10 @@ document.addEventListener('keydown',e=>{
     console.log('Space pressed, toggling play/pause');
     userHasInteracted = true; // Mark user interaction
     togglePlayPause(); 
+  }
+  if(e.key==='p'){
+    e.preventDefault();
+    panicStop();
   }
   if(e.key==='ArrowUp') changeTrack(selected-1);
   if(e.key==='ArrowDown') changeTrack(selected+1);
@@ -576,21 +627,49 @@ document.addEventListener('keydown',e=>{
 
 helpToggle.onclick=()=>help.classList.toggle('visible');
 
+/* ---------- mobile buttons ---------- */
+function createShortcutButtons() {
+  const isMobile = 'maxTouchPoints' in navigator && navigator.maxTouchPoints > 0;
+  if (!isMobile) return;
+
+  const container = document.getElementById('shortcut-buttons');
+  container.classList.add('visible');
+
+  const shortcuts = {
+    '↑': () => changeTrack(selected - 1),
+    '↓': () => changeTrack(selected + 1),
+    'PLAY': () => togglePlayPause(),
+    'PANIC': () => panicStop(),
+    'i': () => toggleModal(),
+    'm': () => {
+      minimal = !minimal;
+      minimal ? (hide(infoHUD), hide(worksHUD), hide(specC), hide(timeDisplay)) : (show(infoHUD), show(worksHUD), show(specC), show(timeDisplay));
+    },
+    'f': () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(),
+  };
+
+  for (const [label, action] of Object.entries(shortcuts)) {
+    const btn = document.createElement('button');
+    btn.textContent = label;
+    if (label === 'PLAY') playPauseBtn = btn;
+    btn.onclick = (e) => {
+        e.preventDefault();
+        userHasInteracted = true;
+        ensureAudio();
+        action();
+    };
+    container.appendChild(btn);
+  }
+}
+
 /* ---------- start ---------- */
 async function init() {
   console.log('Initializing audio player');
+  await ensureAudio(); // Run on loading to initialize Web Audio API
+  
   resize();
   const el = items[selected]; // selected is 0
   updateHUD(el);
-
-  // Create audio context WITHOUT resuming it, so we can decode
-  if (!audioCtx) {
-    audioCtx = new AudioContext();
-    gainNode = audioCtx.createGain();
-    gainNode.gain.value = 0; // Start silent
-    gainNode.connect(audioCtx.destination);
-    console.log('Audio context created in init, gain set to 0');
-  }
 
   try {
     // Load buffer for the first track
@@ -606,6 +685,8 @@ async function init() {
   show(infoHUD);
   show(worksHUD);
   show(specC);
+  
+  createShortcutButtons();
 }
 
 init();
