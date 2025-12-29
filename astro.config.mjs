@@ -10,7 +10,7 @@ import remarkWikilinks from "./remark-wikilinks.mjs";
 
 export default defineConfig({
   output: "static",
-  site: "https://a.zztt.org",
+  site: "https://zztt.org",
   base: "/",
 
   integrations: [

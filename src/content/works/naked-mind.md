@@ -28,7 +28,6 @@ tags:
   - performance
   - collaboration
 performances:
-  - naked mind @FNOBA22
 ---
 ![](https://i.imgur.com/hs6ftj5.png)
 ![](https://i.imgur.com/9Izxhbq.png)

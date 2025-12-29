@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://a.zztt.org/sitemap-index.xml
+Sitemap: https://zztt.org/sitemap.xml
