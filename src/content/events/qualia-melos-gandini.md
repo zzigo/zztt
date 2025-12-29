@@ -8,6 +8,7 @@ eventName: Beca MELOSGandini
 venue: Biblioteca Nacional Argentina
 city: Buenos Aires
 country: Argentina
+audio: "qualia.ogg"
 ---
 
 ![](https://i.imgur.com/VUcOSMK.jpeg)
