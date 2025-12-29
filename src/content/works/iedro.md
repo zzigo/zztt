@@ -11,5 +11,9 @@ tags:
   - pno
 length: 5'45''
 heroImage: https://i.imgur.com/Ennuaka.png
+performances:
+  - iedro@CCR.mesz
+  - iesdro@impuls.derrico
+  - "@iedro@ch.asemathnova"
 ---
 
