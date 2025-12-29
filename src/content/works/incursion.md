@@ -1,9 +1,9 @@
 ---
 title: Incursion
-description: for feedback tuba
+description: tu.amp
 pubDate: 2022-06-02
-performedBy: 
-- "[[Jack Adler-McKean]]"
+performedBy:
+  - "[[Jack Adler-McKean]]"
 heroImage: https://i.imgur.com/tMs0q37.png
 tags:
   - solo

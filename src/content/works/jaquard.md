@@ -1,6 +1,6 @@
 ---
 title: jaquard
-description: for solo tenor
+description: tenor(baroque)
 pubDate: 2017-08-15
 performedBy: "[[Esteban Manzano]]"
 tags:

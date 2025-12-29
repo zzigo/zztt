@@ -7,7 +7,7 @@ performedBy: zztt
 tags:
   - video
 performances:
-- "[[Viva Música Festival Magma]]"
+  - "[[viva-musica-festival-magma]]"
 ---
 
 <iframe title="_TORRENTES EXTENDERSE" src="https://www.youtube.com/embed/uWStpujTgbo?feature=oembed" height="150" width="200" style="aspect-ratio: 1.33333 / 1; width: 100%; height: 100%;" allowfullscreen="" allow="fullscreen"></iframe>

@@ -1,15 +1,15 @@
 ---
 title: vilanos
-description: for amplified flute duet
+description: 2 fl.amp
 pubDate: 2014-10-28
 heroImage: https://i.imgur.com/DgcDiGn.png
-performedBy: 
-- "[[MEI Flautas]]"
-- "[[Labate Pierpaoli Duo-UNA]]"
+performedBy:
+  - "[[MEI Flautas]]"
+  - "[[Labate Pierpaoli Duo-UNA]]"
 performances:
-- "[[Escrituras Argentinas@conDiT]]"
-- "[[DaMUS UNA @Biblioteca Nacional]]"
-- "[[Contemporary Music Concert Series TGSM 2016]]" 
+  - "[[Escrituras Argentinas@conDiT]]"
+  - "[[DaMUS UNA @Biblioteca Nacional]]"
+  - "[[Contemporary Music Concert Series TGSM 2016]]"
 ---
 
 <iframe title="Luciano Azzigotti — Vilanos [w/ score]" src="https://www.youtube.com/embed/CPYFAcObl9s?start=22&amp;feature=oembed" height="113" width="200" allowfullscreen="" allow="fullscreen" style="aspect-ratio: 1.76991 / 1; width: 100%; height: 100%;"></iframe>

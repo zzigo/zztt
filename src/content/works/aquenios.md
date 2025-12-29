@@ -1,18 +1,18 @@
 ---
 title: aquenios
-description: sax quartet
-pubDate:  2014-11-04
-performedBy: 
-- "[[Cuarteto Argentino de Saxofones]]"
-- "[[Klexos]]"
+description: "sx: SATBar"
+pubDate: 2014-11-04
+performedBy:
+  - "[[Cuarteto Argentino de Saxofones]]"
+  - "[[Klexos]]"
 performances:
-- "[[aquenios @CCMConti]]"
-- "[[aquenios @CCR]]"
-- "[[Darmstädter Ferienkurse 2016]]"
+  - "[[aquenios @CCMConti]]"
+  - "[[aquenios @CCR]]"
+  - "[[Darmstädter Ferienkurse 2016]]"
 tags:
   - chamber
 heroImage: https://i.imgur.com/qHoQcFV.png
-listPerformers:  Cuarteto Argentino de Saxofones
+listPerformers: Cuarteto Argentino de Saxofones
 ---
 
 <iframe src="https://w.soundcloud.com/player/?visual=true&amp;url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F219535338&amp;show_artwork=true" height="400" width="100%" style="aspect-ratio: 1.315 / 1; width: 100%; height: 100%;" allowfullscreen="" allow="fullscreen"></iframe>

@@ -1,18 +1,18 @@
 ---
 title: the universe in a thread
-description: chamber opera
-pubDate: "2017-08-10"
-performedBy: 
-- "[[Victoria Inés Barquiza]]"
-- "[[Roberto Maqueda]]"
-- "[[Victor Barceló]]"
-- "[[Gabriela Czerednikov]]"
-- "[[Esteban Manzano]]"
-- "[[Alejandro Becerra]]"
+description: chamber opera (fl-cl-hp-2perc-voci:T(bar)-S(pop)-M-elec)
+pubDate: 2017-08-10
+performedBy:
+  - "[[Victoria Inés Barquiza]]"
+  - "[[Roberto Maqueda]]"
+  - "[[Victor Barceló]]"
+  - "[[Gabriela Czerednikov]]"
+  - "[[Esteban Manzano]]"
+  - "[[Alejandro Becerra]]"
 tags:
   - opera
-performances: 
- - "[[El universo en un hilo @TACEC]]"
+performances:
+  - "[[El universo en un hilo @TACEC]]"
 heroImage: https://i.imgur.com/9Eypb4x.png
 ---
 
