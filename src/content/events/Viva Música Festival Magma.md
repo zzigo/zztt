@@ -6,6 +6,7 @@ eventName: 4V+S
 venue: Pasaje Dardo Rocha
 city: La Plata
 country: Argentina
+performedBy: ""
 ---
 
 ![](https://i.imgur.com/VhJ5VYM.png)
