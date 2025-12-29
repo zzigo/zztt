@@ -296,6 +296,28 @@ const posts = (await getCollection("works")).sort(
 
 				// Add scroll listener
 				window.addEventListener("scroll", handleScroll, { passive: true });
+
+
+			    //  SHORTCUTS 
+
+				document.addEventListener('keydown', (e) => {
+					// Ignore if the user is typing in an input field or holding a modifier key
+					if (e.target.matches('input, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+
+					switch(e.key) {
+					case 'a':
+						window.location.href = '/ascii';
+						break;
+					case 'l':
+						window.location.href = '/listen';
+						break;
+					case 'c':
+						window.location.href = '/calendar';
+						break;
+					}
+				});
+
+		
 			</script>
 		)}
 	</body>

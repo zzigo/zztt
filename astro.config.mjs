@@ -13,7 +13,7 @@ export default defineConfig({
   output: "static",
   site: "https://zztt.org",
   base: "/",
-  redirects: JSON.parse(fs.readFileSync("./src/pages/redirects.json", "utf-8")),
+  redirects: JSON.parse(fs.readFileSync("./src/redirects.json", "utf-8")),
 
   integrations: [
     mdx({
