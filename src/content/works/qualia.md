@@ -1,11 +1,13 @@
 ---
-title:  qualia
+title: qualia
 description: fl/bfl, cl, ban, pno, perc, vl, db
 pubDate: 2010-12-10
-heroImage:  https://i.imgur.com/FdZACEZ.png
+heroImage: https://i.imgur.com/FdZACEZ.png
 performedBy: "[[compañia oblícua]]"
 tags:
   - chamber
+performances:
+  - qualia-melos-gandini
 ---
 
 
