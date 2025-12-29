@@ -4,6 +4,7 @@ import sitemap from "@astrojs/sitemap";
 import react from "@astrojs/react";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import fs from "fs";
 
 import remarkQuoteCallout from "./remark-quote-callout.mjs";
 import remarkWikilinks from "./remark-wikilinks.mjs";
@@ -12,6 +13,7 @@ export default defineConfig({
   output: "static",
   site: "https://zztt.org",
   base: "/",
+  redirects: JSON.parse(fs.readFileSync("./src/pages/redirects.json", "utf-8")),
 
   integrations: [
     mdx({
