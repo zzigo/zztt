@@ -2,7 +2,7 @@ import { defineConfig } from "astro/config";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 import react from "@astrojs/react";
-import node from "@astrojs/node";
+import vercel from "@astrojs/vercel/serverless";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import fs from "fs";
@@ -11,17 +11,16 @@ import remarkQuoteCallout from "./remark-quote-callout.mjs";
 import remarkWikilinks from "./remark-wikilinks.mjs";
 
 export default defineConfig({
-  // Hybrid is now implicit
-  output: "server",
+  output: "static",
 
-  adapter: node({
-    mode: "standalone",
-  }),
+  adapter: vercel(),
 
   site: "https://zztt.org",
   base: "/",
 
-  redirects: JSON.parse(fs.readFileSync("./src/redirects.json", "utf-8")),
+  redirects: JSON.parse(
+    fs.readFileSync("./src/redirects.json", "utf-8")
+  ),
 
   integrations: [
     mdx({
