@@ -1,7 +1,7 @@
 import { e as createAstro, c as createComponent, r as renderComponent, b as renderHead, d as addAttribute, u as unescapeHTML, a as renderTemplate } from '../chunks/astro/server_BMBmnVw6.mjs';
 import 'piccolore';
-import { a as getCollection } from '../chunks/_astro_content_C7DRV1iB.mjs';
-import { $ as $$BaseHead, a as $$Header, b as $$Footer } from '../chunks/Footer_DjpqPhS0.mjs';
+import { a as getCollection } from '../chunks/_astro_content_DZkXTkxE.mjs';
+import { $ as $$BaseHead, a as $$Header, b as $$Footer } from '../chunks/Footer_CxdBQmyz.mjs';
 /* empty css                                         */
 export { renderers } from '../renderers.mjs';
 
@@ -35,11 +35,13 @@ const $$ListOfWorks = createComponent(async ($$result, $$props, $$slots) => {
     });
     const firstPerformanceYear = work.data.pubDate ? new Date(work.data.pubDate).getFullYear() : null;
     const firstPerformanceEvent = workEvents.length > 0 ? workEvents[0].data.venue : null;
+    const isUpcoming = work.data.pubDate && new Date(work.data.pubDate) > /* @__PURE__ */ new Date();
     return {
       ...work,
       performersDisplay,
       firstPerformanceYear,
-      firstPerformanceEvent
+      firstPerformanceEvent,
+      isUpcoming
     };
   });
   const chronologicalWorks = [...processedWorks].sort((a, b) => {
@@ -91,7 +93,9 @@ by type
 </a> </div> ${view === "chronological" && renderTemplate`<ul class="works-list" data-astro-cid-t2c7cnbw> ${chronologicalWorks.map((work) => renderTemplate`<li class="work-item" data-astro-cid-t2c7cnbw> <div class="work-content" data-astro-cid-t2c7cnbw>${unescapeHTML(`
                   <strong style="color: orange;">${work.data.title}</strong>
                   <em>${work.data.description}</em>
-                  (${work.firstPerformanceYear ?? "\u2014"})<br>
+                  (${work.firstPerformanceYear ?? "\u2014"})
+                  ${work.isUpcoming ? '<span class="upcoming-label">Upcoming</span>' : ""}
+                  <br>
                   <small>
                     premiered by ${work.performersDisplay}
                     at ${work.firstPerformanceEvent ?? "unknown event"}
@@ -100,7 +104,9 @@ by type
                 `)}</div> </li>`)} </ul>`} ${view === "year" && renderTemplate`<div class="grouped-works" data-astro-cid-t2c7cnbw> ${sortedYears.map((year) => renderTemplate`<section data-astro-cid-t2c7cnbw> <h2 data-astro-cid-t2c7cnbw>${year}</h2> <ul class="works-list" data-astro-cid-t2c7cnbw> ${worksByYear[year].map((work) => renderTemplate`<li class="work-item" data-astro-cid-t2c7cnbw> <div class="work-content" data-astro-cid-t2c7cnbw>${unescapeHTML(`
                         <strong style="color: orange;">${work.data.title}</strong>
                         <em>${work.data.description}</em>
-                        (${work.firstPerformanceYear ?? "\u2014"})<br>
+                        (${work.firstPerformanceYear ?? "\u2014"})
+                        ${work.isUpcoming ? '<span class="upcoming-label">Upcoming</span>' : ""}
+                        <br>
                         <small>
                           premiered by ${work.performersDisplay}
                           at ${work.firstPerformanceEvent ?? "unknown event"}
@@ -109,7 +115,9 @@ by type
                       `)}</div> </li>`)} </ul> </section>`)} </div>`} ${view === "type" && renderTemplate`<div class="grouped-works" data-astro-cid-t2c7cnbw> ${sortedTypes.map((type) => renderTemplate`<section data-astro-cid-t2c7cnbw> <h2 data-astro-cid-t2c7cnbw>${type}</h2> <ul class="works-list" data-astro-cid-t2c7cnbw> ${worksByType[type].map((work) => renderTemplate`<li class="work-item" data-astro-cid-t2c7cnbw> <div class="work-content" data-astro-cid-t2c7cnbw>${unescapeHTML(`
                         <strong style="color: orange;">${work.data.title}</strong>
                         <em>${work.data.description}</em>
-                        (${work.firstPerformanceYear ?? "\u2014"})<br>
+                        (${work.firstPerformanceYear ?? "\u2014"})
+                        ${work.isUpcoming ? '<span class="upcoming-label">Upcoming</span>' : ""}
+                        <br>
                         <small>
                           premiered by ${work.performersDisplay}
                           at ${work.firstPerformanceEvent ?? "unknown event"}
