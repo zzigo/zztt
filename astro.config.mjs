@@ -2,6 +2,7 @@ import { defineConfig } from "astro/config";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 import react from "@astrojs/react";
+import node from "@astrojs/node";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import fs from "fs";
@@ -10,9 +11,16 @@ import remarkQuoteCallout from "./remark-quote-callout.mjs";
 import remarkWikilinks from "./remark-wikilinks.mjs";
 
 export default defineConfig({
+  // Hybrid is now implicit
   output: "static",
+
+  adapter: node({
+    mode: "standalone",
+  }),
+
   site: "https://zztt.org",
   base: "/",
+
   redirects: JSON.parse(fs.readFileSync("./src/redirects.json", "utf-8")),
 
   integrations: [
@@ -26,13 +34,7 @@ export default defineConfig({
         rehypeKatex,
       ],
     }),
-    sitemap({
-      // Customize sitemap here if needed:
-      // filter: (page) => !page.includes('/private/'), // Exclude certain pages
-      // changefreq: 'weekly',
-      // priority: 0.7,
-      // lastmod: new Date(),
-    }),
+    sitemap(),
     react(),
   ],
 
@@ -41,7 +43,6 @@ export default defineConfig({
       remarkMath,
       remarkWikilinks,
       remarkQuoteCallout,
-    // remarmermaid, 
     ],
     rehypePlugins: [
       rehypeKatex,
