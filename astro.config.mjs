@@ -12,7 +12,7 @@ import remarkWikilinks from "./remark-wikilinks.mjs";
 
 export default defineConfig({
   // Hybrid is now implicit
-  output: "static",
+  output: "server",
 
   adapter: node({
     mode: "standalone",
