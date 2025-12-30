@@ -5,12 +5,14 @@ pubDate: 2013-09-10
 heroImage: https://i.imgur.com/QnASKjw.png
 performedBy: reConvert
 performances:
-- "[[reConvert Latin Tour@conDiT]]"
-- "[[Percussion Workshop @Teatro Argentino de La Plata]]"
-- "[[Darmstädter Ferienkurse 2014]]"
-- "[[Concert Series Zurich]]"
-- "[[Percussion Festival Danish National Conservatoire]]"
-- "[[Cafe OTO London]]"
+  - "[[reConvert Latin Tour@conDiT]]"
+  - "[[Percussion Workshop @Teatro Argentino de La Plata]]"
+  - "[[Darmstädter Ferienkurse 2014]]"
+  - "[[Concert Series Zurich]]"
+  - "[[Percussion Festival Danish National Conservatoire]]"
+  - "[[Cafe OTO London]]"
+tags:
+  - chamber
 ---
 
 

@@ -4,11 +4,13 @@ description: drum bass, mic-gloves, transducer, bowl, china gong, metal objects
 pubDate: 2021-10-08
 heroImage: https://i.imgur.com/RUnwMEo.png
 performedBy:
-- "[[Luis Azcona Delgado]]"
+  - "[[Luis Azcona Delgado]]"
 performances:
-- "[[Embodied Sound @EMPAC]]"
-- "[[IGNM 2021 @ Process Bar]]"
-- "[[Playtime Festival @ HKB]]"
+  - "[[Embodied Sound @EMPAC]]"
+  - "[[IGNM 2021 @ Process Bar]]"
+  - "[[Playtime Festival @ HKB]]"
+tags:
+  - solo
 ---
 
 <iframe title="Limo (2021) for bass drum" src="https://www.youtube.com/embed/AZ62ToitCFI?feature=oembed" height="113" width="200" style="aspect-ratio: 1.76991 / 1; width: 100%; height: 100%;" allowfullscreen="" allow="fullscreen"></iframe>

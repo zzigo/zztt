@@ -3,9 +3,9 @@ title: espinor
 description: extended guitar, webcam, objects, bearing balls, motors
 pubDate: 2016-10-18
 heroImage: https://i.imgur.com/K8Zy6HY.jpeg
-performedBy: 
-- "[[Ricardo Cuadros Pradilla]]"
-- "[[Iván Adriano]]"
+performedBy:
+  - "[[Ricardo Cuadros Pradilla]]"
+  - "[[Iván Adriano]]"
 listPerformers: Ricardo Cuadros Pradilla
 performances:
   - "[[Gutarras del Mundo Teatro Tornavia UNSAM]]"
@@ -13,6 +13,8 @@ performances:
   - "[[Jardines del Servente Festival]]"
   - "[[Nücleo Música Nueva]]"
   - "[[Ciclo de Ensambles UNTREF]]"
+tags:
+  - solo
 ---
 
 

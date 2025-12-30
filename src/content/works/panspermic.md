@@ -3,11 +3,10 @@ title: panspermic
 description: a cosmic allegory for pvc sphere, vector laser synthesis and speakers
 pubDate: 2021-06-04
 heroImage: https://i.imgur.com/AXotdnf.jpeg
-performedBy: 
-- "[[Andrea Zamengo]]"
-- "[[Cristiano Rios]]"
+performedBy:
+  - "[[Andrea Zamengo]]"
+  - "[[Cristiano Rios]]"
 tags:
-  - vectorsynthesis
   - chamber
 ---
 

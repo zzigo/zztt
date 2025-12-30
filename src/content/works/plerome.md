@@ -5,11 +5,11 @@ pubDate: 2022-12-10
 heroImage: https://i.imgur.com/LnNhtWf.png
 performedBy: reConvert
 tags:
-  - micropercussion
+  - chamber
 performances:
-- "[[Plerome @Walchetur]]"
-- "[[Plerome @Launchslabs Basel]]"
-- "[[Plerome @Progr Bern]]"
+  - "[[Plerome @Walchetur]]"
+  - "[[Plerome @Launchslabs Basel]]"
+  - "[[Plerome @Progr Bern]]"
 ---
 
 ![](https://i.imgur.com/YEr4g8g.jpeg)

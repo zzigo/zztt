@@ -1,12 +1,12 @@
 ---
 dates:
-  - "2018-08-12-18:00"
+  - "2025-10-31-20:00"
 work: espinor
 performedBy: 
   - Ricardo Cuadros Pradilla
   - Iván Adriano
-eventName: Exformantes
-venue: Centro Cultural Recoleta
-city: Buenos Aires
+eventName: Ciclo de Ensambles
+venue: Auditorio UNTREF Caseros II
+city: Caseros
 country: Argentina
 ---

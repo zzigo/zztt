@@ -15,6 +15,8 @@ performances:
   - "[[Harp Workshop]]"
   - "[[Carte Blanche]]"
 listPerformers: Simon Foerster
+tags:
+  - solo
 ---
 
 
