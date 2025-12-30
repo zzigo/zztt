@@ -111,21 +111,24 @@ sortedTypes.forEach((type) => {
       main {
         max-width: 800px;
         margin: 0 auto;
-        padding: 2em 1em;
+        padding: 5em 1em;
         background-color: var(--background);
         color: var(--text);
       }
 
       h1 {
-        font-size: 2.5rem;
+        font-size: 1.3rem;
         text-align: center;
         padding-bottom: 1em;
+        font-weight: normal;
+
       }
 
       h2 {
-        font-size: 1.8rem;
+        font-size: 1rem;
+        font-weight: normal;
         margin-top: 2.5em;
-        border-bottom: 1px solid var(--accent);
+        border-bottom: 0px solid var(--accent);
         padding-bottom: 0.5em;
       }
 
@@ -166,13 +169,13 @@ sortedTypes.forEach((type) => {
 
       <div class="view-options">
         <a href="/list-of-works" data-astro-reload class:list={{ active: view === 'chronological' }}>
-          Chronological
+          chronological
         </a>
         <a href="/list-of-works?view=year" data-astro-reload class:list={{ active: view === 'year' }}>
-          By Year
+          by year
         </a>
         <a href="/list-of-works?view=type" data-astro-reload class:list={{ active: view === 'type' }}>
-          By Type
+          by type
         </a>
       </div>
 
