@@ -19,9 +19,9 @@ export default defineConfig({
   base: "/",
 
   // ✅ Redirects (static-safe)
-  redirects: JSON.parse(
-    fs.readFileSync("./src/redirects.json", "utf-8")
-  ),
+  // redirects: JSON.parse(
+  //   fs.readFileSync("./src/redirects.json", "utf-8")
+  // ),
 
   integrations: [
     mdx({

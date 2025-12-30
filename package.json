@@ -21,7 +21,6 @@
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
     "@wasm-audio-decoders/flac": "^0.2.2",
-    "astro": "^5.16.6",
     "astro-expressive-code": "^0.40.0",
     "markdown-it": "^14.1.0",
     "markdown-it-mermaid": "^0.2.5",
@@ -40,6 +39,7 @@
   },
   "devDependencies": {
     "@types/three": "^0.172.0",
+    "astro": "^5.16.6",
     "gh-pages": "^6.3.0"
   }
 }
