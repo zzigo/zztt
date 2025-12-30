@@ -34,13 +34,17 @@ const processedWorks = works.map((work) => {
     const workTitle = work.data.title.toLowerCase();
     const eventWorks = event.data.work;
 
-    if (Array.isArray(eventWorks)) {
-      return eventWorks.some(w => w.toLowerCase() === workTitle);
-    }
-    if (typeof eventWorks === 'string') {
-      return eventWorks.toLowerCase() === workTitle;
-    }
-    return false;
+if (Array.isArray(eventWorks)) {
+  return eventWorks.some(
+    w => typeof w === 'string' && w.toLowerCase() === workTitle
+  );
+}
+if (typeof eventWorks === 'string') {
+  return eventWorks.toLowerCase() === workTitle;
+}
+return false;
+
+
   });
 
   const firstPerformanceYear = work.data.pubDate
@@ -50,8 +54,13 @@ const processedWorks = works.map((work) => {
   const firstPerformanceEvent =
     workEvents.length > 0 ? workEvents[0].data.venue : null;
 
-  const isUpcoming =
-    work.data.pubDate && new Date(work.data.pubDate) > new Date();
+ let isUpcoming = false;
+if (work.data.pubDate) {
+  const d = new Date(work.data.pubDate);
+  if (!Number.isNaN(d.valueOf())) {
+    isUpcoming = d > new Date();
+  }
+}
 
   return {
     ...work,
