@@ -71,10 +71,21 @@ body {
   max-height: 40vh;
   width: 25%;
   overflow-y: auto;
-  mask-image: linear-gradient(to bottom, transparent, white 10%, white 90%, transparent);
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    white 10%,
+    white 90%,
+    transparent
+  );
 }
 #works-hud ul { list-style: none; padding: 0; margin: 0; }
-#works-hud li { padding: 6px 0; cursor: pointer; opacity: .35; transition: opacity 200ms; }
+#works-hud li {
+  padding: 6px 0;
+  cursor: pointer;
+  opacity: .35;
+  transition: opacity 200ms;
+}
 #works-hud li.selected { opacity: 1; }
 #works-hud.visible { opacity: .8; pointer-events: auto; }
 
@@ -152,7 +163,7 @@ body {
 #help.visible { opacity: .75; }
 #help span { display: block; opacity: .7; }
 
-/* SHORTCUT BUTTONS */
+/* SHORTCUT BUTTONS — DEFAULT (DESKTOP) */
 #shortcut-buttons {
   position: fixed;
   bottom: 20px;
@@ -172,7 +183,7 @@ body {
   border: none;
   color: white;
   opacity: 0.3;
-  font-size: 1.5em; /* Big letters */
+  font-size: 1.5em;
   font-family: monospace;
   padding: 5px 10px;
   cursor: pointer;
@@ -193,7 +204,48 @@ body {
   color: white;
   opacity: .5;
 }
+
+/* =========================
+   MOBILE OVERRIDE ONLY
+   ========================= */
+@media (max-width: 768px) {
+
+  #shortcut-buttons {
+    top: 72px;          /* safely below the × */
+    right: 16px;
+    left: auto;
+    bottom: auto;
+
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+
+    padding: 6px;
+  }
+
+  #shortcut-buttons button {
+    font-size: 1.2em;
+    padding: 10px 14px;
+
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+
+    opacity: 0.9;
+    min-width: 72px;
+    text-align: center;
+  }
+
+  #shortcut-buttons button:hover,
+  #shortcut-buttons button:active {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
 </style>
+
+
+
 </head>
 
 <body>
