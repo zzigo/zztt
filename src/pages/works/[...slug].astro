@@ -37,9 +37,16 @@ const { Content } = await render(post);
 
 // Get events for this work
 const allEvents = await getCollection('events');
-const workEvents = allEvents.filter(event => 
-	event.data.work.toLowerCase() === post.data.title.toLowerCase()
-);
+const workTitle = post.data.title.toLowerCase();
+const workEvents = allEvents.filter(event => {
+    const eventWorks = event.data.work;
+    if (Array.isArray(eventWorks)) {
+        return eventWorks.some(w => w.toLowerCase() === workTitle);
+    } else if (typeof eventWorks === 'string') {
+        return eventWorks.toLowerCase() === workTitle;
+    }
+    return false;
+});
 const hasEvents = workEvents.length > 0;
 ---
 
