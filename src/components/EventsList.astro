@@ -27,9 +27,16 @@ const slugify = (text: string) => {
 
 // Filter by work if specified
 if (filterByWork) {
-  allEvents = allEvents.filter(event => 
-    event.data.work.toLowerCase() === filterByWork.toLowerCase()
-  );
+  allEvents = allEvents.filter(event => {
+    const workTitle = filterByWork.toLowerCase();
+    const eventWorks = event.data.work;
+    if (Array.isArray(eventWorks)) {
+      return eventWorks.some(w => w.toLowerCase() === workTitle);
+    } else if (typeof eventWorks === 'string') {
+      return eventWorks.toLowerCase() === workTitle;
+    }
+    return false;
+  });
 }
 
 // Filter out events that might not have dates
@@ -96,7 +103,7 @@ today.setHours(0, 0, 0, 0);
               class={`event-row ${isPast ? 'past-event' : 'upcoming-event'}`}
               data-date={eventInstance.date.toISOString()}
               data-hour={eventInstance.hour || ''}
-              data-work={eventInstance.data.work}
+              data-work={Array.isArray(eventInstance.data.work) ? eventInstance.data.work.join(', ') : eventInstance.data.work}
               data-performedby={performersString}
               data-eventname={eventInstance.data.eventName}
               data-venue={eventInstance.data.venue}
@@ -109,11 +116,16 @@ today.setHours(0, 0, 0, 0);
               </td>
               <td>{eventInstance.hour || '—'}</td>
               <td class="work-cell">
-                {(() => {
-                  const workName = eventInstance.data.work.replace(/\.md$/, '');
-                  const workSlug = workName.toLowerCase().replaceAll(' ', '-');
-                  return <a href={`/works/${workSlug}`}>{workName}</a>;
-                })()}
+                {(Array.isArray(eventInstance.data.work) ? eventInstance.data.work : [eventInstance.data.work]).map((workName, index, arr) => {
+                  const cleanWorkName = workName.replace(/\.md$/, '');
+                  const workSlug = cleanWorkName.toLowerCase().replaceAll(' ', '-');
+                  return (
+                    <>
+                      <a href={`/works/${workSlug}`}>{cleanWorkName}</a>
+                      {index < arr.length - 1 && ', '}
+                    </>
+                  );
+                })}
               </td>
               <td>
                 {performersArray.map((performer, index) => {

@@ -81,7 +81,7 @@ const events = defineCollection({
       date: z.coerce.date().optional(),
       hour: z.string().optional(),
       dates: z.array(z.string()).optional(),
-      work: z.string(),
+      work: z.union([z.string(), z.array(z.string())]),
       performedBy: z.union([z.string(), z.array(z.string())]),
       eventName: z.string(),
       venue: z.string(),
@@ -104,10 +104,11 @@ const events = defineCollection({
       }
 
       const { date, hour, ...rest } = data;
+      const title = Array.isArray(data.work) ? data.work[0] : data.work;
 
       return {
         ...rest,
-        title: data.work,
+        title,
         dates: finalDates,
       };
     })
@@ -136,7 +137,7 @@ const events = defineCollection({
               })
             )
           ),
-        work: z.string(),
+        work: z.union([z.string(), z.array(z.string())]),
         title: z.string(),
         performedBy: z.union([z.string(), z.array(z.string())]),
         eventName: z.string(),

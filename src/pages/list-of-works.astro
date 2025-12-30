@@ -31,10 +31,18 @@ const processedWorks = works.map((work) => {
     performersDisplay = parseWikilink(performedByArray[0]);
   }
 
-  const workEvents = events.filter(
-    (event) =>
-      event.data.work?.toLowerCase() === work.data.title.toLowerCase()
-  );
+  const workEvents = events.filter((event) => {
+    const workTitle = work.data.title.toLowerCase();
+    const eventWorks = event.data.work;
+
+    if (Array.isArray(eventWorks)) {
+      return eventWorks.some(w => w.toLowerCase() === workTitle);
+    } else if (typeof eventWorks === 'string') {
+      return eventWorks.toLowerCase() === workTitle;
+    }
+    
+    return false;
+  });
 
   const firstPerformanceYear = work.data.pubDate
     ? new Date(work.data.pubDate).getFullYear()
