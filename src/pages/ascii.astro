@@ -6,6 +6,8 @@ const { Content: AboutContent } = await aboutPage.render();
 
 const works = await getCollection('works');
 const research = await getCollection('research');
+const researchStatement = await getEntry('research', 'research-statement');
+const { Content: ResearchStatementContent } = await researchStatement.render();
 ---
 <html lang="en">
 <head>
@@ -86,6 +88,9 @@ const research = await getCollection('research');
         +++ wip +++
     </marquee>
 
+    <div class="content-block" id="preamble">
+        <ResearchStatementContent />
+    </div>
  
     <div class="content-block" id="works">
         <h2>works</h2>
