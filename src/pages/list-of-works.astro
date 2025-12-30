@@ -1,4 +1,5 @@
 ---
+export const prerender = false;
 import { getCollection } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
@@ -6,7 +7,6 @@ import Footer from '../components/Footer.astro';
 
 const { searchParams } = Astro.url;
 const view = searchParams.get('view') || 'chronological';
-export const prerender = false;
 // collections
 const works = await getCollection('works');
 const events = await getCollection('events');
