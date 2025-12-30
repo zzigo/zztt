@@ -88,9 +88,6 @@ const { Content: ResearchStatementContent } = await researchStatement.render();
         +++ wip +++
     </marquee>
 
-    <div class="content-block" id="preamble">
-        <ResearchStatementContent />
-    </div>
  
     <div class="content-block" id="works">
         <h2>works</h2>
@@ -105,6 +102,11 @@ const { Content: ResearchStatementContent } = await researchStatement.render();
 
     <div class="content-block" id="research">
         <h2>research</h2>
+
+           <div class="content-block" id="preamble">
+        <ResearchStatementContent />
+    </div>
+    
          <ul>
             {research.map(item => (
                 <li><a href={`/research/${item.slug}/`}>{item.data.title}</a> - {item.data.description}</li>
