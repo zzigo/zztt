@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+___________________________________________________________
+• Luciano Azzigotti
+• luciano.zztt.org
+• luciano@zztt.org
+• @azzigotti
+___________________________________________________________
+-->
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+    <meta name="description" content="Luciano Azzigotti - Instrumental and media composer" />
+    <meta name="author" content="Luciano Azzigotti" />
+    <meta name="keywords"
+        content="luciano,azzigotti,classical music,argentine music,contemporary music,experimental music,noise music,feedback music,interactive music,installation,art installation,filmscoring,música argentina" />
+    <meta name="robots" content="index, follow" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="zztt.org" />
+    <meta name="cache-control" content="no-cache" />
+
+    <!-- Social Media Meta Tags -->
+    <meta property="og:url" content="https://zztt.org" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="luciano azzigotti" />
+    <meta property="og:description" content="luciano azzigotti buenos aires composer based in switzerland" />
+    <meta property="og:image" content="buenos aires.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="luciano azzigotti" />
+    <meta name="twitter:creator" content="zztt.org" />
+    <meta name="twitter:title" content="luciano azzigotti" />
+    <meta name="twitter:description" content="luciano azzigotti buenos aires composer based in switzerland" />
+    <meta name="twitter:image" content="buenos aires.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <title>luciano azzigotti</title>
+
+    <!-- External Resources -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@100&family=Inconsolata:wght@200..900&family=Montserrat+Alternates:wght@200&family=Work+Sans:wght@200&display=swap"
+        rel="stylesheet" />
+
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/addons/p5.dom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@floating-ui/core@1.4.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.5.1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-h2T36DKPH1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag("js", new Date());
+        gtag("config", "G-h2T36DKPH1");
+    </script>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "http://schema.org",
+        "@type": "Person",
+        "name": "Luciano Azzigotti",
+        "url": "https://zztt.org",
+        "sameAs": [
+          "http://www.facebook.com/azzigotti",
+          "http://instagram.com/azzigotti",
+          "http://www.youtube.com/lucianoazzigotti",
+          "http://twitter.com./azzigotti"
+        ]
+      }
+    </script>
+
+    <style>
+        :root {
+            --text-color: #acacac;
+            --link-color: white;
+            --link-color-hover: #81ff9a;
+            --background-color: black;
+            --font-family: "Inconsolata", monospace;
+            --content-width: 70%;
+            --column-width: 45%;
+            --spacing-sm: 10px;
+            --spacing-md: 20px;
+            --font-size-base: clamp(1rem, 2.5vw, 2rem);
+            --font-size-small: 1rem;
+        }
+
+        /* Reset & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--background-color);
+            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        /* Layout */
+        /*.content {*/
+        /*  position: fixed;*/
+        /*  font-size: var(--font-size-base);*/
+        /*  width: var(--content-width);*/
+        /*  bottom: var(--spacing-sm);*/
+        /*  left: 30px !important;*/
+        /*  right: var(--spacing-sm);*/
+        /*  z-index: 1;*/
+        /*  padding: var(--spacing-md);*/
+        /*  line-height: 1.5;*/
+        /*  overflow-y: scroll;*/
+        /*  overscroll-behavior: contain;*/
+        /*  word-wrap: break-word;*/
+        /*}*/
+
+        /*.content::-webkit-scrollbar {*/
+        /*  display: none;*/
+        /*}*/
+
+        /*-------*/
+
+        /* Two Column Layout */
+        .content-wrapper {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: var(--spacing-md);
+            gap: var(--spacing-md);
+            z-index: 1;
+        }
+
+        .left-column {
+            width: var(--column-width);
+            padding: var(--spacing-md);
+            overflow-y: auto;
+            font-size: var(--font-size-base);
+            line-height: 1.5;
+        }
+
+        .right-column {
+            width: var(--column-width);
+            padding: var(--spacing-md);
+            overflow-y: auto;
+            font-size: var(--font-size-base);
+            line-height: 1.5;
+        }
+
+        /* Hide scrollbar but keep functionality */
+        .left-column::-webkit-scrollbar,
+        .right-column::-webkit-scrollbar {
+            display: none;
+        }
+
+        .left-column,
+        .right-column {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /*-------*/
+
+        /* Links */
+        a {
+            color: var(--link-color);
+            text-decoration: none;
+            border-radius: var(--spacing-sm);
+            cursor: crosshair;
+        }
+
+        a:hover,
+        #playButton:hover,
+        .hovered:hover {
+            color: var(--link-color-hover);
+        }
+
+        /* Controls */
+        .controls {
+            position: fixed;
+            top: var(--spacing-md);
+            right: var(--spacing-md);
+            color: var(--link-color);
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        #playButton {
+            font-size: 20px;
+        }
+
+        /* Social Icons */
+        .social-icons {
+            position: fixed;
+            bottom: 10px;
+            right: var(--spacing-md);
+            display: flex;
+            gap: var(--spacing-sm);
+            z-index: 100;
+        }
+
+        .icon-link {
+            color: var(--text-color);
+            font-size: 20px;
+            transition: color 0.3s ease;
+        }
+
+        .icon-link:hover {
+            color: var(--link-color-hover);
+        }
+
+        /* Bottom Text */
+        .bottom {
+            position: fixed;
+            bottom: var(--spacing-sm);
+            left: var(--spacing-sm);
+            font-size: var(--font-size-small);
+            color: var(--link-color);
+        }
+
+        /* Video */
+        .hero {
+            display: block;
+            overflow: hidden;
+            position: fixed;
+        }
+
+        /* Sections */
+        .hidden {
+            display: none;
+        }
+
+        /* Animations */
+        @keyframes fadeout {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadein {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .fadeout {
+            animation: fadeout 1s;
+        }
+
+        .fadein {
+            animation: fadein 1s;
+        }
+
+        /* Overlay */
+        .overlay {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 2;
+            top: 0;
+            left: 0;
+            background-color: rgba(255, 255, 255, 1);
+            transition: 0.5s;
+        }
+
+        .overlay-content {
+            position: relative;
+            top: var(--spacing-sm);
+            width: 95%;
+            text-align: left;
+            padding: 0 0 0 var(--spacing-sm);
+            color: black;
+        }
+
+        .overlay .closebtn {
+            position: absolute;
+            right: 1%;
+            top: 1%;
+            font-size: 40px;
+            color: black;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Overlay -->
+    <!--<div id="myNav" class="overlay">-->
+    <!--  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>-->
+    <!--  <div class="overlay-content">-->
+    <!--    <div id="waveform"></div>-->
+    <!--  </div>-->
+    <!--</div>-->
+
+    <!-- Controls -->
+    <div class="controls">
+        <div id="playButton" onclick="playAudio()">
+            <i class="fas fa-play"></i>
+        </div>
+    </div>
+
+    <!-- Social Icons -->
+    <div class="social-icons">
+        <a href="https://www.youtube.com/@LucianoAzzigotti" target="_blank" class="icon-link">
+            <i class="fab fa-youtube"></i>
+        </a>
+        <a href="https://x.com/azzigotti" target="_blank" class="icon-link">
+            <i class="fab fa-x-twitter"></i>
+        </a>
+        <a href="https://soundcloud.com/lucianoazzigotti" target="_blank" class="icon-link">
+            <i class="fab fa-soundcloud"></i>
+        </a>
+        <a href="https://hkb.academia.edu/LucianoAzzigotti" target="_blank" class="icon-link">
+            <i class="fas fa-graduation-cap"></i>
+        </a>
+        <a href="https://orcid.org/0000-0002-6812-2050" target="_blank" class="icon-link">
+            <i class="fas fa-book"></i>
+        </a>
+        <a href="https://www.linkedin.com/in/azzigotti" target="_blank" class="icon-link">
+            <i class="fab fa-linkedin"></i>
+        </a>
+        <a href="https://github.com/zzigo" target="_blank" class="icon-link">
+            <i class="fab fa-github"></i>
+        </a>
+    </div>
+
+    <!-- Bottom Text -->
+    <p class="bottom">
+        this site starts to be builded followig
+        <a href="http://contemporary-home-computing.org/prof-dr-style/" target="_blank" rel="noopener noreferrer">Prof.
+            Dr. style</a>
+        <span id="scrollValue">Scroll Y: 0</span>
+    </p>
+
+    <!-- Hero Video -->
+    <div class="hero">
+        <video id="videoID" autoplay muted autobuffer preload="auto" loop playsinline src="zztt-teaser.mp4"></video>
+    </div>
+
+    <!-- Main Content -->
+    <!-- Two Column Layout -->
+    <div class="content-wrapper">
+        <!-- Left Column - Main Text -->
+        <div class="left-column">
+            <section id="more" class="hidden">
+                My name is
+                <span class="hovered" onmouseover="showSections('more')"><strong>Luciano Azzigotti</strong></span>.
+                Although originally trained as a pianist and composer, my work has
+                encompassed
+                <span class="hovered" onmouseover="showSections('projects')"><a href="works">concert music</a></span>,
+                <span class="hovered" onmouseover="showSections('electronic')">electronic arts</span>, internet language
+                research, curation,
+                <span class="hovered" onmouseover="showSections('texts')">writing</span>,
+                <span class="hovered" onmouseover="showSections('teaching')">teaching</span>, and
+                <a href="https://www.youtube.com/watch?v=aNXrYMSCfbo" target="_">filmscoring</a>. I also
+                <span class="hovered" onmouseover="showSections('collabs')">collaborated</span>
+                with other artists in dance and visual arts. I am currently working on
+                my doctoral thesis, which deals with
+                <a href="https://soog.zztt.org">speculative ideas about music and instruments</a>. <br /><br />
+                In this
+                <a href="https://www.notion.so/55igo/luciano-azzigotti-fd0c55c21b954397ab3d4262055b87c4?pvs=4"
+                    target="_blank">notion</a>, there are past, present and future works. Updates are posted
+                through
+                <a href="https://www.instagram.com/azzigotti/" target="_blank">Instagram</a>
+            </section>
+        </div>
+
+        <!--end left column-->
+
+        <!-- Right Column - Sections -->
+        <div class="right-column">
+            <section id="texts" class="hidden">
+                <h2>texts by me</h2>
+                <br />
+                <a
+                    href="https://www.academia.edu/110137230/M5live_a_historical_online_environment_for_electronic_music">m5live,
+                    2022</a><br />
+                <a href="https://www.academia.edu/29715208/Ge_rard">gérard, 2018</a><br />
+                <a href="https://www.academia.edu/77084138/Philosophical_matrixes_of_experimental_music">philosophical
+                    matrixes of experimental music, 2016</a><br />
+                <a href="https://www.academia.edu/3812417/Kimi">kimi, 2010</a><br />
+                <a href="https://www.academia.edu/5835000/Un_Gran_Solo">un gran solo, 2010</a><br />
+                <br />
+                <h2>by others</h2>
+                <br />
+                <a href="https://rdu.unc.edu.ar/handle/11086/15729">una correspondencia..., pablo araya, 2020</a><br />
+                <a
+                    href="http://sedici.unlp.edu.ar/bitstream/handle/10915/135779/Documento_completo.pdf-PDFA.pdf?sequence=1&isAllowed=y">inervación
+                    y segunda técnica en vilanos, daniel halaban, 2018</a><br />
+                <a
+                    href="https://www.semanticscholar.org/paper/Are-scores-maps%3A-a-cartographic-response-to-goodman-Miller/b2a0e29fd3856282706ca3639a85d00649ed9682">are
+                    scores maps?..., daniel miller, 2017</a><br />
+                <a
+                    href="https://www.academia.edu/34762109/El_software_generativo_en_situaci%C3%B3n_de_concierto_dos_casos_Alma_Laprida_pdf">el
+                    software generativo en situación de concierto..., alma laprida,
+                    2017</a><br />
+            </section>
+
+            <section id="teaching" class="hidden">
+                <h2>at Haute Ecole de Musique Gèneve</h2>
+                <br /><br />
+                <a href="https://wa.zztt.org">web audio code central</a><br />
+                <a href="https://github.com/zzigo/internetmusic">internet music</a><br /><br />
+                <p>
+                    Can we understand the Internet as one of the major tasks that our
+                    generation must interpret, shape, and re-discover? From studying the
+                    historical-societal and cultural environment of its foundation until
+                    the last implemented technologies on the browser, this class will
+                    focus on the creation of online instruments and art-pieces.
+                </p>
+                <br /><br /><br />
+                <h2>at Universidad Nacional de Tres de Febrero</h2>
+                <br /><br />
+                <a href="https://github.com/musiki/i1">Instrument 1: Acoustics and Organology</a><br />
+                <a href="https://github.com/musiki/i2">Instrument 2: Protocols and Hybrid Music</a><br />
+                <a href="https://github.com/musiki/cym">science and music</a><br /><br />
+                <p>
+                    How can numerical thinking contribute new mental models for thinking
+                    about music? What are the points of common emergence between the
+                    history of music and its tangible and intangible artifacts? Is it
+                    music that predicts scientific paradigms, or can the
+                    speculative-mathematical method of science construct musical
+                    meaning?
+                </p>
+                <br /><br /><br />
+                <a href="https://musiki.org.ar">musiki</a>
+            </section>
+
+            <section id="projects" class="hidden">
+                <h2>projects</h2>
+                <br />
+                the archean atmosphere<br />
+                bioshock<br />
+                incursion<br />
+                the purjinke collective<br />
+                the whorl<br />
+                limo<br />
+                pleroma<br />
+                pansmermic<br />
+                hiperincursion<br />
+                apomixis<br />
+                kokon<br />
+                bulle<br />
+                micelio<br />
+                espinor<br />
+                aquenios<br />
+                vilanos<br />
+                microbeatlogic<br />
+                qualia<br />
+                iedro<br />
+            </section>
+
+            <section id="electronic" class="hidden">
+                <h2>electronic, code and net-art</h2>
+                <br />
+                <a href="https://soog.zztt.org">soog</a><br />
+                <a href="https://m5live.zztt.org">m5live</a><br />
+                zelenbot<br />
+                <a href="https://collision.zztt.org">collision</a><br />
+                <a href="https://spam.zztt.org/">spam</a><br />
+                <a href="https://github.com/zzigo/bandoneonSimulator">bandoneon simulator</a><br />
+            </section>
+
+            <section id="installations" class="hidden">
+                <h2>installations</h2>
+                <br />
+                event horizon<br />
+                1978<br />
+                singforme<br />
+                osmos<br />
+            </section>
+
+            <section id="collabs" class="hidden">
+                <h2>collabs</h2>
+                <br />
+                <h2>film scoring</h2>
+                <br />
+                <a href="https://www.youtube.com/watch?v=aNXrYMSCfbo">reel</a><br />
+                tenfa, 2024<br />
+                una habitación simple, 2021<br />
+                the intruder, 2020<br />
+                submerged family, 2018<br />
+                zama, 2017<br />
+                te nombro azul, 2015<br />
+                <br />
+                <h2>dance</h2>
+                <br />
+                <a href="https://www.youtube.com/watch?v=uIl0-TihMrc">pensamento cintilante, 2024</a><br />
+                naked mind, 2022<br />
+                mental activity, 2012<br />
+            </section>
+        </div>
+    </div>
+
+    <!--end content wrapper-->
+
+    <script>
+        // Initialize variables
+        const video = document.getElementById("videoID");
+        let fullScreen_st = false;
+        let playAudio_st = false;
+        const elem = document.documentElement;
+        let scene,
+            camera,
+            renderer,
+            model,
+            cube,
+            material1,
+            geometry,
+            video01,
+            fluorescentGridMaterial;
+
+        // Set static title
+        document.title = "luciano azzigotti";
+
+        // Event Listeners
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "a") playAudio();
+            if (event.key === "w") sceneOne();
+            if (event.key === "f") fullScreen();
+            if (event.key === "m") toggleNav();
+            if (event.key === "q") fadeOut("content,bottom", 1000);
+            if (event.key === "Q") fadeIn("content,bottom", 1000);
+        });
+
+        // Navigation Functions
+        function openNav() {
+            document.getElementById("myNav").style.width = "100%";
+            fadeOut("content,bottom", 1000);
+        }
+
+        function closeNav() {
+            document.getElementById("myNav").style.width = "0%";
+            fadeIn("content,bottom", 1000);
+        }
+
+        const toggleNav = toggle(openNav, closeNav);
+
+        function toggle(func1, func2) {
+            let flag = false;
+            return function () {
+                flag = !flag;
+                if (flag) func1();
+                else func2();
+            };
+        }
+
+        // Animation Functions
+        function fadeOut(sections, time) {
+            const sek = document.getElementById("more");
+            sek.classList.add("fadeout");
+            setTimeout(() => {
+                sek.style.display = "none";
+                sek.classList.remove("fadeout");
+            }, time);
+        }
+
+        function fadeIn(sections, time) {
+            const sek = document.getElementById("more");
+            sek.classList.add("fadein");
+            sek.style.display = "block";
+            setTimeout(() => sek.classList.remove("fadein"), time);
+        }
+
+        // Media Controls
+        function playAudio() {
+            video.muted = !video.muted;
+        }
+
+        function fullScreen() {
+            if (!fullScreen_st) {
+                if (elem.requestFullscreen) elem.requestFullscreen();
+                else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+                else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+                fullScreen_st = true;
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen)
+                    document.webkitExitFullscreen();
+                else if (document.msExitFullscreen) document.msExitFullscreen();
+                fullScreen_st = false;
+            }
+        }
+
+        // Section Management
+        function showSections(sectionId) {
+            hideAllSections();
+            const section = document.getElementById(sectionId);
+            if (section) section.style.display = "block";
+            initSection();
+        }
+
+        function hideAllSections() {
+            document.querySelectorAll(".hidden").forEach((section) => {
+                section.style.display = "none";
+            });
+        }
+
+        function initSection() {
+            document.getElementById("more").style.display = "block";
+        }
+
+        function updateScrollValue() {
+            const scrollValueElement = document.getElementById("scrollValue");
+            scrollValueElement.textContent = `Scroll Y: ${window.scrollY}`;
+        }
+
+        // Initialize
+        window.addEventListener("scroll", updateScrollValue);
+        window.addEventListener("load", updateScrollValue);
+        initSection();
+
+        // Three.js setup and animation
+        document.addEventListener('DOMContentLoaded', function () {
+            // Make sure video is loaded and ready
+            video01 = document.getElementById("videoID");
+
+            // Force video to play
+            video01.play().catch(e => {
+                console.log("Auto-play prevented. User interaction needed to play video.");
+                // Add a click event to the document to start video on first interaction
+                document.addEventListener('click', function startVideo() {
+                    video01.play().catch(e => console.error("Error playing video:", e));
+                    document.removeEventListener('click', startVideo);
+                }, { once: true });
+            });
+
+            // Initialize Three.js scene
+            init();
+            animate();
+        });
+
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+
+            // Create camera
+            camera = new THREE.PerspectiveCamera(
+                70,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+
+            // Create renderer with antialiasing
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 0); // Transparent background
+            document.body.appendChild(renderer.domElement);
+
+            // Position camera
+            camera.position.z = 1;
+            camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+            // Create cube with video texture
+            const geometry = new THREE.BoxGeometry(1.77, 1, 1);
+
+            // Create video texture
+            video01 = document.getElementById("videoID");
+            const texture = new THREE.VideoTexture(video01);
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            texture.format = THREE.RGBFormat;
+
+            // Create material with video texture
+            material1 = new THREE.MeshBasicMaterial({ map: texture });
+
+            // Create cube mesh
+            cube = new THREE.Mesh(geometry, material1);
+            scene.add(cube);
+
+            // Handle window resize
+            window.addEventListener("resize", onWindowResize, false);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Add subtle rotation to the cube
+            if (cube) {
+                cube.rotation.x += 0.001;
+                cube.rotation.y += 0.001;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function sceneOne() {
+            const targetPosition = new THREE.Vector3(0, 0, 100);
+            const duration = 30000;
+            const startPosition = new THREE.Vector3().copy(camera.position);
+            let startTime = null;
+
+            function animate(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const progress = timestamp - startTime;
+                cube.rotation.x += 0.01;
+                cube.rotation.y += 0.01;
+
+                if (progress < duration) {
+                    const ratio = progress / duration;
+                    camera.position.lerpVectors(startPosition, targetPosition, ratio);
+                    renderer.render(scene, camera);
+                    requestAnimationFrame(animate);
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+    </script>
+
+    <!-- WaveSurfer -->
+    <script type="module">
+        import WaveSurfer from "https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.esm.js";
+
+        const wavesurfer = WaveSurfer.create({
+            container: "#waveform",
+            waveColor: "#000000",
+            progressColor: "#383351",
+            url: "inc/euglenoids.mp3",
+            sampleRate: 22050,
+        });
+
+        wavesurfer.on("interaction", () => {
+            wavesurfer.play();
+        });
+    </script>
+</body>
+
+</html>

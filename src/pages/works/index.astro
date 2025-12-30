@@ -6,9 +6,16 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
 import { getCollection } from 'astro:content';
 import FormattedDate from '../../components/FormattedDate.astro';
 
-const posts = (await getCollection('works')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+const posts = (await getCollection('works'))
+	.filter((work) => work.data.status !== 'upcoming')
+	.sort((a, b) => {
+		if (a.data.pubDate && b.data.pubDate) {
+			return b.data.pubDate.valueOf() - a.data.pubDate.valueOf();
+		}
+		return a.data.title.localeCompare(b.data.title);
+	});
+
+
 ---
 
 <!doctype html>

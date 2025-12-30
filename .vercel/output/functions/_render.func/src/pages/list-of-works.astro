@@ -1,0 +1,285 @@
+---
+export const prerender = false;
+import { getCollection } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const { searchParams } = Astro.url;
+const view = searchParams.get('view') || 'chronological';
+// collections
+const works = await getCollection('works');
+const events = await getCollection('events');
+
+// helpers
+const parseWikilink = (link) =>
+  typeof link === 'string' ? link.replace(/\[\[|\]\]/g, '') : '';
+
+// normalize works
+const processedWorks = works.map((work) => {
+  const performedByArray = Array.isArray(work.data.performedBy)
+    ? work.data.performedBy
+    : work.data.performedBy
+      ? [work.data.performedBy]
+      : [];
+
+  let performersDisplay = 'unknown performers';
+
+  if (work.data.listPerformers) {
+    performersDisplay = work.data.listPerformers;
+  } else if (performedByArray.length > 0) {
+    performersDisplay = parseWikilink(performedByArray[0]);
+  }
+
+  const workEvents = events.filter((event) => {
+    const workTitle = work.data.title.toLowerCase();
+    const eventWorks = event.data.work;
+
+    if (Array.isArray(eventWorks)) {
+      return eventWorks.some(w => w.toLowerCase() === workTitle);
+    } else if (typeof eventWorks === 'string') {
+      return eventWorks.toLowerCase() === workTitle;
+    }
+    
+    return false;
+  });
+
+  const firstPerformanceYear = work.data.pubDate
+    ? new Date(work.data.pubDate).getFullYear()
+    : null;
+
+  const firstPerformanceEvent =
+    workEvents.length > 0 ? workEvents[0].data.venue : null;
+
+  return {
+    ...work,
+    performersDisplay,
+    firstPerformanceYear,
+    firstPerformanceEvent,
+  };
+});
+
+// chronological (immutable)
+const chronologicalWorks = [...processedWorks].sort((a, b) => {
+  if (a.firstPerformanceYear && b.firstPerformanceYear) {
+    if (b.firstPerformanceYear !== a.firstPerformanceYear) {
+      return b.firstPerformanceYear - a.firstPerformanceYear;
+    }
+  }
+  if (a.firstPerformanceYear) return -1;
+  if (b.firstPerformanceYear) return 1;
+  return a.data.title.localeCompare(b.data.title);
+});
+
+// by year
+const worksByYear = chronologicalWorks.reduce((acc, work) => {
+  const year = work.firstPerformanceYear ?? 'Undated';
+  if (!acc[year]) acc[year] = [];
+  acc[year].push(work);
+  return acc;
+}, {});
+
+const sortedYears = Object.keys(worksByYear).sort((a, b) => {
+  if (a === 'Undated') return 1;
+  if (b === 'Undated') return -1;
+  return b - a;
+});
+
+// by type
+const worksByType = processedWorks.reduce((acc, work) => {
+  const tags = work.data.tags?.length ? work.data.tags : ['Untagged'];
+  tags.forEach((tag) => {
+    if (!acc[tag]) acc[tag] = [];
+    acc[tag].push(work);
+  });
+  return acc;
+}, {});
+
+const sortedTypes = Object.keys(worksByType).sort((a, b) =>
+  a.localeCompare(b)
+);
+
+sortedTypes.forEach((type) => {
+  worksByType[type] = [...worksByType[type]].sort((a, b) => {
+    if (a.firstPerformanceYear && b.firstPerformanceYear) {
+      return b.firstPerformanceYear - a.firstPerformanceYear;
+    }
+    return a.data.title.localeCompare(b.data.title);
+  });
+});
+---
+<html lang="en" data-theme="dark">
+  <head>
+    <BaseHead
+      title="List of Works"
+      description="Complete list of works by Luciano Azzigotti"
+    />
+
+    <style>
+      main {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 5em 1em;
+        background-color: var(--background);
+        color: var(--text);
+      }
+
+      h1 {
+        font-size: 1.3rem;
+        text-align: center;
+        padding-bottom: 1em;
+        font-weight: normal;
+
+      }
+
+      h2 {
+        font-size: 1rem;
+        font-weight: normal;
+        margin-top: 2.5em;
+        border-bottom: 0px solid var(--accent);
+        padding-bottom: 0.5em;
+      }
+
+      .view-options {
+        text-align: center;
+        margin-bottom: 2em;
+      }
+
+      .view-options a {
+        margin: 0 0.5em;
+        padding: 0.5em 1em;
+        border-radius: 4px;
+        text-decoration: none;
+        color: var(--text);
+      }
+
+      .view-options a.active {
+        border: 1px solid var(--accent);
+      }
+
+      .works-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .work-item {
+        padding-bottom: 1.5em;
+      }
+    </style>
+  </head>
+
+  <body>
+    <Header />
+
+    <main>
+      <h1>List of Works</h1>
+
+      <div class="view-options">
+        <a href="/list-of-works" data-astro-reload class:list={{ active: view === 'chronological' }}>
+          chronological
+        </a>
+        <a href="/list-of-works?view=year" data-astro-reload class:list={{ active: view === 'year' }}>
+          by year
+        </a>
+        <a href="/list-of-works?view=type" data-astro-reload class:list={{ active: view === 'type' }}>
+          by type
+        </a>
+      </div>
+
+      {view === 'chronological' && (
+        <ul class="works-list">
+          {chronologicalWorks.map(work => (
+            <li class="work-item">
+              <div
+                class="work-content"
+                set:html={`
+                  <strong style="color: orange;">${work.data.title}</strong>
+                  <em>${work.data.description}</em>
+                  (${work.firstPerformanceYear ?? '—'})<br>
+                  <small>
+                    premiered by ${work.performersDisplay}
+                    at ${work.firstPerformanceEvent ?? 'unknown event'}
+                    ${
+                      work.data.tags?.length
+                        ? ` - <em style="opacity:0.2;">${work.data.tags.join(', ')}</em>`
+                        : ''
+                    }
+                  </small>
+                `}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {view === 'year' && (
+        <div class="grouped-works">
+          {sortedYears.map(year => (
+            <section>
+              <h2>{year}</h2>
+              <ul class="works-list">
+                {worksByYear[year].map(work => (
+                  <li class="work-item">
+                    <div
+                      class="work-content"
+                      set:html={`
+                        <strong style="color: orange;">${work.data.title}</strong>
+                        <em>${work.data.description}</em>
+                        (${work.firstPerformanceYear ?? '—'})<br>
+                        <small>
+                          premiered by ${work.performersDisplay}
+                          at ${work.firstPerformanceEvent ?? 'unknown event'}
+                          ${
+                            work.data.tags?.length
+                              ? ` - <em style="opacity:0.2;">${work.data.tags.join(', ')}</em>`
+                              : ''
+                          }
+                        </small>
+                      `}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
+
+      {view === 'type' && (
+        <div class="grouped-works">
+          {sortedTypes.map(type => (
+            <section>
+              <h2>{type}</h2>
+              <ul class="works-list">
+                {worksByType[type].map(work => (
+                  <li class="work-item">
+                    <div
+                      class="work-content"
+                      set:html={`
+                        <strong style="color: orange;">${work.data.title}</strong>
+                        <em>${work.data.description}</em>
+                        (${work.firstPerformanceYear ?? '—'})<br>
+                        <small>
+                          premiered by ${work.performersDisplay}
+                          at ${work.firstPerformanceEvent ?? 'unknown event'}
+                          ${
+                            work.data.tags?.length
+                              ? ` - <em style="opacity:0.2;">${work.data.tags.join(', ')}</em>`
+                              : ''
+                          }
+                        </small>
+                      `}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
+    </main>
+
+    <Footer />
+  </body>
+</html>

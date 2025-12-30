@@ -1,0 +1,118 @@
+{
+	"version": 3,
+	"routes": [
+		{
+			"src": "^/category/works$",
+			"headers": {
+				"Location": "/works"
+			},
+			"status": 301
+		},
+		{
+			"src": "^/en/onkimi$",
+			"headers": {
+				"Location": "/works/kimi"
+			},
+			"status": 301
+		},
+		{
+			"src": "^/en$",
+			"headers": {
+				"Location": "/"
+			},
+			"status": 301
+		},
+		{
+			"src": "^/es/sound-installation/cantaparami$",
+			"headers": {
+				"Location": "/works/canta-para-mi"
+			},
+			"status": 301
+		},
+		{
+			"src": "^/es$",
+			"headers": {
+				"Location": "/"
+			},
+			"status": 301
+		},
+		{
+			"src": "^/espinor$",
+			"headers": {
+				"Location": "/works/espinor"
+			},
+			"status": 301
+		},
+		{
+			"src": "^/events/gutarras-del-mundo-teatro-tornavia-unsam$",
+			"headers": {
+				"Location": "/"
+			},
+			"status": 301
+		},
+		{
+			"src": "^/jaquard$",
+			"headers": {
+				"Location": "/works/jaquard"
+			},
+			"status": 301
+		},
+		{
+			"src": "^/mbl$",
+			"headers": {
+				"Location": "/works/mbl"
+			},
+			"status": 301
+		},
+		{
+			"src": "^/micelio$",
+			"headers": {
+				"Location": "/works/micelio"
+			},
+			"status": 301
+		},
+		{
+			"src": "^/sound-installation/cantaparami$",
+			"headers": {
+				"Location": "/works/canta-para-mi"
+			},
+			"status": 301
+		},
+		{
+			"src": "^/torrentesextenderse$",
+			"headers": {
+				"Location": "/works/torrentes-extenderse"
+			},
+			"status": 301
+		},
+		{
+			"src": "^/vilanos$",
+			"headers": {
+				"Location": "/works/vilanos"
+			},
+			"status": 301
+		},
+		{
+			"handle": "filesystem"
+		},
+		{
+			"src": "^/_astro/(.*)$",
+			"headers": {
+				"cache-control": "public, max-age=31536000, immutable"
+			},
+			"continue": true
+		},
+		{
+			"src": "^/_server-islands/([^/]+?)/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/_image/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/list-of-works/?$",
+			"dest": "_render"
+		}
+	]
+}

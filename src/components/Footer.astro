@@ -9,9 +9,16 @@ const today = new Date();
 			<i class="fab fa-creative-commons-by"></i>
 			<i class="fab fa-creative-commons-sa"></i>
 			<span> {today.getFullYear()} &nbsp; ZZTT</span>
-
 		</a>
 	</div>
+<div class="info-note">
+	 <a href="/ascii"> A-raw view &nbsp;&nbsp;</a> 
+	 <a href="/list-of-works"> W-list of works &nbsp;&nbsp;</a> 
+	 <a href="/listen"> L-listen space &nbsp;&nbsp;</a> 
+	  <a href="/calendar"> C-calendar</a> 
+
+	</div>
+
 	<div class="social-links">
 		<a href="https://www.youtube.com/@LucianoAzzigotti" target="_blank" class="icon-link">
 			<i class="fab fa-youtube"></i>
@@ -51,6 +58,45 @@ const today = new Date();
 		</a>
 	</div>
 </footer>
+
+<script is:inline>
+  if (!window.__zzttShortcutsInstalled) {
+    window.__zzttShortcutsInstalled = true;
+
+    document.addEventListener('keydown', (e) => {
+      if (
+        e.repeat ||
+        !(e.target instanceof HTMLElement) ||
+        e.target.matches('input, textarea') ||
+        e.metaKey || e.ctrlKey || e.altKey
+      ) return;
+
+      switch (e.key) {
+        case 'a':
+          window.location.href = '/ascii';
+          break;
+        case 'l':
+          window.location.href = '/listen';
+          break;
+        case 'c':
+          window.location.href = '/calendar';
+          break;
+		case 'w':
+          window.location.href = '/list-of-works';
+          break;
+		  case 'y':
+          window.location.href = '/list-of-works?view=year';
+          break;
+		  case 't':
+		  window.location.href = '/list-of-works?view=type';
+		  break;
+        default:
+          break;
+      }
+    });
+  }
+</script>
+
 <style>
 	footer {
 		padding: 2em 1em 6em 1em;

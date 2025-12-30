@@ -91,11 +91,26 @@ const { Content: ResearchStatementContent } = await researchStatement.render();
  
     <div class="content-block" id="works">
         <h2>works</h2>
-        <ul>
-            {works.map(work => (
-                <li><a href={`/works/${work.slug}/`}>{work.data.title}</a> ({work.data.description})</li>
-            ))}
-        </ul>
+   <ul>
+  {works.map(work => {
+    const isUpcoming = work.data.status === 'upcoming';
+
+    return (
+      <li>
+        <a href={`/works/${work.slug}/`}>
+          {work.data.title}
+        </a>
+        ({work.data.description})
+        {" "}
+        {isUpcoming && (
+          <span style="color:#0f0; opacity:0.7; margin-left:6px;">
+              📣 <i>upcoming</i>
+          </span>
+        )}
+      </li>
+    );
+  })}
+</ul>
     </div>
 
 
@@ -106,7 +121,7 @@ const { Content: ResearchStatementContent } = await researchStatement.render();
            <div class="content-block" id="preamble">
         <ResearchStatementContent />
     </div>
-    
+
          <ul>
             {research.map(item => (
                 <li><a href={`/research/${item.slug}/`}>{item.data.title}</a> - {item.data.description}</li>

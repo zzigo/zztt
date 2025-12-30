@@ -1,0 +1,114 @@
+---
+import { getCollection } from 'astro:content';
+
+// Fetch upcoming works
+const upcomingWorks = (await getCollection('works'))
+  .filter(work => work.data.status === 'upcoming')
+  .sort((a, b) => {
+    // Optional: sort by pubDate if present
+    if (a.data.pubDate && b.data.pubDate) {
+      return a.data.pubDate.getTime() - b.data.pubDate.getTime();
+    }
+    return a.data.title.localeCompare(b.data.title);
+  });
+---
+
+{upcomingWorks.length > 0 && (
+  <section class="upcoming-section">
+    <h2 class="upcoming-heading">Upcoming</h2>
+
+    <ul class="upcoming-list">
+      {upcomingWorks.map(work => (
+        <li class="upcoming-item">
+          <div class="upcoming-title-line">
+            <span class="upcoming-label">upcoming</span>
+            <strong class="upcoming-title">{work.data.title}</strong>
+          </div>
+
+          {work.data.description && (
+            <div class="upcoming-description">
+              {work.data.description}
+            </div>
+          )}
+
+          {work.data.tags?.length && (
+            <div class="upcoming-tags">
+              {work.data.tags.join(' · ')}
+            </div>
+          )}
+        </li>
+      ))}
+    </ul>
+  </section>
+)}
+
+<style>
+.upcoming-section {
+  margin-bottom: 4rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--accent-light);
+}
+
+.upcoming-heading {
+  font-size: 1.4rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+  color: var(--text);
+}
+
+.upcoming-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.upcoming-item {
+  margin-bottom: 1.5rem;
+}
+
+.upcoming-title-line {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.upcoming-title {
+  font-weight: 400;
+  color: var(--text);
+}
+
+.upcoming-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  line-height: 1;
+}
+
+.upcoming-description {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.upcoming-tags {
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  opacity: 0.4;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 768px) {
+  .upcoming-heading {
+    font-size: 1.2rem;
+  }
+
+  .upcoming-description {
+    font-size: 0.85rem;
+  }
+}
+</style>

@@ -51,11 +51,14 @@ const processedWorks = works.map((work) => {
   const firstPerformanceEvent =
     workEvents.length > 0 ? workEvents[0].data.venue : null;
 
+  const isUpcoming = work.data.pubDate && new Date(work.data.pubDate) > new Date();
+
   return {
     ...work,
     performersDisplay,
     firstPerformanceYear,
     firstPerformanceEvent,
+    isUpcoming,
   };
 });
 
@@ -166,6 +169,18 @@ sortedTypes.forEach((type) => {
       .work-item {
         padding-bottom: 1.5em;
       }
+
+      .upcoming-label {
+        font-size: 0.8em;
+        font-weight: bold;
+        padding: 0.2em 0.6em;
+        border-radius: 4px;
+        background-color: var(--accent);
+        color: var(--background);
+        margin-left: 0.5em;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
     </style>
   </head>
 
@@ -196,7 +211,9 @@ sortedTypes.forEach((type) => {
                 set:html={`
                   <strong style="color: orange;">${work.data.title}</strong>
                   <em>${work.data.description}</em>
-                  (${work.firstPerformanceYear ?? '—'})<br>
+                  (${work.firstPerformanceYear ?? '—'})
+                  ${work.isUpcoming ? '<span class="upcoming-label">Upcoming</span>' : ''}
+                  <br>
                   <small>
                     premiered by ${work.performersDisplay}
                     at ${work.firstPerformanceEvent ?? 'unknown event'}
@@ -226,7 +243,9 @@ sortedTypes.forEach((type) => {
                       set:html={`
                         <strong style="color: orange;">${work.data.title}</strong>
                         <em>${work.data.description}</em>
-                        (${work.firstPerformanceYear ?? '—'})<br>
+                        (${work.firstPerformanceYear ?? '—'})
+                        ${work.isUpcoming ? '<span class="upcoming-label">Upcoming</span>' : ''}
+                        <br>
                         <small>
                           premiered by ${work.performersDisplay}
                           at ${work.firstPerformanceEvent ?? 'unknown event'}
@@ -259,7 +278,9 @@ sortedTypes.forEach((type) => {
                       set:html={`
                         <strong style="color: orange;">${work.data.title}</strong>
                         <em>${work.data.description}</em>
-                        (${work.firstPerformanceYear ?? '—'})<br>
+                        (${work.firstPerformanceYear ?? '—'})
+                        ${work.isUpcoming ? '<span class="upcoming-label">Upcoming</span>' : ''}
+                        <br>
                         <small>
                           premiered by ${work.performersDisplay}
                           at ${work.firstPerformanceEvent ?? 'unknown event'}

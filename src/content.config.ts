@@ -29,6 +29,8 @@ const works = defineCollection({
     tags: z.array(z.string()).optional(),
     performedBy: z.union([z.string(), z.array(z.string())]).optional(),
     performances: z.union([z.string(), z.array(z.string())]).optional(),
+    status: z.enum(['upcoming', 'performed']).optional(),
+
   }),
 });
 
