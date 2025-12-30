@@ -1,10 +1,11 @@
 ---
 title: pignatari machine
 description: generative video monocanal
-pubDate: 
+pubDate: 2007-11-02
 heroImage: https://i.imgur.com/vxbhLsr.png
 tags: 
 - video
+- generative
 performances: viva-musica-festival-magma
 ---
 
