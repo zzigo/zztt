@@ -1,17 +1,10 @@
 ---
-export const prerender = false;
 
 import { getCollection } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 
-const { searchParams } = Astro.url;
-const view = searchParams.get('view') || 'chronological';
-
-const isChronological = view === 'chronological';
-const isYear = view === 'year';
-const isType = view === 'type';
 
 // collections
 const works = await getCollection('works');
@@ -205,25 +198,19 @@ const sortedTypes = Object.keys(worksByType).sort();
     <main>
       <h1>List of Works</h1>
 
-      <nav class="view-options">
-        <a href="/list-of-works" class:list={{ active: isChronological }}>
-          chronological
-        </a>
-        <a href="/list-of-works?view=year" class:list={{ active: isYear }}>
-          by year
-        </a>
-        <a href="/list-of-works?view=type" class:list={{ active: isType }}>
-          by type
-        </a>
-      </nav>
+       <nav class="view-options">
+    <a href="/list-of-works">chronological</a>
+    <a href="/list-of-works?view=year">by year</a>
+    <a href="/list-of-works?view=type">by type</a>
+  </nav>
 
       <!-- CHRONOLOGICAL -->
-      <section hidden={!isChronological}>
+      <section data-view="chronological">
         <ul class="works-list">
           {chronologicalWorks.map(work => (
             <li class="work-item">
               <span class="work-line">
-                <span class="work-title">{work.data.title}</span>
+                <a href={`/works/${work.slug}/`} class="work-title">{work.data.title}</a>
                 <span class="work-description">
                   {work.data.description}
                 </span>
@@ -245,7 +232,7 @@ const sortedTypes = Object.keys(worksByType).sort();
       </section>
 
       <!-- BY YEAR -->
-      <section hidden={!isYear}>
+      <section data-view="year">
         {sortedYears.map(year => (
           <section>
             <h2>{year}</h2>
@@ -253,7 +240,7 @@ const sortedTypes = Object.keys(worksByType).sort();
               {worksByYear[year].map(work => (
                 <li class="work-item">
                   <span class="work-line">
-                    <span class="work-title">{work.data.title}</span>
+                <a href={`/works/${work.slug}/`} class="work-title">{work.data.title}</a>
                     <span class="work-description">
                     {work.data.description}
                     </span>
@@ -269,7 +256,7 @@ const sortedTypes = Object.keys(worksByType).sort();
       </section>
 
       <!-- BY TYPE -->
-      <section hidden={!isType}>
+      <section data-view="type">
         {sortedTypes.map(type => (
           <section>
             <h2>{type}</h2>
@@ -277,7 +264,7 @@ const sortedTypes = Object.keys(worksByType).sort();
               {worksByType[type].map(work => (
                 <li class="work-item">
                   <span class="work-line">
-                    <span class="work-title">{work.data.title}</span>
+                <a href={`/works/${work.slug}/`} class="work-title">{work.data.title}</a>
                     <span class="work-description">
                       {work.data.description}
                     </span>
@@ -294,5 +281,23 @@ const sortedTypes = Object.keys(worksByType).sort();
     </main>
 
     <Footer />
+
+    <script>
+  (() => {
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view') || 'chronological';
+
+    document.querySelectorAll('section[data-view]').forEach(section => {
+      section.style.display =
+        section.dataset.view === view ? 'block' : 'none';
+    });
+
+    document.querySelectorAll('.view-options a').forEach(a => {
+      const v = new URL(a.href).searchParams.get('view') || 'chronological';
+      if (v === view) a.classList.add('active');
+    });
+  })();
+</script>
   </body>
 </html>
+
