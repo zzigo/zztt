@@ -154,13 +154,13 @@ const events = defineCollection({
    SCORES
    ========================= */
 
-const scores = defineCollection({
-  schema: z.object({
-    title: z.string(),
-    description: z.string(),
-    pdf: z.string(),
-  }),
-});
+// const scores = defineCollection({
+//   schema: z.object({
+//     title: z.string(),
+//     description: z.string(),
+//     pdf: z.string(),
+//   }),
+// });
 
 /* =========================
    PAGES
@@ -186,6 +186,6 @@ export const collections = {
   research,
   performers,
   events,
-  scores,
+  // scores,
   pages,
 };
