@@ -194,8 +194,12 @@ const venueInfo = parseVenue(venue);
 
                     {work && (
                         <div class="meta-section">
-                            <h3>Work</h3>
-                            <p><a href={`/works/${slugify(parseWikilink(work))}`}>{parseWikilink(work)}</a></p>
+                            <h3>{Array.isArray(work) && work.length > 1 ? 'Works' : 'Work'}</h3>
+                            {(Array.isArray(work) ? work : [work]).map(w => {
+                                const workName = parseWikilink(w);
+                                const workSlug = slugify(workName);
+                                return <p><a href={`/works/${workSlug}`}>{workName}</a></p>
+                            })}
                         </div>
                     )}
 

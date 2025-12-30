@@ -116,16 +116,16 @@ today.setHours(0, 0, 0, 0);
               </td>
               <td>{eventInstance.hour || '—'}</td>
               <td class="work-cell">
-                {(Array.isArray(eventInstance.data.work) ? eventInstance.data.work : [eventInstance.data.work]).map((workName, index, arr) => {
-                  const cleanWorkName = workName.replace(/\.md$/, '');
-                  const workSlug = cleanWorkName.toLowerCase().replaceAll(' ', '-');
-                  return (
-                    <>
-                      <a href={`/works/${workSlug}`}>{cleanWorkName}</a>
-                      {index < arr.length - 1 && ', '}
-                    </>
-                  );
-                })}
+                {
+                  Array.isArray(eventInstance.data.work)
+                    ? eventInstance.data.work.map((workName, index) => (
+                        <>
+                          <a href={`/works/${workName.toLowerCase().replaceAll(' ', '-')}`}>{workName.replace(/\.md$/, '')}</a>
+                          {index < eventInstance.data.work.length - 1 ? ', ' : ''}
+                        </>
+                      ))
+                    : <a href={`/works/${eventInstance.data.work.toLowerCase().replaceAll(' ', '-')}`}>{eventInstance.data.work.replace(/\.md$/, '')}</a>
+                }
               </td>
               <td>
                 {performersArray.map((performer, index) => {
