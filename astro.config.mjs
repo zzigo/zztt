@@ -9,6 +9,7 @@ import fs from "fs";
 
 import remarkQuoteCallout from "./remark-quote-callout.mjs";
 import remarkWikilinks from "./remark-wikilinks.mjs";
+import remarkEmbeds from "./remark-embeds.mjs";
 
 export default defineConfig({
   // ✅ STATIC OUTPUT — no server, no functions
@@ -28,6 +29,7 @@ export default defineConfig({
       remarkPlugins: [
         remarkMath,
         remarkQuoteCallout,
+        remarkEmbeds,
         remarkWikilinks,
       ],
       rehypePlugins: [
@@ -41,6 +43,7 @@ export default defineConfig({
   markdown: {
     remarkPlugins: [
       remarkMath,
+      remarkEmbeds,
       remarkWikilinks,
       remarkQuoteCallout,
     ],

@@ -1,0 +1,28 @@
+---
+title: personal data sheet
+---
+- 1975 born in Buenos Aires
+- 1991 gold medal William Conservatoire for the piano program
+- 1995-2002 stdying composition at Arts Faculty, with Mariano Etkin and Cecilia Villanueva, and philosophy at the University of La Plata.
+- 2005 composition classes with Julio Viera, Jorge Sad, Francisco Colasanto at LIPM.
+- 2007 Fundaction Telefónica interactive program scholarship
+- 2008 until 2012 music analysis teaching position at Arts Faculty, UNLP.
+- 2009 National Ars Foundation stipend, *spam* & *kimi*.
+- 2010 Melos-Gandini Scholarship, with Gerardo Gandini.
+- 2010 *Qualia*
+- 2011 conDiT foundation 
+- 2011 *Epinikia & Agonistics
+- 2013 to present,teaching position at UNTREF, Music Bachelor, instruments, science & music , composition seminars.
+- 2013 *microbeatlogic*
+- 2014 masterclasses in Badajoz, Canarias, Madeira and Iguazu conservatoires.
+- 2014 *vilanos* 
+- 2015 container foundation, premiere of *floema*
+- 2016 masterclass at Goldsmith University
+- 2017 National Composition Prize, Juan Carlos Paz
+- 2018 music director at TACEC, Teatro Argentino de La Plata
+- 2020 studying creative practice master at Hoschule der Künste Bern with Xavier Dayer and Simon
+- 2021 teaching position at Haute école de musique de Genève, Internet Music.
+- 2021 masterclass at HEM, Genève, Switzerland internet music.
+- 2022 Silver Condor, best Musi for the film "The Intruder".
+- 2022 *plerome*
+- 2024 *the entanglement* 

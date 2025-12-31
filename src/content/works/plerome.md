@@ -12,6 +12,8 @@ performances:
   - "[[Plerome @Progr Bern]]"
 ---
 
+<iframe title="Luciano Azzigotti | Plerome (2022) by reConvert Project" src="https://www.youtube.com/embed/Y1kdH9UFtn8?feature=oembed" height="113" width="200" allowfullscreen="" allow="fullscreen" style="aspect-ratio: 1.76991 / 1; width: 100%; height: 100%;"></iframe>
+
 ![](https://i.imgur.com/YEr4g8g.jpeg)
 ![](https://i.imgur.com/ZrIh9Zh.png)
 “…𝑡ℎ𝑒 𝑝𝑟𝑖𝑚𝑎𝑟𝑦 𝑠𝑢𝑏𝑗𝑒𝑐𝑡 𝑜𝑓 𝑔𝑒𝑛𝑒𝑟𝑎𝑙 𝑜𝑟𝑔𝑎𝑛𝑜𝑙𝑜𝑔𝑦, 𝑤ℎ𝑖𝑐ℎ 𝑖𝑠 𝑡𝑒𝑟𝑡𝑖𝑎𝑟𝑦 𝑟𝑒𝑡𝑒𝑛𝑡𝑖𝑜𝑛, 𝑎𝑛𝑑 𝑚𝑜𝑟𝑒 𝑝𝑟𝑒𝑐𝑖𝑠𝑒𝑙𝑦 ℎ𝑦𝑝𝑜𝑚𝑛𝑒𝑠𝑖𝑐 𝑡𝑒𝑟𝑡𝑖𝑎𝑟𝑦 𝑟𝑒𝑡𝑒𝑛𝑡𝑖𝑜𝑛 𝑖𝑛𝑠𝑜𝑓𝑎𝑟 𝑎𝑠 𝑖𝑡 𝑖𝑠 𝑖𝑟𝑟𝑒𝑑𝑢𝑐𝑖𝑏𝑙𝑦 𝑝ℎ𝑎𝑟𝑚𝑎𝑐𝑜𝑙𝑜𝑔𝑖𝑐𝑎𝑙, 𝑐𝑜𝑛𝑓𝑒𝑟𝑠 𝑎 𝑐𝑜𝑛𝑠𝑡𝑖𝑡𝑢𝑡𝑖𝑣𝑒 𝑎𝑛𝑑 𝑡ℎ𝑒𝑟𝑒𝑓𝑜𝑟𝑒 𝑖𝑟𝑟𝑒𝑑𝑢𝑐𝑖𝑏𝑙𝑒 𝑏𝑒𝑎𝑟𝑖𝑛𝑔 𝑜𝑓 𝑛𝑜𝑒𝑡𝑖𝑐 𝑙𝑜𝑐𝑎𝑙𝑖𝑡𝑦 𝑜𝑛 𝑡𝑜𝑑𝑎𝑦'𝑠 𝑒𝑥𝑜𝑠𝑜𝑚𝑎𝑡𝑖𝑐 𝑠𝑖𝑡𝑢𝑎𝑡𝑖𝑜𝑛”. Bernard Stiegler 
