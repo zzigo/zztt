@@ -5,19 +5,22 @@ pubDate: 2014-10-16
 heroImage: https://i.imgur.com/AaWgBWw.jpeg
 performances:
   - "[[eventHorizon@panal361]]"
+comissioned: panal361
 tags: 
   - installation
 ---
 
 <iframe title="horizonte de sucesos" src="https://www.youtube.com/embed/2zwKj8rToko?feature=oembed" height="113" width="200" allowfullscreen="" allow="fullscreen" style="aspect-ratio: 1.76991 / 1; width: 100%; height: 100%;"></iframe>
+
 ![](https://i.imgur.com/l6uVr18.jpeg)
 ![](https://i.imgur.com/a5orVUi.jpeg)
 ![](https://i.imgur.com/nucQhRn.jpeg)
-
 ![](https://i.imgur.com/7FG8U2P.jpeg)
 ![](https://i.imgur.com/XvscGlP.jpeg)
 ![](https://i.imgur.com/veRjGHL.jpeg)
 ![](https://i.imgur.com/uFFaH5b.jpeg)
+
+
 <img src="https://i.imgur.com/DYZhXNv.png" style="display:flex; align-items:center; filter: invert(1);" />
 <img src="https://i.imgur.com/NE3DNTu.png" style="display:flex; align-items:center; filter: invert(1);" />
 
