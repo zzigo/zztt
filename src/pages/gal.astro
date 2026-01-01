@@ -1,0 +1,98 @@
+---
+import { getCollection } from "astro:content";
+import FullGallery from "../components/FullGallery.jsx";
+import BaseHead from "../components/BaseHead.astro";
+import { SITE_TITLE } from "../consts";
+import Header from "../components/Header.astro";
+
+// Helper to generate Imgur thumbnails
+// s = Small Square (90x90)
+// b = Big Square (160x160)
+// t = Small Thumbnail (160x160)
+// m = Medium Thumbnail (320x320)
+// l = Large Thumbnail (640x640)
+// h = Huge Thumbnail (1024x1024)
+function getImgurThumbnail(url, size = 'l') {
+  if (!url) return url;
+  if (url.includes('imgur.com')) {
+    // Avoid double-thumbnailing if already present (basic check)
+    // This regex looks for the file extension and inserts the size char before it
+    return url.replace(/(\.[^.]+)$/, `${size}$1`);
+  }
+  return url;
+}
+
+const works = await getCollection("works");
+const research = await getCollection("research");
+const events = await getCollection("events");
+
+let allImages = [];
+
+function extractImages(collection, type) {
+  collection.forEach((item) => {
+    // 1. Check heroImage
+    if (item.data.heroImage) {
+      allImages.push({
+        src: item.data.heroImage,
+        thumbnail: getImgurThumbnail(item.data.heroImage, 'm'), // Use medium for grid
+        title: item.data.title || item.data.eventName || "Untitled",
+        type: type,
+        slug: item.slug || item.id
+      });
+    }
+
+    // 2. Parse Markdown Body for images
+    // Regex for standard markdown images: !alt
+    const mdRegex = /!\[.*?\]\((.*?)\)/g;
+    let match;
+    while ((match = mdRegex.exec(item.body)) !== null) {
+      const url = match[1];
+      allImages.push({
+        src: url,
+        thumbnail: getImgurThumbnail(url, 'm'),
+        title: item.data.title || item.data.eventName || "Untitled",
+        type: type,
+        slug: item.slug || item.id
+      });
+    }
+
+    // Regex for HTML img tags: <img src="url" ... />
+    const htmlRegex = /<img.*?src="'["']/g;
+    while ((match = htmlRegex.exec(item.body)) !== null) {
+      const url = match[1];
+      allImages.push({
+        src: url,
+        thumbnail: getImgurThumbnail(url, 'm'),
+        title: item.data.title || item.data.eventName || "Untitled",
+        type: type,
+        slug: item.slug || item.id
+      });
+    }
+  });
+}
+
+extractImages(works, "work");
+extractImages(research, "research");
+extractImages(events, "event");
+
+// Shuffle images for a more "gallery" feel (optional, can remove if chronological is preferred)
+allImages = allImages.sort(() => Math.random() - 0.5);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={`Gallery - ${SITE_TITLE}`} description="Full visual archive" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <Header />
+    <FullGallery client:only="react" images={allImages} />
+  </body>
+</html>
