@@ -5,7 +5,6 @@ pubDate: 2014-10-16
 heroImage: https://i.imgur.com/AaWgBWw.jpeg
 performances:
   - "[[eventHorizon@panal361]]"
-comssioned: panal361
 tags: 
   - installation
 ---

@@ -93,7 +93,7 @@ today.setHours(0, 0, 0, 0);
         {eventInstances.map(eventInstance => {
           const performersArray = Array.isArray(eventInstance.data.performedBy) 
             ? eventInstance.data.performedBy
-            : [eventInstance.data.performedBy];
+            : (eventInstance.data.performedBy ? [eventInstance.data.performedBy] : []);
 
           const performersString = performersArray.join(', ');
           const isPast = eventInstance.date < today;
