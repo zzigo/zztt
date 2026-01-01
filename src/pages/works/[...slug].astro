@@ -3,6 +3,8 @@ import { type CollectionEntry, getCollection } from 'astro:content';
 import BlogPost from '../../layouts/BlogPost.astro';
 import EventsList from '../../components/EventsList.astro';
 import { render } from 'astro:content';
+import ContentGallery from '../../components/ContentGallery.jsx';
+
 
 export async function getStaticPaths() {
 	const posts = await getCollection('works');
@@ -59,7 +61,9 @@ const hasEvents = workEvents.length > 0;
 			<EventsList filterByWork={post.data.title} showFilters={false} />
 		</section>
 	)}
+	<ContentGallery client:load />
 </BlogPost>
+
 
 <style>
 	.work-events-section {

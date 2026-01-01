@@ -20,6 +20,7 @@
     "@tweenjs/tween.js": "^25.0.0",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
+    "@uiw/react-heat-map": "^2.3.3",
     "@wasm-audio-decoders/flac": "^0.2.2",
     "astro-expressive-code": "^0.40.0",
     "markdown-it": "^14.1.0",
@@ -35,7 +36,8 @@
     "remark-mermaidjs": "^7.0.0",
     "three": "^0.172.0",
     "tone": "^15.0.4",
-    "unist-util-visit": "^5.0.0"
+    "unist-util-visit": "^5.0.0",
+    "yet-another-react-lightbox": "^3.28.0"
   },
   "devDependencies": {
     "@types/three": "^0.172.0",

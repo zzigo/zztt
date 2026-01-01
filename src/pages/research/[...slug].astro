@@ -2,6 +2,9 @@
 import { type CollectionEntry, getCollection } from 'astro:content';
 import BlogPost from '../../layouts/ResearchPost.astro';
 import { render } from 'astro:content';
+import ContentGallery from '../../components/ContentGallery.jsx';
+
+
 
 export async function getStaticPaths() {
 	const posts = await getCollection('research');
@@ -38,3 +41,5 @@ const { Content } = await render(post);
 <BlogPost {...post.data}>
 	<Content />
 </BlogPost>
+<ContentGallery client:load />
+

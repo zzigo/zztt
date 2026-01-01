@@ -5,6 +5,7 @@ import Footer from '../../components/Footer.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
 import { getCollection } from 'astro:content';
 
+
 const posts = (await getCollection('works'))
 	.filter((work) => work.data.status !== 'upcoming')
 	.sort((a, b) => {
@@ -113,7 +114,7 @@ const posts = (await getCollection('works'))
 									<img width={720} height={360} src={post.data.heroImage} alt="" />
 									<h4 class="title">
 										{post.data.title}
-										<span>({post.data.pubDate.getFullYear()})</span>
+										<span style="font-size: 0.6em; opacity: 0.6;">({post.data.pubDate.getFullYear()})</span>
 									</h4>
 									<p class="description">{post.data.description}</p>
 								</a>

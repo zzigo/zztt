@@ -9,7 +9,7 @@ tags:
   - generative
 performances: "[[apomixis @CCK]]"
 ---
-<iframe title="Apomixis Megáspora Teaser" src="https://www.youtube.com/embed/Qgl_nK7T8ME?feature=oembed" height="113" width="200" style="aspect-ratio: 1.76991 / 1; width: 100%; height: 100%;" allowfullscreen="" allow="fullscreen"></iframe>
+<iframe title="Apomixis Megáspora Teaser" src="https://www.youtube.com/embed/jCdQ02JPp8o?feature=oembed" height="113" width="200" style="aspect-ratio: 1.76991 / 1; width: 100%; height: 100%;" allowfullscreen="" allow="fullscreen"></iframe>
 
 Apomixis is a set of pieces for large organ, composed to be played automatically through a generative MIDI system on the 4-manual Klais organ, installed in the Symphonic Hall of Kirchner Cultural Centre.
 

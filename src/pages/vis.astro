@@ -1,0 +1,96 @@
+---
+import BaseHead from "../components/BaseHead.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
+import { getCollection } from "astro:content";
+import ActivityHeatmap from "../components/ActivityHeatmap";
+
+// 1. Fetch all collections
+const works = await getCollection("works");
+const research = await getCollection("research");
+const events = await getCollection("events");
+
+// 2. Process data into a map to handle overlaps
+// Priority: Work (Green) > Research (Violet) > Event (Blue)
+const dataMap = new Map();
+
+function addEntry(dateObj, type, title) {
+  if (!dateObj) return;
+  // Format date as YYYY-MM-DD
+  const dateStr = dateObj.toISOString().split('T')[0];
+  
+  const existing = dataMap.get(dateStr);
+  
+  // If no entry exists, create one
+  if (!existing) {
+    dataMap.set(dateStr, { date: dateStr, type, titles: [title] });
+    return;
+  }
+
+  // If entry exists, update priority and append title
+  existing.titles.push(title);
+  
+  // Update type priority
+  if (type === 'work') {
+    existing.type = 'work';
+  } else if (type === 'research' && existing.type !== 'work') {
+    existing.type = 'research';
+  }
+  // If it's 'event', we only keep it if existing is also 'event' (already set), 
+  // otherwise we keep the higher priority type (work/research).
+}
+
+works.forEach(w => {
+  if (w.data.status !== 'upcoming') {
+    addEntry(w.data.pubDate, 'work', w.data.title);
+  }
+});
+
+research.forEach(r => {
+  addEntry(r.data.pubDate, 'research', r.data.title);
+});
+
+events.forEach(e => {
+  if (e.data.dates) {
+    e.data.dates.forEach(d => {
+      addEntry(d.date, 'event', e.data.eventName);
+    });
+  }
+});
+
+// 3. Convert map to array for the component
+const heatmapData = Array.from(dataMap.values()).map(item => ({
+  date: item.date,
+  count: 1, // Required by library to show as active
+  type: item.type,
+  content: item.titles.join(', ')
+}));
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`Activity - ${SITE_TITLE}`} description="Activity Heatmap" />
+		<style>
+			main {
+				max-width: 1200px;
+				margin: 0 auto;
+				padding: 6rem 2rem 2rem 2rem;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+            <h1 style="margin-bottom: 2rem;">Activity Log</h1>
+            <p style="margin-bottom: 3rem; color: var(--text-muted);">
+                <span style="color: #4caf50; font-weight: bold;">■</span> Works &nbsp;
+                <span style="color: #ee82ee; font-weight: bold;">■</span> Research &nbsp;
+                <span style="color: rgba(60, 100, 255, 0.8); font-weight: bold;">■</span> Events
+            </p>
+			<ActivityHeatmap client:only="react" data={heatmapData} />
+		</main>
+		<Footer />
+	</body>
+</html>
