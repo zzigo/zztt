@@ -1,14 +1,15 @@
 ---
 title: event horizon
 description: curie motor, flash, subwoofer, retort stand
-pubDate: 2014-10-18
+pubDate: 2014-10-16
 heroImage: https://i.imgur.com/AaWgBWw.jpeg
 performances:
   - "[[eventHorizon@panal361]]"
 comssioned: panal361
 tags: 
-  -installation
+  - installation
 ---
+
 <iframe title="horizonte de sucesos" src="https://www.youtube.com/embed/2zwKj8rToko?feature=oembed" height="113" width="200" allowfullscreen="" allow="fullscreen" style="aspect-ratio: 1.76991 / 1; width: 100%; height: 100%;"></iframe>
 ![](https://i.imgur.com/l6uVr18.jpeg)
 ![](https://i.imgur.com/a5orVUi.jpeg)
