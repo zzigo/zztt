@@ -23,7 +23,7 @@ function parseAnyDate(input) {
       const mo = Number(m[2]) - 1;
       const da = Number(m[3]);
       const d = new Date(y, mo, da);
-cel      return Number.isNaN(d.valueOf()) ? null : d;
+      return Number.isNaN(d.valueOf()) ? null : d;
     }
 
     // Handle "YYYY/MM/DD"
