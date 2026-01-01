@@ -4,7 +4,6 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
 import { getCollection } from 'astro:content';
-import FormattedDate from '../../components/FormattedDate.astro';
 
 const posts = (await getCollection('works'))
 	.filter((work) => work.data.status !== 'upcoming')
@@ -64,12 +63,22 @@ const posts = (await getCollection('works'))
 				color: rgb(var(--white));
 				line-height: 1;
 			}
-			.date {
+
+			h4{
+				font-size: 1.1em; 
+				padding-top: 1em;
+				padding-bottom: 0.2em;
+				font-weight: normal;
+				/* opacity: 0.6; */
+			}
+			.description {
 				margin: 0;
+				font-size: 0.9em;
+				opacity: 60%;
 				color: rgb(var(--gray));
 			}
 			ul li a:hover h4,
-			ul li a:hover .date {
+			ul li a:hover .description {
 				color: rgb(var(--accent));
 			}
 			ul a:hover img {
@@ -102,10 +111,11 @@ const posts = (await getCollection('works'))
 							<li>
 								<a href={`/works/${post.id.replace(/\.md$/, '')}/`}>
 									<img width={720} height={360} src={post.data.heroImage} alt="" />
-									<h4 class="title">{post.data.title}</h4>
-									<p class="date">
-										<FormattedDate date={post.data.pubDate} />
-									</p>
+									<h4 class="title">
+										{post.data.title}
+										<span>({post.data.pubDate.getFullYear()})</span>
+									</h4>
+									<p class="description">{post.data.description}</p>
 								</a>
 							</li>
 						))

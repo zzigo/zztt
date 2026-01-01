@@ -177,7 +177,10 @@ body.menu-open .viewport {
             <img src={post.data.heroImage} alt={post.data.title} loading="lazy">
           </a>
           <div class="entry-info">
-            <h3>{post.data.title}</h3>
+            <h3>
+              {post.data.title}
+              <span style="font-size: 0.6em; opacity: 0.6;">({post.data.pubDate.getFullYear()})</span>
+            </h3>
             <p>{post.data.description}</p>
           </div>
         </div>
@@ -191,7 +194,10 @@ body.menu-open .viewport {
             <img src={post.data.heroImage} alt={post.data.title} loading="lazy">
           </a>
           <div class="entry-info">
-            <h3>{post.data.title}</h3>
+            <h3>
+              {post.data.title}
+              <span style="font-size: 0.6em; opacity: 0.6;">({post.data.pubDate.getFullYear()})</span>
+            </h3>
             <p>{post.data.description}</p>
           </div>
         </div>
