@@ -16,7 +16,10 @@ const performerSlugs = allPerformers.map(p => p.slug);
 
 // Slugify helper
 const slugify = (text: string) => {
-    return text.toString().toLowerCase()
+    return text.toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
         .replace(/\s+/g, '-')
         .replace(/&/g, '-and-')
         .replace(/[^\w\-]+/g, '')
@@ -120,11 +123,11 @@ today.setHours(0, 0, 0, 0);
                   Array.isArray(eventInstance.data.work)
                     ? eventInstance.data.work.map((workName, index) => (
                         <>
-                          <a href={`/works/${workName.toLowerCase().replaceAll(' ', '-')}`}>{workName.replace(/\.md$/, '')}</a>
+                          <a href={`/works/${slugify(workName)}`}>{workName.replace(/\.md$/, '')}</a>
                           {index < eventInstance.data.work.length - 1 ? ', ' : ''}
                         </>
                       ))
-                    : <a href={`/works/${eventInstance.data.work.toLowerCase().replaceAll(' ', '-')}`}>{eventInstance.data.work.replace(/\.md$/, '')}</a>
+                    : <a href={`/works/${slugify(eventInstance.data.work)}`}>{eventInstance.data.work.replace(/\.md$/, '')}</a>
                 }
               </td>
               <td>
@@ -160,7 +163,9 @@ today.setHours(0, 0, 0, 0);
                     {eventInstance.data.eventName}
                   </a>
                 ) : (
-                  eventInstance.data.eventName
+                  <a href={`/content/event/${slugify(eventInstance.data.eventName)}`}>
+                    {eventInstance.data.eventName}
+                  </a>
                 )}
               </td>
               <td>

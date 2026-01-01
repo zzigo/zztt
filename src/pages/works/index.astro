@@ -25,6 +25,10 @@ const posts = (await getCollection('works'))
 		<style>
 			main {
 				width: 960px;
+				  margin: 0.75rem auto 3rem auto !important;
+				  padding: 4em;
+
+
 			}
 			ul {
 				display: flex;
@@ -66,15 +70,17 @@ const posts = (await getCollection('works'))
 			}
 
 			h4{
-				font-size: 1.1em; 
-				padding-top: 1em;
+				font-size: 1.2em; 
+				padding-top: 0.1em;
 				padding-bottom: 0.2em;
 				font-weight: normal;
 				/* opacity: 0.6; */
 			}
 			.description {
-				margin: 0;
-				font-size: 0.9em;
+				margin: 0em;
+				margin-top:;
+				padding-bottom: 2em;
+				font-size: 1em;
 				opacity: 60%;
 				color: rgb(var(--gray));
 			}
@@ -114,9 +120,9 @@ const posts = (await getCollection('works'))
 									<img width={720} height={360} src={post.data.heroImage} alt="" />
 									<h4 class="title">
 										{post.data.title}
-										<span style="font-size: 0.6em; opacity: 0.6;">({post.data.pubDate.getFullYear()})</span>
+										<span class="year">({post.data.pubDate.getFullYear()})</span>
 									</h4>
-									<p class="description">{post.data.description}</p>
+									<span class="description">{post.data.description}</span>
 								</a>
 							</li>
 						))

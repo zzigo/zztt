@@ -101,7 +101,7 @@ export default function ActivityHeatmap({ data = [] }) {
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.5rem',
+        gap: '0rem',
       }}
     >
       {tooltip && (
@@ -120,7 +120,7 @@ export default function ActivityHeatmap({ data = [] }) {
             zIndex: 9999,
             border: `1px solid ${tooltip.color}`,
             boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-            maxWidth: '300px',
+            maxWidth: '1000px',
             backdropFilter: 'blur(4px)',
           }}
         >
@@ -135,7 +135,7 @@ export default function ActivityHeatmap({ data = [] }) {
             {tooltip.type || 'Activity'}
           </div>
           <div style={{ marginBottom: '4px', opacity: 0.7, fontSize: '0.75rem' }}>{tooltip.date}</div>
-          <div style={{ lineHeight: '1.4' }}>{tooltip.content}</div>
+          <div style={{ lineHeight: '1' }}>{tooltip.content}</div>
         </div>
       )}
 
@@ -170,7 +170,7 @@ export default function ActivityHeatmap({ data = [] }) {
                 value={normalized}
                 startDate={startDate}
                 endDate={endDate}
-                width={hmWidth}
+                width={Math.max(hmWidth, 1300)}
                 rectSize={rectSize}
                 space={space}
                 legendCellSize={0}

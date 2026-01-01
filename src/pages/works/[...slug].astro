@@ -13,7 +13,7 @@ export async function getStaticPaths() {
 	
 	posts.forEach((post) => {
 		const originalSlug = post.id.replace(/\.md$/, '');
-		const normalizedSlug = originalSlug.toLowerCase().replace(/\s+/g, '-');
+		const normalizedSlug = originalSlug.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '-');
 		
 		// Add the normalized lowercase version as primary
 		paths.push({
