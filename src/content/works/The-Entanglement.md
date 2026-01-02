@@ -8,10 +8,8 @@ performances:
 tags:
   - dance
   - symphonic
-length: 63:00
 performedBy:
   - "[[Orquesta do Teatro Municipal do São Paulo]]"
-listPerformers: HELLO
 ---
 
 
