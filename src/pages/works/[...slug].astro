@@ -5,15 +5,28 @@ import ContentGallery from '../../components/ContentGallery.jsx';
 
 export async function getStaticPaths() {
     const posts = await getCollection('works');
-    return posts.map((post) => {
-        const originalSlug = post.id.replace(/\.md$/, '');
-        const normalizedSlug = originalSlug.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '-');
+    const paths = [];
+
+    for (const post of posts) {
+        const uniqueSlugs = new Set();
         
-        return {
-            params: { slug: normalizedSlug },
-            props: post,
-        };
-    });
+        // 1. Astro's slug (from filename, lowercase, dasherized)
+        uniqueSlugs.add(post.slug);
+
+        // 2. Slug from Title (to handle different casing)
+        const titleSlug = post.data.title.replace(/\s+/g, '-');
+        uniqueSlugs.add(titleSlug); // e.g., The-Entanglement
+        uniqueSlugs.add(titleSlug.toLowerCase()); // e.g., the-entanglement
+
+        for (const slug of uniqueSlugs) {
+            paths.push({
+                params: { slug },
+                props: post,
+            });
+        }
+    }
+
+    return paths;
 }
 
 type Props = CollectionEntry<'works'>;

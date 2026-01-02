@@ -1,7 +1,7 @@
 ---
 dates: 
  - "2008-10-15-17:00"
-work: Osmos
+work: osmos
 performedBy: installation
 eventName: Estados del Agua
 venue: Objeto-A Gallery
