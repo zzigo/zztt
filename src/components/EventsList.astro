@@ -157,13 +157,14 @@ today.setHours(0, 0, 0, 0);
                   );
                 })}
               </td>
-              <td>
+                        <td>
                 {eventInstance.data.url ? (
                   <a href={eventInstance.data.url} target="_blank" rel="noopener noreferrer">
                     {eventInstance.data.eventName}
                   </a>
                 ) : (
-                  <a href={`/content/event/${slugify(eventInstance.data.eventName)}`}>
+                  /* Cambiamos slugify(eventName) por el slug real del archivo */
+                  <a href={`/events/${eventInstance.slug}`}>
                     {eventInstance.data.eventName}
                   </a>
                 )}

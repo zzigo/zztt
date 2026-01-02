@@ -4,40 +4,12 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import FormattedDate from '../components/FormattedDate.astro';
-import PdfFlipbook from '../components/PdfFlipbook.astro';
 
 type Props = CollectionEntry<'blog' | 'works' | 'research'>['data'];
 
-const { title, description, pubDate, updatedDate, heroImage, performedBy, performances } = Astro.props as Props;
-
-const slugify = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-const parseWikilink = (link: string) => link.replace(/\[\[|\]\]/g, '');
-
-const performancesArray = Array.isArray(performances) ? performances : (performances ? [performances] : []);
-const performedByArray = Array.isArray(performedBy) ? performedBy : (performedBy ? [performedBy] : []);
-
-const isPartial = Astro.url.searchParams.get('partial') === 'true';
+const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 ---
 
-{isPartial ? (
-	<>
-		{heroImage && (
-			<div class="hero-image">
-				<img 
-					width={1020} 
-					height={510} 
-					src={heroImage} 
-					alt={title}
-					loading="lazy"
-					style="max-width: 100%; height: auto;"
-				/>
-			</div>
-		)}
-		<div class="prose">
-			<slot />
-		</div>
-	</>
-) : (
 <html lang="en" data-theme="dark">
 	<head>
 		<BaseHead title={title} description={description} />
@@ -61,7 +33,7 @@ const isPartial = Astro.url.searchParams.get('partial') === 'true';
 			}
 			.main-content {
 				flex-grow: 1;
-				min-width: 0; /* Prevents overflow issues in flex children */
+				min-width: 0;
 			}
 
 			@media (min-width: 768px) {
@@ -81,41 +53,13 @@ const isPartial = Astro.url.searchParams.get('partial') === 'true';
 			.sidebar h1 {
 				margin: 0 0 0.25em 0;
 				line-height: 1.1;
+				font-size: 2rem;
 			}
 
 			.sidebar .description {
 				font-style: italic;
 				color: var(--text-muted);
-			}
-
-			.meta-section {
-				margin-top: 1.5em;
-			}
-
-			.meta-section h3 {
-				font-size: 0.9em;
-				text-transform: uppercase;
-				color: var(--text-muted);
-				border-bottom: 1px solid var(--accent);
-				padding-bottom: 0.3em;
-				margin-bottom: 0.5em;
-			}
-
-			.meta-section ul, .meta-section p {
-				list-style: none;
-				padding: 0;
-				margin: 0;
-				font-size: 0.95em;
-			}
-
-			.meta-section a {
-				color: var(--text);
-				text-decoration: none;
-				border-bottom: 1px solid var(--accent-light);
-			}
-			.meta-section a:hover {
-				color: var(--accent);
-				border-bottom-color: var(--accent);
+				margin-bottom: 1.5em;
 			}
 
 			.hero-image {
@@ -127,92 +71,31 @@ const isPartial = Astro.url.searchParams.get('partial') === 'true';
 				margin: 0 auto;
 				border-radius: 12px;
 				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+				width: 100%;
+				height: auto;
 			}
 			.prose {
 				width: 100%;
-				max-width: 720px; /* Keep prose readable */
+				max-width: 720px;
 				margin: 0;
 				padding: 0;
 				color: var(--text);
 			}
 			
 			.date {
-				margin-bottom: 0.5em;
+				margin-bottom: 1.5em;
 				color: var(--text-muted);
 				font-size: 0.9em;
-			}
-			.last-updated-on {
-				font-style: italic;
-			}
-
-			/* Callout for quotes */
-			.callout[data-callout='quote'] {
-				position: relative;
-				text-align: center;
-				padding: 1rem;
-				z-index: 0;
-				margin: 2em 0;
-			}
-			.callout[data-callout='quote']::before {
-				content: '"';
-				font-family: serif;
-				font-size: 8em;
-				font-weight: bold;
-				color: var(--text-muted);
-				opacity: 0.2;
-				position: absolute;
-				left: 50%;
-				top: 50%;
-				transform: translate(-50%, -50%);
-				z-index: -1;
-			}
-			.callout[data-callout="quote"] .callout-title {
-				font-style: italic;
-				display: block;
-			}
-			.callout[data-callout="quote"] .callout-content {
-				font-size: 1.0em;
-				line-height: 1.32;
-				padding-block: 1.1rem;
 			}
 		</style>
 	</head>
 
 	<body>
-		<script>
-			// Theme initialization script
-			const theme = (() => {
-				if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
-					return localStorage.getItem('theme') || 'dark';
-				}
-				if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-					return 'dark';
-				}
-				return 'dark';
-			})();
-
-			if (theme === 'light') {
-				document.documentElement.classList.add('light');
-                document.documentElement.setAttribute('data-theme', 'light');
-			} else {
-				document.documentElement.classList.add('dark');
-                document.documentElement.setAttribute('data-theme', 'dark');
-			}
-
-			window.localStorage.setItem('theme', theme);
-		</script>
 		<Header />
 		<main>
 			{heroImage && (
 				<div class="hero-image">
-					<img 
-						width={1020} 
-						height={510} 
-						src={heroImage} 
-						alt={title}
-						loading="lazy"
-						style="max-width: 100%; height: auto;"
-					/>
+					<img width={1020} height={510} src={heroImage} alt={title} />
 				</div>
 			)}
 			<div class="layout-wrapper">
@@ -223,7 +106,7 @@ const isPartial = Astro.url.searchParams.get('partial') === 'true';
 					</div>
 
 					<div class="date">
-						<FormattedDate date={pubDate} />
+						{pubDate && <FormattedDate date={pubDate} />}
 						{updatedDate && (
 							<div class="last-updated-on">
 								Last updated on <FormattedDate date={updatedDate} />
@@ -233,39 +116,15 @@ const isPartial = Astro.url.searchParams.get('partial') === 'true';
 					
 					<hr />
 
-					{performedByArray.length > 0 && (
-						<div class="meta-section">
-							<h3>Performed By</h3>
-							<ul>
-								{performedByArray.map(performer => {
-									const performerName = parseWikilink(performer);
-									return <li><a href={`/performers/${slugify(performerName)}`}>{performerName}</a></li>
-								})}
-							</ul>
-						</div>
-					)}
-
-					{performancesArray.length > 0 && (
-						<div class="meta-section">
-							<h3>Performances</h3>
-							<ul>
-								{performancesArray.map(performance => {
-									const eventName = parseWikilink(performance);
-									return <li><a href={`/events/${slugify(eventName)}`}>{eventName}</a></li>
-								})}
-							</ul>
-						</div>
-					)}
+					<slot name="sidebar" />
 				</aside>
 
 				<article class="main-content">
 					<div class="prose">
-						<slot />
-					</div>
+						<slot /> </div>
 				</article>
 			</div>
 		</main>
 		<Footer />
 	</body>
 </html>
-)}

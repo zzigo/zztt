@@ -28,7 +28,7 @@ Mentors: Mariano Etkin, Gerardo Gandini, and encounters with Pierluigi Billone, 
 
 ## Recent collaborations
 
-Symphonic Orchestra Teatro Municipal São Paulo; Ensembles reConvert, neo, 4tetlaboratoire; Jack Adler-McKean, Gunnildur Eisnadottir;  choreographer Luis Garay; film directors Natalia Meta and Lucrecia Martel; media artists Juan Pablo Ferlat, Teresa Pereda, and Silvia Rivas.
+Symphonic Orchestra Teatro Municipal São Paulo; Ensembles betweenFeathers, reConvert, neo, 4tetlaboratoire; Jack Adler-McKean, Gunnhildur Einarsdöttir;  choreographer Luis Garay; film directors Natalia Meta and Lucrecia Martel; media artists Juan Pablo Ferlat, Teresa Pereda, and Silvia Rivas.
 
   
 ## Curatorial and Artistic Leadership

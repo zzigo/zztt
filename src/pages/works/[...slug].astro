@@ -1,80 +1,185 @@
 ---
-import { type CollectionEntry, getCollection } from 'astro:content';
+import { type CollectionEntry, getCollection, render } from 'astro:content';
 import BlogPost from '../../layouts/BlogPost.astro';
-import EventsList from '../../components/EventsList.astro';
-import { render } from 'astro:content';
 import ContentGallery from '../../components/ContentGallery.jsx';
 
-
 export async function getStaticPaths() {
-	const posts = await getCollection('works');
-	// Generate all possible slug variations (lowercase, original case)
-	const paths: Array<{ params: { slug: string }; props: CollectionEntry<'works'> }> = [];
-	
-	posts.forEach((post) => {
-		const originalSlug = post.id.replace(/\.md$/, '');
-		const normalizedSlug = originalSlug.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '-');
-		
-		// Add the normalized lowercase version as primary
-		paths.push({
-			params: { slug: normalizedSlug },
-			props: post,
-		});
-		
-		// Also add original case version if different
-		if (originalSlug !== normalizedSlug) {
-			paths.push({
-				params: { slug: originalSlug.replace(/\s+/g, '-') },
-				props: post,
-			});
-		}
-	});
-	
-	return paths;
+    const posts = await getCollection('works');
+    return posts.map((post) => {
+        const originalSlug = post.id.replace(/\.md$/, '');
+        const normalizedSlug = originalSlug.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, '-');
+        
+        return {
+            params: { slug: normalizedSlug },
+            props: post,
+        };
+    });
 }
-type Props = CollectionEntry<'works'>;
 
+type Props = CollectionEntry<'works'>;
 const post = Astro.props;
 const { Content } = await render(post);
 
-// Get events for this work
+// --- UTILIDADES ---
+const slugify = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+const parseWikilink = (link: string) => link.replace(/\[\[|\]\]/g, '');
+
+const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+    });
+};
+
+const performedByArray = Array.isArray(post.data.performedBy) 
+    ? post.data.performedBy 
+    : (post.data.performedBy ? [post.data.performedBy] : []);
+
 const allEvents = await getCollection('events');
-const workTitle = post.data.title.toLowerCase();
-const workEvents = allEvents.filter(event => {
-    const eventWorks = event.data.work;
-    if (Array.isArray(eventWorks)) {
-        return eventWorks.some(w => w.toLowerCase() === workTitle);
-    } else if (typeof eventWorks === 'string') {
-        return eventWorks.toLowerCase() === workTitle;
-    }
-    return false;
-});
-const hasEvents = workEvents.length > 0;
+
+const workEvents = allEvents
+    .filter(event => {
+        const eventWork = event.data.work;
+        const currentSlug = post.slug || post.id.replace(/\.md$/, '');
+        
+        if (Array.isArray(eventWork)) {
+            return eventWork.includes(currentSlug) || eventWork.includes(post.id);
+        }
+        return eventWork === currentSlug || eventWork === post.id;
+    })
+    .flatMap(event => (event.data.dates || []).map(d => ({
+        title: event.data.eventName,
+        city: event.data.city,
+        date: d.date,
+        slug: event.slug
+    })))
+    .sort((a, b) => b.date.valueOf() - a.date.valueOf());
 ---
 
 <BlogPost {...post.data}>
-	<Content />
-	
-	{hasEvents && (
-		<section class="work-events-section">
-			<h2>Performances & Events</h2>
-			<EventsList filterByWork={post.data.title} showFilters={false} />
-		</section>
-	)}
-	<ContentGallery client:load />
+    
+    <div slot="sidebar" class="sticky-sidebar-container">
+        
+        {performedByArray.length > 0 && (
+            <div class="meta-section">
+                <h3>Performed By</h3>
+                <ul class="meta-list performers-list">
+                    {performedByArray.map(performer => {
+                        const name = parseWikilink(performer);
+                        return (
+                            <li>
+                                <a href={`/performers/${slugify(name)}`}>{name}</a>
+                            </li>
+                        );
+                    })}
+                </ul>
+            </div>
+        )}
+
+        {workEvents.length > 0 && (
+            <div class="meta-section">
+                <h3>History & Events</h3>
+                <ul class="meta-list events-list">
+                    {workEvents.map(event => (
+                        <li>
+                            <a href={`/events/${event.slug}`}>
+                                <strong>{event.title}</strong>
+                            </a>
+                            <div class="event-meta">
+                                {event.city} — {formatDate(event.date)}
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        )}
+    </div>
+
+    <Content />
+    
+    <div class="gallery-container">
+        <ContentGallery client:load />
+    </div>
+
 </BlogPost>
 
-
 <style>
-	.work-events-section {
-		margin-top: 4rem;
-		padding-top: 3rem;
-		border-top: 2px solid var(--border, #ddd);
-	}
+    /* --- LÓGICA STICKY --- */
+    @media (min-width: 768px) {
+        .sticky-sidebar-container {
+            position: sticky;
+            /* Ajusta este valor según la altura de tu Nav/Header */
+            top: 5rem; 
+            /* Evita que el sidebar sea más alto que la pantalla y sea inaccesible */
+            max-height: calc(100vh - 6rem);
+            overflow-y: auto;
+            /* Escondemos la scrollbar para mantener la estética minimalista */
+            scrollbar-width: none; 
+        }
+        .sticky-sidebar-container::-webkit-scrollbar {
+            display: none;
+        }
+    }
 
-	.work-events-section h2 {
-		font-size: 2rem;
-		margin-bottom: 2rem;
-		color: var(--text);
-	}
+    .meta-section {
+        margin-top: 2rem;
+    }
+
+    .meta-section:first-child {
+        margin-top: 0;
+    }
+
+    .meta-section h3 {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--accent);
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .meta-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .meta-list li {
+        line-height: 1.2;
+        padding-left: 0;
+    }
+
+    .performers-list li {
+        margin-bottom: 0.3rem;
+    }
+
+    .events-list li {
+        margin-bottom: 1.2rem;
+    }
+
+    .meta-list a {
+        text-decoration: none;
+        color: var(--text);
+        font-size: 0.95rem;
+        transition: all 0.2s;
+    }
+
+    .meta-list a:hover {
+        color: var(--accent);
+    }
+
+    .event-meta {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 0.2rem;
+        font-style: italic;
+    }
+
+    .gallery-container {
+        margin-top: 5rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border, #333);
+    }
 </style>

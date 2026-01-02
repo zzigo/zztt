@@ -5,15 +5,12 @@ pubDate: 2018-07-28
 heroImage: https://i.imgur.com/V5Nau8q.jpeg
 performedBy:
   - "[[Simon Foerster]]"
-  - "[[Gunnildur Eisnadottir]]"
+  - "[[Gunnhildur Einarsdöttir]]"
+  - "[[Sunniva Rødland]]"
 performances:
-  - "[[Darmstädter Ferienkurse 2018]]"
   - "[[Phonemes Concert Series]]"
-  - "[[History of my Instrument]]"
-  - "[[Concert International en Trptyque]]"
   - "[[Harfen Musik]]"
   - "[[Harp Workshop]]"
-  - "[[Carte Blanche]]"
 listPerformers: Simon Foerster
 tags:
   - solo
