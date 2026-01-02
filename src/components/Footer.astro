@@ -12,11 +12,10 @@ const today = new Date();
 		</a>
 	</div>
 <div class="info-note">
-	 <a href="/ascii"> A-raw view &nbsp;&nbsp;</a> 
-	 <a href="/list-of-works"> W-list of works &nbsp;&nbsp;</a> 
-	 <a href="/listen"> L-listen space &nbsp;&nbsp;</a> 
-	  <a href="/calendar"> C-calendar</a> 
-
+	 <a href="/plain"> <strong>P</strong>lain view &nbsp;&nbsp;</a> 
+	 <a href="/list-of-works"> <strong>W</strong>orks list &nbsp;&nbsp;</a> 
+	 <a href="/listen"> <strong>L</strong>isten  &nbsp;&nbsp;</a> 
+	  <a href="/calendar"> <strong>C</strong>alendar </a> 
 	</div>
 
 	<div class="social-links">
@@ -72,8 +71,8 @@ const today = new Date();
       ) return;
 
       switch (e.key) {
-        case 'a':
-          window.location.href = '/ascii';
+        case 'p':
+          window.location.href = '/plain';
           break;
         case 'l':
           window.location.href = '/listen';
@@ -142,4 +141,15 @@ const today = new Date();
 	.social-links i {
 		font-size: 1.2em;
 	}
+
+	.info-note a {
+    text-decoration: none; /* Quita el subrayado de los enlaces */
+    color: inherit;        /* Mantiene el color de texto normal */
+}
+	.info-note a strong {
+    color: #ffffff !important; /* Un naranja-rojo vibrante, puedes cambiarlo por #000 para solo grosor */
+    font-weight: 900;
+    text-decoration: underline;
+    text-transform: monospace;
+}
 </style>
