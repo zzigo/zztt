@@ -35,7 +35,7 @@ const { Content } = await render(post);
 
 // --- UTILIDADES ---
 const slugify = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-const parseWikilink = (link: string) => link.replace(/\[\[|\]\]/g, '');
+const parseWikilink = (link: string) => link.replace(/\[\[|\]\]/g, '').trim();
 
 const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-GB', {
@@ -62,7 +62,7 @@ for (const event of relatedEvents) {
     if (event.data.performedBy) {
         const performers = Array.isArray(event.data.performedBy) ? event.data.performedBy : [event.data.performedBy];
         for (const performer of performers) {
-            uniquePerformers.add(performer);
+            uniquePerformers.add(parseWikilink(performer));
         }
     }
 }
@@ -87,14 +87,11 @@ const workEvents = relatedEvents
             <div class="meta-section">
                 <h3>Performed By</h3>
                 <ul class="meta-list performers-list">
-                    {performedByArray.map(performer => {
-                        const name = parseWikilink(performer);
-                        return (
-                            <li>
-                                <a href={`/performers/${slugify(name)}`}>{name}</a>
-                            </li>
-                        );
-                    })}
+                    {performedByArray.map(name => (
+                        <li>
+                            <a href={`/performers/${slugify(name)}`}>{name}</a>
+                        </li>
+                    ))}
                 </ul>
             </div>
         )}

@@ -1,12 +1,11 @@
 ---
 dates:
-  - "2017-11-04-19:00"
-work: [micelio, espinor, feérico, bulle]
-performedBy:
-  - "[[Gabriela Czerednikov]]"
-  - "[[Ricardo Cuadros Pradilla]]"
-  - "[[Luciano Azzigotti]]"
-  - "[[Géraldine Thébault]]"
+  - 2017-11-04-19:00
+work:
+  - micelio
+  - espinor
+  - feérico
+  - bulle
 eventName: Objetos ex-formantes
 venue: Biblioteca Nacional Mariano Moreno
 city: Buenos Aires
