@@ -3,13 +3,9 @@ title: The Entanglement
 description: 2-2-3-2 / 2-4-2-1 / 4 perc (timp + 3)
 pubDate: 08-08-2024
 heroImage: https://i.imgur.com/mjD3TeH.jpeg
-performances:
-  - "[[Pensamento Cintillante @TMSP2025]]"
 tags:
   - dance
   - symphonic
-performedBy:
-  - "[[Orquesta do Teatro Municipal do São Paulo]]"
 ---
 
 
@@ -64,9 +60,15 @@ In this sense, the piece functions both as an artistic outcome and as a research
 
 
 ## snippets
+S1 the void
+<audio controls src="https://files.catbox.moe/9ox4sx.mp3"></audio>
 
-4. ruido branco
-<audio controls src="https://files.catbox.moe/c7s0f2.mp3" style="width: 100%; height: 40px;"></audio>
 
-6.2 the map
+S2 intro
+<audio controls src="https://files.catbox.moe/ap0slq.mp3"></audio>
+
+S4 ruido branco
+<audio controls src="https://files.catbox.moe/c7s0f2.mp3"></audio>
+
+S6.2 the map
 <audio controls src="https://files.catbox.moe/8duaox.mp3"></audio>

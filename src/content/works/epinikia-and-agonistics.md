@@ -3,12 +3,9 @@ title: Epinikia and Agonistics
 description: running choir and exapnded environment
 pubDate: 2011-10-23
 heroImage: https://i.imgur.com/v1XRL0D.png
-performedBy: '"[[Nonsense Ensamble Vocal de Solistas]]"'
 tags:
   - vocal
   - performance
-performances:
-  - "[[Epinicios y Agonales @conDiT3]]"
 ---
 <iframe title="Epinicios y Agonales (2011)  de Luciano Azzigotti" src="https://www.youtube.com/embed/_AA21T8xrh0?feature=oembed" height="113" width="200" style="aspect-ratio: 1.76991 / 1; width: 100%; height: 100%;" allowfullscreen="" allow="fullscreen"></iframe>
 

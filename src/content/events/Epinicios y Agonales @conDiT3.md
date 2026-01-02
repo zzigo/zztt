@@ -2,7 +2,7 @@
 dates:
   - "2011-10-15-17:00"
   - "2011-10-15-19:00"
-work: epinikia and agonistics
+work: Epinikia and Agonistics
 performedBy:
   - "[[Nonsense Ensamble Vocal de Solistas]]"
 eventName: Epinikia and Agonistics

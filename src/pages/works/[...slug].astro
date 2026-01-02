@@ -45,22 +45,31 @@ const formatDate = (date: Date) => {
     });
 };
 
-const performedByArray = Array.isArray(post.data.performedBy) 
-    ? post.data.performedBy 
-    : (post.data.performedBy ? [post.data.performedBy] : []);
-
+// Get all events and filter for the current work.
 const allEvents = await getCollection('events');
+const relatedEvents = allEvents.filter(event => {
+    const eventWork = event.data.work;
+    const currentWorkTitle = post.data.title;
+    if (Array.isArray(eventWork)) {
+        return eventWork.includes(currentWorkTitle);
+    }
+    return eventWork === currentWorkTitle;
+});
 
-const workEvents = allEvents
-    .filter(event => {
-        const eventWork = event.data.work;
-        const currentSlug = post.slug || post.id.replace(/\.md$/, '');
-        
-        if (Array.isArray(eventWork)) {
-            return eventWork.includes(currentSlug) || eventWork.includes(post.id);
+// Get unique performers from the related events.
+const uniquePerformers = new Set<string>();
+for (const event of relatedEvents) {
+    if (event.data.performedBy) {
+        const performers = Array.isArray(event.data.performedBy) ? event.data.performedBy : [event.data.performedBy];
+        for (const performer of performers) {
+            uniquePerformers.add(performer);
         }
-        return eventWork === currentSlug || eventWork === post.id;
-    })
+    }
+}
+const performedByArray = Array.from(uniquePerformers);
+
+// Create the flattened list of dated events for display.
+const workEvents = relatedEvents
     .flatMap(event => (event.data.dates || []).map(d => ({
         title: event.data.eventName,
         city: event.data.city,
