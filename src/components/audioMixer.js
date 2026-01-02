@@ -35,23 +35,24 @@ export default function AudioMixer() {
   let isVisible = false;
   
   // Initialize the mixer
-  const init = () => {
+  const init = (config = {}) => {
     console.log("Initializing Audio Mixer");
     
     // Create master gain
-    masterGain = new Tone.Gain(0.8).toDestination();
+    masterGain = new Tone.Gain(config.masterVolume !== undefined ? Math.pow(10, config.masterVolume / 20) : 0.8).toDestination();
     
     // Create effect nodes
     reverbNode = new Tone.Reverb({
-      decay: 5,
-      wet: 0.5,
+      decay: config.reverbDecay || 5,
+      wet: config.reverbWet || 0.5,
       preDelay: 0.1
     });
     
     delayNode = new Tone.FeedbackDelay({
-      delayTime: 0.25,
-      feedback: 0.4,
-      wet: 0.3
+      delayTime: config.delayTime || 0.25,
+      feedback: config.delayFeedback || 0.4,
+      wet: config.delayWet || 0.3,
+      maxDelay: 10 // Allow up to 10 seconds delay to prevent "value outside nominal range" errors
     });
     
     // Create gain nodes for each audio source
@@ -72,7 +73,7 @@ export default function AudioMixer() {
     delayNode.connect(masterGain);
     
     // Create UI
-    createMixerUI();
+    createMixerUI(config);
     
     return {
       gainNodes,
@@ -96,14 +97,6 @@ export default function AudioMixer() {
     // Connect to appropriate gain node
     node.connect(gainNodes[type]);
     
-    // Also connect to effects based on type
-    if (type.includes('Oscillators') || type.includes('GrainPlayers') || type === 'floatingModelAudio') {
-      // Create a split to send to effects
-      const splitter = new Tone.Split();
-      node.connect(splitter);
-      splitter.connect(gainNodes.reverbSend, 0);
-      splitter.connect(gainNodes.delaySend, 1);
-    }
     
     console.log(`Connected ${type} to mixer`);
   };
@@ -132,7 +125,7 @@ export default function AudioMixer() {
   const threeAudioControls = {};
   
   // Create the mixer UI
-  const createMixerUI = () => {
+  const createMixerUI = (config) => {
     // Create mixer container
     mixerElement = document.createElement('div');
     mixerElement.id = 'audio-mixer';
@@ -145,6 +138,7 @@ export default function AudioMixer() {
     mixerElement.style.padding = '10px';
     mixerElement.style.color = '#fff';
     mixerElement.style.fontFamily = 'Arial, sans-serif';
+ mixerElement.style.fontSize = '12px';
     mixerElement.style.zIndex = '1000';
     mixerElement.style.display = 'none';
     mixerElement.style.boxShadow = '0 0 20px rgba(197, 197, 197, 0.5)';
@@ -159,7 +153,7 @@ export default function AudioMixer() {
     mixerElement.appendChild(title);
     
     // Create master volume control
-    createSlider(mixerElement, 'Master Volume', 0.8, (value) => {
+    createSlider(mixerElement, 'Master Volume', 0.8, (value) => { // This is linear gain 0-1, distinct from dB config
       masterGain.gain.value = value;
     });
     
@@ -168,47 +162,47 @@ export default function AudioMixer() {
     
     // Create sliders for each audio source
     createSlider(mixerElement, 'Sphere Oscillators', 0.8, (value) => {
-      if (gainNodes.sphereOscillators) gainNodes.sphereOscillators.gain.value = Math.min(1, Math.max(0, value));
-    });
+      if (gainNodes.sphereOscillators) gainNodes.sphereOscillators.gain.value = value;
+    }, 2);
     
     createSlider(mixerElement, 'Sphere Grain Players', 0.8, (value) => {
-      if (gainNodes.sphereGrainPlayers) gainNodes.sphereGrainPlayers.gain.value = Math.min(1, Math.max(0, value));
-    });
+      if (gainNodes.sphereGrainPlayers) gainNodes.sphereGrainPlayers.gain.value = value;
+    }, 2);
     
     createSlider(mixerElement, 'Cube Oscillators', 0.8, (value) => {
-      if (gainNodes.cubeOscillators) gainNodes.cubeOscillators.gain.value = Math.min(1, Math.max(0, value));
-    });
+      if (gainNodes.cubeOscillators) gainNodes.cubeOscillators.gain.value = value;
+    }, 2);
     
     createSlider(mixerElement, 'Lighting Bar Noise', 0.8, (value) => {
-      if (gainNodes.lightingBarNoise) gainNodes.lightingBarNoise.gain.value = Math.min(1, Math.max(0, value));
-    });
+      if (gainNodes.lightingBarNoise) gainNodes.lightingBarNoise.gain.value = value;
+    }, 2);
     
     createSlider(mixerElement, 'Pulse Oscillators', 0.8, (value) => {
-      if (gainNodes.pulseOscillators) gainNodes.pulseOscillators.gain.value = Math.min(1, Math.max(0, value));
-    });
+      if (gainNodes.pulseOscillators) gainNodes.pulseOscillators.gain.value = value;
+    }, 2);
     
     createSlider(mixerElement, 'Floating Model Audio', 0.8, (value) => {
-      if (gainNodes.floatingModelAudio) gainNodes.floatingModelAudio.gain.value = Math.min(1, Math.max(0, value));
-      if (threeAudioControls.floatingModelAudio) threeAudioControls.floatingModelAudio.setVolume(Math.min(1, Math.max(0, value)));
-    });
+      if (gainNodes.floatingModelAudio) gainNodes.floatingModelAudio.gain.value = value;
+      if (threeAudioControls.floatingModelAudio) threeAudioControls.floatingModelAudio.setVolume(value);
+    }, 2);
     
     // Create section divider
     createDivider(mixerElement, 'Effects');
     
     // Create effect controls
-    createSlider(mixerElement, 'Reverb Amount', 1, (value) => {
+    createSlider(mixerElement, 'Reverb Amount', config.reverbWet || 1, (value) => {
       reverbNode.wet.value = Math.min(1, Math.max(0, value));
     });
     
-    createSlider(mixerElement, 'Delay Amount', 0.3, (value) => {
+    createSlider(mixerElement, 'Delay Amount', config.delayWet || 0.3, (value) => {
       delayNode.wet.value = Math.min(1, Math.max(0, value));
     });
     
-    createSlider(mixerElement, 'Delay Time', 0.25, (value) => {
-      delayNode.delayTime.value = Math.min(2, Math.max(0, value * 2)); // 0-2 seconds
+    createSlider(mixerElement, 'Delay Time', (config.delayTime || 0.25) / 10, (value) => {
+      delayNode.delayTime.value = Math.min(10, Math.max(0, value * 10)); // 0-10 seconds mapped to 0-1 slider
     });
     
-    createSlider(mixerElement, 'Delay Feedback', 0.4, (value) => {
+    createSlider(mixerElement, 'Delay Feedback', config.delayFeedback || 0.4, (value) => {
       delayNode.feedback.value = Math.min(1, Math.max(0, value));
     });
     
@@ -239,7 +233,7 @@ export default function AudioMixer() {
   };
   
   // Helper to create a slider
-  const createSlider = (parent, label, defaultValue, onChange) => {
+  const createSlider = (parent, label, defaultValue, onChange, max = 1) => {
     const container = document.createElement('div');
     container.style.marginBottom = '10px';
     
@@ -255,7 +249,7 @@ export default function AudioMixer() {
     const slider = document.createElement('input');
     slider.type = 'range';
     slider.min = '0';
-    slider.max = '1';
+    slider.max = max.toString();
     slider.step = '0.01';
     slider.value = defaultValue.toString();
     slider.style.flex = '1';
@@ -271,7 +265,7 @@ export default function AudioMixer() {
     slider.oninput = () => {
       const value = parseFloat(slider.value);
       // Clamp value to valid range
-      const clampedValue = Math.min(1, Math.max(0, value));
+      const clampedValue = Math.min(max, Math.max(0, value));
       valueDisplay.textContent = clampedValue.toFixed(2);
       onChange(clampedValue);
     };
@@ -289,7 +283,7 @@ export default function AudioMixer() {
     divider.style.borderBottom = '1px solid rgba(164, 164, 164, 1)';
     divider.style.paddingBottom = '5px';
     divider.style.color = 'rgba(118, 118, 118, 1)';
-    divider.style.fontWeight = 'bold';
+    divider.style.fontWeight = 'normal';
     divider.textContent = title;
     parent.appendChild(divider);
   };

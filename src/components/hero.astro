@@ -4,7 +4,7 @@
 >
   <button
     id="start-audio-btn"
-    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 15px 30px; background-color: rgba(0, 0, 0, 0.8); color: #fff; border: 2px solid #ff00ff; border-radius: 5px; font-family: monospace; font-size: 18px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 0, 255, 0.5); z-index: 1000; display: none;"
+    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 15px 30px; background-color: rgba(0, 0, 0, 0.8); color: #fff; border: 2px solid #ff00ff; border-radius: 5px; font-family: monospace; font-size: 13px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 0, 255, 0.5); z-index: 1000; display: none;"
   >
     ◉ Start Vaporwave Experience
   </button>
@@ -16,6 +16,7 @@
   import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
   import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
   import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+  import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
   import * as Tone from "tone";
   import TWEEN from "@tweenjs/tween.js";
   import SphereModule from "./sphereModule.js";
@@ -36,21 +37,21 @@
 
   const AUDIO_CONFIG = {
     reverbDecay: 10.0,          // Reverb decay (2 seconds)
-    reverbWet: 1,           // 90% reverb mix (extremely wet)
-    delayTime: 5.0,           // Delay time (2 seconds)
-    delayFeedback: 0,       // Delay feedback (20%)
-    delayWet: 0.1,            // 90% delay mix (extremely wet)
+    reverbWet: 0.5,           // 50% reverb mix
+    delayTime: 0.7,           // Delay time
+    delayFeedback: 0.8,       // Delay feedback
+    delayWet: 0.5,            // 10% delay mix
     masterVolume: -6,        // Audible volume
     spatialRolloff: 1.,      // Slower spatial falloff
     oscVolume: -15,           // Base oscillator volume
   };
 
   const VISUAL_CONFIG = {
-    bloomStrength: 0.8,       // Reduced bloom (was 1.5)
-    bloomRadius: 0.6,         // Larger bloom radius (was 0.4)
-    bloomThreshold: 0.7,      // Higher threshold (was 0.85)
-    saturation: 1.4,          // More saturation for vaporwave
-    brightness: 0.9,          // Slightly darker
+    bloomStrength: 1,       // Reduced bloom (was 1.5)
+    bloomRadius: 0.9,         // Larger bloom radius (was 0.4)
+    bloomThreshold: 0.9,      // Higher threshold (was 0.85)
+    saturation: 2,          // More saturation for vaporwave
+    brightness: 0.2,          // Slightly darker
   };
 
   // Initialize Three.js variables
@@ -67,6 +68,9 @@
   let delay: any;
   let listener: any;
   let threeAudioListener: THREE.AudioListener;
+  let gltfLoader = new GLTFLoader();
+  let singerModel: THREE.Group | null = null;
+  let singerAnimations: any[] = [];
 
   // Initialize modules
   let cubeModule: any;
@@ -83,6 +87,7 @@
   let cameraZPosition = 0;
   let modules: any[] = [];
   let moduleIdCounter = 0;
+  let nextSingerSpawnTime = 0;
 
   // Camera orientation controls with inertial physics
   let cameraRotationX = 0; // Up/Down look
@@ -135,7 +140,8 @@
   `;
 
   // Module creation function - creates audio-visual objects at random positions
-  const createModule = (type: 'sphere' | 'cube' | 'pulse') => {
+  const createModule = (type: 'sphere' | 'cube' | 'pulse' | 'singer') => {
+
     const module: any = {
       id: moduleIdCounter++,
       type,
@@ -164,6 +170,28 @@
       scale: 0.5 + Math.random() * 1.0,
       birthZ: cameraZPosition + TUNNEL_CONFIG.moduleSpawnDistance,
     };
+
+    // Override for Singer to make it a "Chaser"
+    if (type === 'singer') {
+      module.position.set(
+        (Math.random() - 0.5) * 6, // Even tighter X range to ensure visibility
+        (Math.random() - 0.5) * 3, // Even tighter Y range
+        cameraZPosition - 15 // Start closer behind
+      );
+      // Move faster than camera (zSpeed is 0.5)
+      module.velocity.set(
+        (Math.random() - 0.5) * 0.002,
+        (Math.random() - 0.5) * 0.002,
+        TUNNEL_CONFIG.zSpeed + 0.025 // Very slow overtake for majestic flyby
+      );
+      // Rotate slowly in XYZ
+      module.rotationSpeed.set(
+        0.005,
+        0.005,
+        0.003
+      );
+      module.scale = 1.5;
+    }
 
     // Create visual mesh based on type
     let geometry, material;
@@ -251,6 +279,42 @@
         blending: THREE.AdditiveBlending,
         side: THREE.DoubleSide,
       });
+    } else if (type === 'singer') {
+      if (singerModel) {
+        module.mesh = singerModel.clone();
+        
+        // Apply wireframe material
+        module.mesh.traverse((child: any) => {
+          if (child.isMesh) {
+            child.material = new THREE.MeshStandardMaterial({
+              color: 0xffccaa,
+              wireframe: true,
+              emissive: 0x331111,
+            });
+          }
+        });
+
+        // Apply scale to the cloned group/mesh
+        module.scale *= 2.0; // Make singer bigger
+        module.mesh.scale.setScalar(module.scale);
+
+        // Setup animation mixer
+        if (singerAnimations && singerAnimations.length > 0) {
+          module.mixer = new THREE.AnimationMixer(module.mesh);
+          // Play the first animation found
+          module.mixer.clipAction(singerAnimations[0]).play();
+        }
+      } else {
+        // Fallback Placeholder
+        geometry = new THREE.IcosahedronGeometry(2.5 * module.scale, 1);
+        material = new THREE.MeshStandardMaterial({
+          color: 0xffccaa,
+          roughness: 0.4,
+          metalness: 0.1,
+          emissive: 0x331111,
+          flatShading: true,
+        });
+      }
     } else {  // pulse
       geometry = new THREE.TorusGeometry(2 * module.scale, 0.4 * module.scale, 16, 32);
       
@@ -262,7 +326,10 @@
       });
     }
 
-    module.mesh = new THREE.Mesh(geometry, material);
+    // If mesh wasn't created via clone() (i.e. it's a primitive), create it now
+    if (!module.mesh) {
+      module.mesh = new THREE.Mesh(geometry, material);
+    }
     module.mesh.position.copy(module.position);
     module.mesh.rotation.set(module.rotation.x, module.rotation.y, module.rotation.z);
     scene.add(module.mesh);
@@ -325,10 +392,20 @@
         filter.connect(filterWet.b); // wet signal
         filterWet.connect(panner);
         
-        // Connect to reverb and delay if available
-        if (reverb && delay) {
-          panner.connect(reverb);
-          panner.connect(delay);
+        // Connect to Audio Mixer
+        if (audioMixer) {
+          const channelMap = {
+            'sphere': 'sphereOscillators',
+            'cube': 'cubeOscillators',
+            'pulse': 'pulseOscillators',
+            'singer': 'floatingModelAudio'
+          };
+          const channel = channelMap[type] || 'sphereOscillators';
+          audioMixer.connectNode(panner, channel);
+          
+          // Also connect to effects (parallel processing)
+          if (reverb) panner.connect(reverb);
+          if (delay) panner.connect(delay);
         } else {
           panner.toDestination();
         }
@@ -350,7 +427,7 @@
   };
 
   // Update modules in the tunnel
-  const updateModules = () => {
+  const updateModules = (deltaTime: number) => {
     const time = Date.now() * 0.001;
 
     modules.forEach((module, index) => {
@@ -375,13 +452,25 @@
         module.mesh.rotation.z += module.rotationSpeed.z;
 
         // Update shader time uniform
-        if (module.mesh.material.uniforms && module.mesh.material.uniforms.time) {
+        if (module.mesh.material && module.mesh.material.uniforms && module.mesh.material.uniforms.time) {
           module.mesh.material.uniforms.time.value = time;
         }
 
         // Pulsing scale
         const pulse = 1.0 + Math.sin(time * 0.5 + module.id) * 0.1;
         module.mesh.scale.setScalar(module.scale * pulse);
+
+        // Update animation mixer for singer
+        if (module.mixer) {
+          module.mixer.update(deltaTime);
+        } else if (module.type === 'singer' && module.mesh) {
+          // Procedural fallback: try to animate morph targets if available
+          module.mesh.traverse((child: any) => {
+            if (child.morphTargetInfluences && child.morphTargetInfluences.length > 0) {
+              child.morphTargetInfluences[0] = (Math.sin(time * 8) + 1) * 0.5;
+            }
+          });
+        }
       }
 
       // Update light
@@ -407,8 +496,23 @@
         }
       }
 
-      // Remove modules that are too far behind camera
-      if (module.position.z < cameraZPosition - TUNNEL_CONFIG.moduleLifetime) {
+      // Lifecycle Management
+      let shouldRemove = false;
+      
+      // Special case for Singer: Recycle when it goes too far AHEAD (into the fog)
+      if (module.type === 'singer') {
+        if (module.position.z > cameraZPosition + 60) { // Recycle much sooner (was 120)
+          shouldRemove = true;
+          // Schedule next spawn 5-10 seconds after disappearance
+          nextSingerSpawnTime = Date.now() * 0.001 + 5 + Math.random() * 5;
+        }
+      } 
+      // Standard modules: Remove when too far BEHIND
+      else if (module.position.z < cameraZPosition - TUNNEL_CONFIG.moduleLifetime) {
+        shouldRemove = true;
+      }
+
+      if (shouldRemove) {
         // Cleanup
         if (module.mesh) scene.remove(module.mesh);
         if (module.light) scene.remove(module.light);
@@ -426,9 +530,14 @@
 
     // Spawn new modules randomly
     if (Math.random() < 0.03) {  // 3% chance per frame
-      const types = ['sphere', 'cube', 'pulse'];
+      const types = ['sphere', 'cube', 'pulse']; // Don't spawn random singers, we have a persistent one
       const type = types[Math.floor(Math.random() * types.length)] as any;
       createModule(type);
+    }
+
+    // Spawn Singer if it's time and one doesn't exist
+    if (Date.now() * 0.001 > nextSingerSpawnTime && !modules.some((m: any) => m.type === 'singer')) {
+      createModule('singer');
     }
   };
 
@@ -569,27 +678,16 @@
       threeAudioListener = new THREE.AudioListener();
       camera.add(threeAudioListener);
 
-      // Create reverb (extremely wet)
-      reverb = new Tone.Reverb({
-        decay: AUDIO_CONFIG.reverbDecay,
-        wet: AUDIO_CONFIG.reverbWet,
-      });
-      await reverb.generate();
-      reverb.toDestination();
-      console.log("✓ Reverb configured:", AUDIO_CONFIG.reverbDecay + "s decay,", (AUDIO_CONFIG.reverbWet * 100) + "% wet");
-
-      // Create delay (extremely wet)
-      delay = new Tone.FeedbackDelay({
-        delayTime: AUDIO_CONFIG.delayTime,
-        feedback: AUDIO_CONFIG.delayFeedback,
-        wet: AUDIO_CONFIG.delayWet,
-      });
-      delay.toDestination();
-      console.log("✓ Delay configured:", AUDIO_CONFIG.delayTime + "s time,", (AUDIO_CONFIG.delayFeedback * 100) + "% feedback,", (AUDIO_CONFIG.delayWet * 100) + "% wet");
-
       // Initialize audio mixer (for additional processing)
       audioMixer = AudioMixer();
-      const mixerComponents = audioMixer.init();
+      const mixerComponents = audioMixer.init(AUDIO_CONFIG);
+      
+      // Use mixer's effect nodes
+      reverb = mixerComponents.reverbNode;
+      delay = mixerComponents.delayNode;
+      
+      // Ensure reverb is generated (Tone.Reverb needs this)
+      await reverb.generate();
       
       // Set master volume
       Tone.getDestination().volume.value = AUDIO_CONFIG.masterVolume;
@@ -665,7 +763,7 @@
     camera.position.y = wobbleY;
 
     // Update modules
-    updateModules();
+    updateModules(deltaTime);
 
     // Update TWEEN
     TWEEN.update();
@@ -686,12 +784,28 @@
       setupScene();
       setupPostProcessing();
 
+      // Load Singer Model
+      await new Promise((resolve) => {
+        gltfLoader.load('/inc/rigged-mouth/source/mouth2.glb', (gltf) => {
+          singerModel = gltf.scene;
+          singerAnimations = gltf.animations;
+          console.log("✓ Singer model loaded");
+          resolve(null);
+        }, undefined, (err) => {
+          console.log("Singer model not found (using placeholder)");
+          resolve(null); // Resolve anyway to continue
+        });
+      });
+
       // Create initial modules
       for (let i = 0; i < 15; i++) {
         const types = ['sphere', 'cube', 'pulse'];
         const type = types[Math.floor(Math.random() * types.length)] as any;
         createModule(type);
       }
+
+      // Explicitly spawn the Singer
+      createModule('singer');
 
       // Try to start audio automatically or show button
       const startButton = document.getElementById("start-audio-btn");
