@@ -10,7 +10,7 @@ Luciano Azzigotti's work investigates the invention of systems as aesthetic devi
 
 [List of Works (wip)](/list-of-works)
 
-## selected awards and supports
+## Selected awards and supports
 
 2022 Silver Condor Award for Best Original Music Score (The Intruder)<br>
 2021 Berlinale Talents, selected composer<br>
@@ -22,26 +22,25 @@ Luciano Azzigotti's work investigates the invention of systems as aesthetic devi
 2010 Melos / Gandini Scholarship (with Gerardo Gandini)<br>
 2007 Interactivos Program, Fundación Telefónica<br>
 
-## studies
+## Studies
 studies between 1995 and 2002 at Facultad de Artes, Universidad Nacional de La Plata, electronic music at LIMP (with Francisco Colasanto and Julio Viera), Master in Composition at Hochschule der Künste Bern (with Simon Steen-Andersen and Xavier Dayer).
 Mentors: Mariano Etkin, Gerardo Gandini, and encounters with Pierluigi Billone, Rebecca Saunders, Gilbert Nouno.
 
-## recent collaborations
+## Recent collaborations
 
 Symphonic Orchestra Teatro Municipal São Paulo; Ensembles reConvert, neo, 4tetlaboratoire; Jack Adler-McKean, Gunnildur Eisnadottir;  choreographer Luis Garay; film directors Natalia Meta and Lucrecia Martel; media artists Juan Pablo Ferlat, Teresa Pereda, and Silvia Rivas.
 
   
-## curatorial
+## Curatorial and Artistic Leadership
 
-2025– founder of Zictra ensemble<br>
-2018 artistic director of TACEC (Teatro Argentino de La Plata)<br>
-2016–2023 founder of Container CH<br>
-2012 editor of [Espiral Magazine](https://condit.org.ar/espiral)<br>
-2010–2015 founder of [conDiT](https://en.wikipedia.org/wiki/ConDiT)<br>
+2025–present Founder, Zictra Ensemble <br>
+2018 Artistic Director, [TACEC(Teatro Argentino de La Plata, Centro de Experimentación y Creación)](https://www.instagram.com/tacecteatroargentino/?hl=en)<br>
+2016–2023 Founder, Container CH
+2012 Editor, [Espiral Magazine](https://condit.org.ar/espiral)<br>
+2010–2015 Founder and Director, [conDiT](https://en.wikipedia.org/wiki/ConDiT)<br>
 
-  
 
-## teaching
+## Teaching
 
 [Instruments](https://github.com/musiki/instrumentos), UNTREF University<br>
 [Science & Music](https://github.com/musiki/cym), UNTREF University<br>

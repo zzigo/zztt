@@ -174,23 +174,30 @@
     // Override for Singer to make it a "Chaser"
     if (type === 'singer') {
       module.position.set(
-        (Math.random() - 0.5) * 6, // Even tighter X range to ensure visibility
-        (Math.random() - 0.5) * 3, // Even tighter Y range
-        cameraZPosition - 15 // Start closer behind
+        (Math.random() - 0.5) * 20, // Wider X range for variety
+        (Math.random() - 0.5) * 10, // Wider Y range
+        cameraZPosition - 60 // Start well behind the camera
       );
       // Move faster than camera (zSpeed is 0.5)
       module.velocity.set(
-        (Math.random() - 0.5) * 0.002,
-        (Math.random() - 0.5) * 0.002,
-        TUNNEL_CONFIG.zSpeed + 0.025 // Very slow overtake for majestic flyby
+        (Math.random() - 0.5) * 0.01,
+        (Math.random() - 0.5) * 0.01,
+        TUNNEL_CONFIG.zSpeed + 0.04 // Consistent slow overtake speed
       );
       // Rotate slowly in XYZ
       module.rotationSpeed.set(
-        0.005,
-        0.005,
-        0.003
+        (Math.random() - 0.5) * 0.01,
+        (Math.random() - 0.5) * 0.01,
+        (Math.random() - 0.5) * 0.01
       );
       module.scale = 1.5;
+      
+      // Placeholder for future TTS capability
+      // Ideally, this logic should be moved to a separate SingerModule.js file
+      module.speak = (text) => {
+        console.log("Singer says:", text);
+        // Future: Implement Web Speech API here and map to morph targets
+      };
     }
 
     // Create visual mesh based on type
@@ -501,10 +508,27 @@
       
       // Special case for Singer: Recycle when it goes too far AHEAD (into the fog)
       if (module.type === 'singer') {
-        if (module.position.z > cameraZPosition + 60) { // Recycle much sooner (was 120)
-          shouldRemove = true;
-          // Schedule next spawn 5-10 seconds after disappearance
-          nextSingerSpawnTime = Date.now() * 0.001 + 5 + Math.random() * 5;
+        // Wait until it is deep in the fog before recycling
+        if (module.position.z > cameraZPosition + TUNNEL_CONFIG.fogFar) { 
+          // Reset to behind camera (Eternal Loop)
+          module.position.z = cameraZPosition - 60 - Math.random() * 20;
+          module.position.x = (Math.random() - 0.5) * 30;
+          module.position.y = (Math.random() - 0.5) * 15;
+          
+          // Randomize trajectory for the next pass
+          module.velocity.x = (Math.random() - 0.5) * 0.01;
+          module.velocity.y = (Math.random() - 0.5) * 0.01;
+          module.velocity.z = TUNNEL_CONFIG.zSpeed + 0.03 + Math.random() * 0.03; // Varying speed
+
+          // Randomize rotation
+          module.rotationSpeed.set(
+            (Math.random() - 0.5) * 0.01,
+            (Math.random() - 0.5) * 0.01,
+            (Math.random() - 0.5) * 0.01
+          );
+          
+          // Don't remove, just reset
+          shouldRemove = false;
         }
       } 
       // Standard modules: Remove when too far BEHIND
@@ -533,11 +557,6 @@
       const types = ['sphere', 'cube', 'pulse']; // Don't spawn random singers, we have a persistent one
       const type = types[Math.floor(Math.random() * types.length)] as any;
       createModule(type);
-    }
-
-    // Spawn Singer if it's time and one doesn't exist
-    if (Date.now() * 0.001 > nextSingerSpawnTime && !modules.some((m: any) => m.type === 'singer')) {
-      createModule('singer');
     }
   };
 
