@@ -64,7 +64,7 @@ body {
   word-wrap: break-word;
   overflow-wrap: break-word;
   overflow-x: hidden;
-  font-size: 1rem;
+  /* font-size: 1rem; */
   line-height: 1.5;
   width: 100%;
   min-width: 0;
@@ -121,8 +121,8 @@ i {
 p {
   margin-bottom: 1em;
   color: var(--text);
-  font-size: 1.3rem;
-  line-height: 1;
+  /* font-size: 1.3rem; */
+  line-height: 1.5;
 }
 
 .prose p {
@@ -448,7 +448,12 @@ hr {
   }
   
   body {
-    font-size: 11px;
+    /* font-size: 11px; */
+  }
+
+  p {
+    /* font-size: 1.1rem;
+    line-height: 1.2; */
   }
 
 }
