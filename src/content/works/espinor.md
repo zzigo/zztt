@@ -36,5 +36,3 @@ The video is organized in two symmetrical overlapping layers, one of them is the
 
 A complex web of three modes that rotate in a row, the sound, the gesture and the time. The recording of immediate actions and their contrapuntal execution generates and scalar constructions in time of great precision. The organizational unit extend to a complementary resonant object made of gesture, sound and documentary actions in real and past time. The use of a numerical memory as a notation parameter equals the condition of the recording at the level of live events, except that they are mirrored symmetrically like the spinorial model, a vector model of rotation of elementary particles. The guitar is not only a sound generator but also a geographical and spatial, quasi-scene generator where the guitarist appears inside it as well as outside. It was commissioned by the music area of the National Ministry of Culture for the Guitarras del Mundo festival.
 
-
-

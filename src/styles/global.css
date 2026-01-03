@@ -412,7 +412,7 @@ hr {
 
 @media (max-width: 720px) {
   body {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 
   main {
