@@ -4,35 +4,18 @@
   License MIT
 */
 
-/* =========================================================
-   0. VARIABLES FUNDACIONALES (FUERA DE @layer)
-   ---------------------------------------------------------
-   Estas variables deben ser siempre accesibles y animables.
-   No las metas en layers.
-   ========================================================= */
-
-:root {
-  /* DEBUG EXAGERADO (para ver animación claramente) */
-  --bg-base: #111010;
-  --bg-min:  #ff0000;
-  --bg-max:  #27ffa5;
-
-  /* Periodo de respiración */
-  --bg-breathe-period: 20s;
-}
-
-/* =========================================================
-   1. BASE LAYER
-   ========================================================= */
-
 @layer base {
-
+  /* =========================================================
+     Default theme = DARK
+     ========================================================= */
   :root {
-    --color-text-main: 242 241 236;
-    --color-bg-main: 23 23 23;
-    --color-bg-muted: 36 36 36;
-    --color-border-main: 242 241 236;
+    --color-text-main: 242 241 236; /* #F2F1EC */
+    --color-bg-main: 23 23 23; /* #171717 */
+    --color-bg-muted: 36 36 36; /* #242424 */
+    --color-border-main: 242 241 236; /* #F2F1EC */
 
+    /* Legacy variables */
+    --background: rgba(8, 0, 16, 255);
     --text: #F2F1EC;
     --text-muted: #999999;
     --accent: #c8ffc5fc;
@@ -45,7 +28,16 @@
     --gray-dark: 51, 51, 51;
   }
 
+  /* =========================================================
+     Explicit light mode override
+     ========================================================= */
   html.light {
+    --color-text-main: 23 23 23; /* #171717 */
+    --color-bg-main: 242 241 236; /* #F2F1EC */
+    --color-bg-muted: 234 233 225; /* #EAE9E1 */
+    --color-border-main: 23 23 23; /* #171717 */
+
+    --background: #F2F1EC;
     --text: #171717;
     --text-muted: #666666;
     --accent: #f510a171;
@@ -54,26 +46,28 @@
 }
 
 /* =========================================================
-   2. GLOBAL LAYOUT
+   Global layout
    ========================================================= */
 
 html {
-  background-color: var(--bg-base);
-  animation: bg-breathe var(--bg-breathe-period) infinite linear;
+  background-color: var(--background);
   color: var(--text);
 }
 
 body {
-  background-color: var(--bg-base);
-  animation: bg-breathe var(--bg-breathe-period) infinite linear
-  
   margin: 0;
   padding: 0;
   font-family: Helvetica, Arial, sans-serif;
+  background-color: var(--background);
   color: var(--text);
+  text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   overflow-x: hidden;
   font-size: 1rem;
   line-height: 1.5;
+  width: 100%;
+  min-width: 0;
 }
 
 main {
@@ -81,44 +75,31 @@ main {
   max-width: 100%;
   margin: auto;
   padding: 3em 1em;
+  position: relative;
+  z-index: 1;
+  background-color: var(--background);
+  box-sizing: border-box;
+}
+
+/* Ensure all children respect container width */
+main * {
+  max-width: 100%;
   box-sizing: border-box;
 }
 
 /* =========================================================
-   3. FONDO RESPIRANTE (ROBUSTO, SIN color-mix)
+   Typography
    ========================================================= */
 
-/*
-  Animación perceptual:
-  - colores explícitos → funciona en TODOS los browsers
-  - interpolación natural del motor CSS
-  - estructura simétrica (sube / baja)
-*/
-
-@keyframes bg-breathe {
-  0%   { background-color: var(--bg-base); }
-  25%  { background-color: var(--bg-max); }
-  50%  { background-color: var(--bg-base); }
-  75%  { background-color: var(--bg-min); }
-  100% { background-color: var(--bg-base); }
-}
-
-/* Accesibilidad */
-@media (prefers-reduced-motion: reduce) {
-  html {
-    animation: none;
-    background-color: var(--bg-base);
-  }
-}
-
-/* =========================================================
-   4. TYPOGRAPHY
-   ========================================================= */
-
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0 0 0.5rem 0;
-  line-height: 1.2;
   color: var(--text);
+  line-height: 1.2;
 }
 
 h1 { font-size: 1.5rem; }
@@ -127,22 +108,29 @@ h3 { font-size: 1.1rem; }
 h4 { font-size: 0.9rem; }
 h5 { font-size: 0.8rem; }
 
+strong,
+b {
+  font-weight: 100;
+}
+
+em,
+i {
+  font-style: italic;
+}
+
 p {
   margin-bottom: 1em;
-  font-size: 1.3rem;
-  line-height: 1.6;
   color: var(--text);
+  font-size: 1.3rem;
+  line-height: 1;
 }
 
 .prose p {
   margin-bottom: 2em;
 }
 
-strong, b { font-weight: 100; }
-em, i { font-style: italic; }
-
 /* =========================================================
-   5. LINKS
+   Links
    ========================================================= */
 
 a {
@@ -155,7 +143,25 @@ a:hover {
 }
 
 /* =========================================================
-   6. MEDIA
+   Forms & tables
+   ========================================================= */
+
+textarea,
+input {
+  width: 100%;
+  font-size: 11.2px;
+  background-color: var(--background);
+  color: var(--text);
+  border: 1px solid var(--accent);
+}
+
+table {
+  width: 100%;
+  color: var(--text);
+}
+
+/* =========================================================
+   Media
    ========================================================= */
 
 img {
@@ -165,12 +171,13 @@ img {
 }
 
 /* =========================================================
-   7. CODE
+   Code
    ========================================================= */
 
 code {
   padding: 2px 5px;
   background-color: rgb(var(--gray-dark));
+  color: var(--text);
   border-radius: 2px;
 }
 
@@ -178,15 +185,196 @@ pre {
   padding: 1.5em;
   border-radius: 8px;
   background-color: rgb(var(--gray-dark));
-  overflow-x: auto;
 }
 
 pre > code {
   all: unset;
+  color: var(--text);
 }
 
 /* =========================================================
-   8. MISC
+   Blockquotes & callouts
+   ========================================================= */
+
+blockquote {
+  border-left: 4px solid var(--accent);
+  padding-left: 20px;
+  margin: 0;
+  font-size: 0.933em;
+  color: var(--text-muted);
+}
+
+/* Base callout styles */
+.callout {
+  position: relative;
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+  border: none;
+}
+
+.callout-quote::before {
+  content: "\201C";
+  position: absolute;
+  top: -0.25rem;
+  left: 0.4rem;
+  font-size: 7rem;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Callout title */
+.callout-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--text);
+  text-transform: capitalize;
+}
+
+/* Summary for foldable callouts */
+details.callout summary.callout-title {
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+  padding: 0.25rem 0;
+}
+
+details.callout summary.callout-title::marker {
+  content: "";
+}
+
+details.callout summary.callout-title::before {
+  content: "▶";
+  display: inline-block;
+  margin-right: 0.75rem;
+  transition: transform 0.2s ease;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+details.callout[open] summary.callout-title::before {
+  transform: rotate(90deg);
+}
+
+details.callout[open] summary.callout-title {
+  margin-bottom: 0.75rem;
+}
+
+/* Remove default marker */
+details.callout summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Callout content */
+.callout-content {
+  padding-top: 0.5rem;
+}
+
+.callout-content p {
+  margin: 0.5rem 0;
+}
+
+.callout-content p:first-child {
+  margin-top: 0;
+}
+
+.callout-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Callout type variants */
+.callout-tip {
+  background: rgba(0, 200, 100, 0.15);
+}
+
+.callout-tip .callout-title {
+  color: rgba(0, 255, 160, 0.9);
+}
+
+.callout-note {
+  background: rgba(100, 149, 237, 0.15);
+}
+
+.callout-note .callout-title {
+  color: rgba(100, 200, 255, 0.9);
+}
+
+.callout-warning {
+  background: rgba(255, 165, 0, 0.15);
+}
+
+.callout-warning .callout-title {
+  color: rgba(255, 200, 0, 0.9);
+}
+
+.callout-danger {
+  background: rgba(255, 69, 58, 0.15);
+}
+
+.callout-danger .callout-title {
+  color: rgba(255, 100, 90, 0.9);
+}
+
+.callout-quote {
+  background: rgba(150, 150, 150, 0.15);
+}
+
+.callout-quote .callout-title {
+  color: rgba(200, 200, 200, 0.9);
+}
+
+details.callout {
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+}
+
+details.callout > summary {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+details.callout > summary::-webkit-details-marker {
+  display: none;
+}
+
+details.callout > summary::before {
+  content: "▶";
+  display: inline-block;
+  margin-right: 0.6rem;
+  font-size: 0.7rem;
+  opacity: 0.7;
+  transition: transform 0.2s ease;
+}
+
+details.callout[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.callout-content section {
+  margin: 0.75rem 0;
+}
+
+.callout-content h4 {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+  margin-bottom: 0.25rem;
+}
+
+.callout-content hr {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin: 0.75rem 0;
+}
+
+/* =========================================================
+   Misc
    ========================================================= */
 
 hr {
@@ -194,30 +382,100 @@ hr {
   border-top: 1px solid var(--accent);
 }
 
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+  padding: 40px 0;
+}
+
+.center figcaption {
+  margin-top: 8px;
+  font-style: italic;
+  font-size: 0.56em;
+  color: var(--text-muted);
+}
+
 .sr-only {
-  position: absolute;
+  position: absolute !important;
   width: 1px;
   height: 1px;
   overflow: hidden;
   clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* =========================================================
-   9. RESPONSIVE
+   Responsive
    ========================================================= */
 
 @media (max-width: 720px) {
-  main {
-    padding: 0.75em;
+  body {
+    font-size: 1rem;
   }
 
-  img, video, iframe, pre, table {
-    max-width: 100%;
+  main {
+    padding: 0.5em;
+    width: 100%;
+  }
+  
+  /* Force all content to stay within bounds */
+  img, video, iframe, pre, table, figure {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+    object-fit: contain;
+  }
+  
+  /* Prevent code blocks from overflowing */
+  pre {
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  
+  /* Ensure headings wrap */
+  h1, h2, h3, h4, h5, h6 {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 }
 
 @media (max-width: 400px) {
   main {
-    padding: 0.5em;
+    padding: 0.25em;
   }
+  
+  body {
+    font-size: 11px;
+  }
+
+}
+
+
+/* AUDIO */
+
+/* Estilo Global para reproductores de Audio en Obsidian */
+audio {
+    width: 100%;
+    height: 40px;
+    border-radius: 8px;
+    filter: invert(100%) hue-rotate(180deg) brightness(1.5); /* Hace el reproductor oscuro */
+    background-color: transparent;
+}
+
+/* Opcional: Contenedor para que no se vea pegado a los bordes */
+.audio-player-container {
+    padding: 10px;
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 12px;
+    margin: 10px 0;
+}
+
+/* Mejora el aspecto en hover */
+audio:hover {
+    filter: invert(100%) hue-rotate(180deg) brightness(1.8);
+    transition: filter 0.3s ease;
 }
