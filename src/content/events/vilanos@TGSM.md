@@ -12,7 +12,8 @@ city: Buenos Aires
 country: Argentina
 ---
 
-!()(https://i.imgur.com/c4e7qs9.png)
+![](https://i.imgur.com/c4e7qs9.png)
+
 
 CÁMARA² II  
 Sala Cunill Cabanellas - Martes 7 de noviembre, 19hs
