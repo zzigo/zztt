@@ -56,3 +56,4 @@ We posit that in Azzigotti’s work the particular way the instruments are ampli
 Thus the singularities of the piece direct our attention to a specific modus of interaction between the performer’s body and the musical instrument, demanding us to reconsider Marx’s ideas about the relationship between humans and technology.
 Hence what we intend is, not only to say something about Vilanos, but to contribute in providing tools to reflect on political and aesthetical implications of technology in New Music today.
 
+
