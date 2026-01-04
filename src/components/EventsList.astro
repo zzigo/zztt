@@ -353,17 +353,19 @@ today.setHours(0, 0, 0, 0);
     const searchInput = document.getElementById('search-input') as HTMLInputElement;
     const sortButtons = document.querySelectorAll('.sort-btn');
 
+    // Store all rows from the beginning to avoid losing them after filtering
+    const allTableRows = Array.from(tbody.querySelectorAll('.event-row')) as HTMLElement[];
+
     let currentSort = { column: 'date', direction: 'desc' };
 
     function filterAndSortRows() {
       if (!tbody) return;
       
-      const rows = Array.from(tbody.querySelectorAll('.event-row')) as HTMLElement[];
       const searchTerm = searchInput?.value.toLowerCase() || '';
       let visibleRows = [];
 
-      // 1. Filter
-      rows.forEach(row => {
+      // 1. Filter from the master list of all rows
+      allTableRows.forEach(row => {
         const work = row.dataset.work || '';
         const performedBy = row.dataset.performedby || '';
         const eventName = row.dataset.eventname || '';

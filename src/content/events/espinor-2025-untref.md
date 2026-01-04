@@ -4,7 +4,6 @@ dates:
 work: espinor
 performedBy: 
   - Ricardo Cuadros Pradilla
-  - Iván Adriano
 eventName: Ciclo de Ensambles
 venue: Auditorio UNTREF Caseros II
 city: Caseros
