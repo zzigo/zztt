@@ -4,7 +4,7 @@ dates:
 work: iedro
 performedBy: 
 - "[[Asia Ahmetjanova]]"
-eventName: Carte Blanche: Asia Ahmetjanova
+eventName: Carte Blanche Asia Ahmetjanova
 venue: Neubad Luzern
 city: Luzern
 country: Switzerland
