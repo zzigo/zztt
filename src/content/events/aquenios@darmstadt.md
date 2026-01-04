@@ -4,7 +4,7 @@ dates:
 work: aquenios
 performedBy:
   - Klexos
-eventName: '"Darmstädter Ferienkurse 2018"'
+eventName: Darmstädter Ferienkurse 2018
 venue: OS Showcase
 city: Darmstadt
 country: Germany
