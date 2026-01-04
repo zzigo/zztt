@@ -5,15 +5,10 @@ work: microbeatlogic
 performedBy:
   - "[[reConvert]]"
 eventName: neue musik in st.ruprecht
-venue: Edificio Siglo XXI de Caja de Badajoz
-city: Badajoz
-country: Spain
-url: https://2epoca.sulponticello.com/comienza-el-v-ciclo-de-musica-actual-de-badajoz/
+venue: St. Ruprecht
+city: Vienna
+country: Austria
 ---
-
-![](https://i.imgur.com/FdcIe1G.png)
-
-
 ![](https://i.imgur.com/FDMZDn8.jpeg)
 
 Víctor Barceló – Schlagzeug  
