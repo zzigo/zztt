@@ -3,13 +3,6 @@ title: vilanos
 description: 2 fl.amp
 pubDate: 2014-10-28
 heroImage: https://i.imgur.com/DgcDiGn.png
-performedBy:
-  - "[[MEI Flautas]]"
-  - "[[Labate Pierpaoli Duo-UNA]]"
-performances:
-  - "[[Escrituras Argentinas@conDiT]]"
-  - "[[DaMUS UNA @Biblioteca Nacional]]"
-  - "[[Contemporary Music Concert Series TGSM 2016]]"
 tags:
   - chamber
 ---
@@ -35,16 +28,6 @@ In a multicultural and multitemporal environment, composing with systems and the
   <figcaption>Vilanos at conDiT 2014 4 Escrituras Argentinas</figcaption>
 </figure>
 
-- Nota extendida
-    
-    En los confines del siglo XIX los decadentistas estetizan la vida como una forma de conciencia de inutilidad e impotencia en contraste con el positivismo de la época.
-    En los comienzos del siglo XXI, el pensamiento numérico aplicado al arte invierte la relación: a la vez que muchas de las obras muestran una utilidad y una función estética, sus estructuras se asemejan a formas orgánicas.
-    A veces utilizo sistemas de la naturaleza como metáfora para construir sistemas estéticos. En esta obra me inspiré en los vilanos, las terminaciones de determinados frutos que sirven a la diseminación y procreación.
-    En la oposición entre lo sintético y lo orgánico, uno se impone ante el entorno mientras que el segundo lo crea. Las cosas vivas no son compuestas o talladas, sino que simplemente crecen. La propiedad de crecimiento esta dada por el siguiente principio: toda información requerida para funcionar y replicarse está soportada en una célula o mínima forma de vida. El principio formal de la obra está basado en este despliegue, desde los sonidos no pulmonares (o "chasquidos") hasta el traspaso de una realimentación del interior del instrumento a una con el enterno. Al amplificar la flauta dentro de su cuerpo cada uno de los agujeros se transforma a su vez en un tubo cerrado con su propia fundamental. Es en la inestabilidad de este complejo acústico desde el cual la obra se proyecta de forma arborea. Los sistemas arbóreos despliegan siempre las mismas formas independientemente de los materiales que lo conformen. Son menos uniformes, y presentan mas variaciones en sus detalles que las espirales o las explosiones, ocupan todo el espacio que pueden, como las venas, el subterrano y los complejos rítmicos abordados aquí, construidos por mínima variación realimentada y espejada. Como un canon estricto que se fractaliza hacia el infinito y vuelve a la superficie en un espacio toroidal.
-    La cantidad de variables interferentes se opone a la cantidad de variables de control, la precisa notación de la embocadura, y de la configuración de la flauta como traductor espacial. La repetición no está en el material musical sino en el fenómeno de la re-alimentación. Puede entenderse a toda la geometría como una forma de restricción espacial, entre la relación entre la cantidad de líneas y puntos. En formas no repetitivas siempre hay menos lineas que puntos, ya que los puntos son conectores de intercambio. En Vilanos, intenté componer solamente los puntos de la geometria, y que las lineas y las formas fueran emergentes. Esto sucede especialmente en la tercera sección, donde la interacción en hoquetus entre los eventos de las llaves, superpuestos a las acciones de la embocadura, generan una textura de cuatro estratos cuya resultante es siempre cambiante, por la velocidad de interacción de la realimentación.
-    En un entorno multicultural y multitemporal componer con sistemas y sus emergentes incuantificables puede hacernos recordar cuan ridícula puede ser toda pretensión de control o de selectividad subjetiva. Es toda una definición antielitista de la sofistificación como el crecimiento selectivo de todo organismo natural. Mas allá de nuestra subjetividad. Es (parafraseando a Adorno) un antagonismo no resuelto de la realidad, que vuelve como un problema inmanente de la forma.
-    
-
 ### Research
 
 in preparation, explained concert IUNA ensemble, Cúpula CCK. 2015
@@ -57,3 +40,15 @@ Thus the singularities of the piece direct our attention to a specific modus of 
 Hence what we intend is, not only to say something about Vilanos, but to contribute in providing tools to reflect on political and aesthetical implications of technology in New Music today.
 
 
+
+![](https://i.imgur.com/nkZJpRB.jpeg)
+
+![](https://i.imgur.com/zAEVYBr.jpeg)
+
+![](https://i.imgur.com/rvLfYnh.jpeg)
+
+![](https://i.imgur.com/5GXULlb.jpeg)
+
+![](https://i.imgur.com/Rba4sxP.jpeg)
+
+![](https://i.imgur.com/2LnzUz5.jpeg)

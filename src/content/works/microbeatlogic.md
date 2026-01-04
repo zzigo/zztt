@@ -20,5 +20,12 @@ In the micro percussive scale, information is processed as a magnetic field, t
 <iframe style="border: none; width: 100%; height: 100%; aspect-ratio: 1.30548 / 1;" src="https://e.issuu.com/embed.html?u=lucianoazzigotti&amp;d=microbeatlogic_1_2_2014" allowfullscreen="" allow="fullscreen"></iframe>
 
 
+## darmstadt
 ![](https://i.imgur.com/Ku6QjJp.jpeg)
+
+## moë
+
+![](https://i.imgur.com/j7sst9t.jpeg)
+![](https://i.imgur.com/yVmcr1c.jpeg)
+![](https://i.imgur.com/lWfVaeW.jpeg)
 
